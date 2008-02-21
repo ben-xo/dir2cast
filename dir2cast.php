@@ -382,13 +382,18 @@ class Cached_Dir_Podcast extends Dir_Podcast
 	{
 		if(file_exists($this->temp_file))
 		{
-			$output = file_get_contents($this->temp_file);
+			if(filemtime($this->temp_file) > filemtime($this->source_dir))
+			{
+				return file_get_contents($this->temp_file);
+			}
+			else
+			{
+				unlink($this->temp_file);
+			}
 		}
-		else
-		{
-			$output = parent::generate();
-			file_put_contents($this->temp_file, $output);
-		}
+		
+		$output = parent::generate();
+		file_put_contents($this->temp_file, $output);
 		return $output;
 	}
 
