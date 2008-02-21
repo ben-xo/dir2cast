@@ -72,7 +72,7 @@ if(!defined('TITLE'))
 if(!defined('LINK'))
 {
 	if(!empty($_SERVER['HTTP_HOST']))
-		define('LINK', 'http://' . ($_SERVER['HTTPS'] ? 's' : '') . $_SERVER['PHP_SELF']);
+		define('LINK', 'http' . ($_SERVER['HTTPS'] ? 's' : '') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF']);
 	else
 		define('LINK', 'http://www.example.com/');
 }
@@ -96,6 +96,15 @@ if(!defined('WEBMASTER'))
 	
 if(!defined('TTL'))
 	define('TTL', 60);
+
+if(!defined('URL_BASE'))
+{
+	if(!empty($_SERVER['HTTP_HOST']))
+		define('URL_BASE', 'http' . ($_SERVER['HTTPS'] ? 's' : '') . '://' . $_SERVER['HTTP_HOST'] . get_url_path(DIR) );
+	else
+		define('URL_BASE', 'file://' . DIR);
+}
+	
 	
 define('VERSION', '0.1');
 
@@ -161,7 +170,7 @@ class RSS_File_Item extends RSS_Item {
 	
 	public function setLinkFromFilename($filename)
 	{
-		$url = 'http://whatwhatwhat';
+		$url = URL_BASE . '/' . urlencode(basename($filename));
 		$this->setLink($url);
 	}
 }
@@ -376,7 +385,7 @@ class Cached_Dir_Podcast extends Dir_Podcast
 		$safe_source_dir = str_replace('/', '_', $source_dir);
 		
 		// something unique, safe, stable and easily identifiable
-		$this->temp_file = rtrim($temp_dir, '/') . '/' . md5($source_dir) . '_' . $safe_source_dir . '.rss';
+		$this->temp_file = rtrim($temp_dir, '/') . '/' . md5($source_dir) . '_' . $safe_source_dir . '.xml';
 		
 		parent::__construct($source_dir);
 	}
@@ -413,4 +422,10 @@ class Cached_Dir_Podcast extends Dir_Podcast
 function magic_stripslashes($s) 
 { 
 	return get_magic_quotes_gpc() ? stripslashes($s) : $s; 
+}
+
+function get_url_path($dir)
+{
+	// assumes that $dir is under DOCUMENT_ROOT otherwise the results are undefined
+	die('TODO');
 }
