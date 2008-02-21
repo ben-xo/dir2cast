@@ -229,6 +229,7 @@ abstract class Podcast extends GetterSetter
 	public function http_headers()
 	{
 		header('Content-type: text/xml');
+		header('Last-modified: ' . $this->getLastBuildDate());
 	}
 	
 	/**
@@ -279,12 +280,13 @@ abstract class Podcast extends GetterSetter
 				'description' => $item->getDescription(),
 				'pubDate' => $item->getPubDate()
 			);
+			
 			foreach($item_elements as $name => $val)
 			{
 				$element = $item_element->appendChild(new DOMElement($name));
 				$element->appendChild(new DOMText($val));
-
 			}
+			
 			$enclosure = $item_element->appendChild(new DOMElement('enclosure'));
 			$enclosure->setAttribute('url', $item->getLink());
 			$enclosure->setAttribute('length', $item->getLength());
@@ -373,6 +375,7 @@ class Cached_Dir_Podcast extends Dir_Podcast
 		$this->temp_dir = $temp_dir;
 		$safe_source_dir = str_replace('/', '_', $source_dir);
 		
+		// something unique, safe, stable and easily identifiable
 		$this->temp_file = rtrim($temp_dir, '/') . '/' . md5($source_dir) . '_' . $safe_source_dir . '.rss';
 		
 		parent::__construct($source_dir);
@@ -384,7 +387,7 @@ class Cached_Dir_Podcast extends Dir_Podcast
 		{
 			if(filemtime($this->temp_file) > filemtime($this->source_dir))
 			{
-				return file_get_contents($this->temp_file);
+				return file_get_contents($this->temp_file); // serve cached copy
 			}
 			else
 			{
@@ -393,7 +396,7 @@ class Cached_Dir_Podcast extends Dir_Podcast
 		}
 		
 		$output = parent::generate();
-		file_put_contents($this->temp_file, $output);
+		file_put_contents($this->temp_file, $output); // save cached copy
 		return $output;
 	}
 
