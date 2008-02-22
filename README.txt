@@ -1,5 +1,5 @@
-dir2cast by Ben XO
-==================
+dir2cast by Ben XO v0.1 (2008-02-22)
+====================================
 
 Hello!
 
@@ -14,8 +14,11 @@ Features:
 * dir2cast will automatically use the ID3 fields from your MP3s for the Author, 
   Title, etc. ID3v2 is supported. (Uses bundled getID3 lib).
 
-* Almost-full support for iTunes podcast tags. (per-item keywords and 'explicit'
-  are not supported).
+* The generated feed is cached (in the supplied 'temp' folder, or anywhere else
+  that you want) and only updated if something in the directory changes.
+
+* Almost-full support for iTunes podcast tags. (Not supported: block, explicit,
+  new-feed-url, per-item keywords).
 
 * iTunes 'image' supported: just drop a file called itunes_image.jpg in the same
   folder as your MP3s.
@@ -27,6 +30,8 @@ Features:
 
 * You can set a per-file iTunes Summary by creating a text file with the same
   name as the MP3 (e.g. for file.mp3, create file.txt).
+
+* Works from the command line, if you want.
 
 -- 
 Ben
