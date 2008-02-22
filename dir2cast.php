@@ -5,7 +5,7 @@
  */
 
 /* SETTINGS *********************************************
- * All of these have defaults, so you can leave them    *
+ * Most of these have defaults, which you can leave     *
  * commented if you want.                               *
  ********************************************************/
 
@@ -220,6 +220,10 @@ if(!defined('ITUNES_OWNER_EMAIL'))
 	
 define('VERSION', '0.1');
 
+/* EXTENALS *********************************************/
+
+require_once('getID3/getid3.php');
+
 /* CLASSES **********************************************/
 
 abstract class GetterSetter {
@@ -247,13 +251,69 @@ abstract class GetterSetter {
 			case 'set':
 				$this->parameters[$var_name] = $params[0];
 				break;
+				
+			default:
+				throw new Exception("Unknown method '" . $method . "' called on " . __CLASS__);
 		}
 	}	
 }
 
-interface Podcast_Helper   {
-	public function appendTo(DOMElement $d, DOMDocument $doc);
+interface Podcast_Helper {
+	public function appendToChannel(DOMElement $d, DOMDocument $doc);
+	public function appendToItem(DOMElement $d, DOMDocument $doc, RSS_Item $item);
 	public function addNamespaceTo(DOMElement $d, DOMDocument $doc);
+}
+
+/**
+ * Uses external getID3 lib to analyse MP3 files.
+ *
+ */
+class getID3_Podcast_Helper implements Podcast_Helper {
+	
+	/**
+	 * getID3 analyzer
+	 *
+	 * @var getid3
+	 */
+	protected $getid3;
+	
+	public function appendToChannel(DOMElement $d, DOMDocument $doc) { /* nothing */ }
+	public function addNamespaceTo(DOMElement $d, DOMDocument $doc) { /* nothing */ }
+
+	public function __construct() { 
+		$this->getid3 = new getid3();
+	}
+	
+	/**
+	 * Fills in a bunch of info on the Item by using getid3->Analyse()
+	 */
+	public function appendToItem(DOMElement $d, DOMDocument $doc, RSS_Item $item)
+	{
+		if($item instanceof MP3_RSS_Item && !$item->getAnalyzed())
+		{
+			try {
+				
+				@$this->getid3->Analyze($item->getFilename());
+				
+				$item->setBitrate($this->getid3->info['bitrate']);
+				
+				$item->setID3Title( $this->getid3->info['comments']['title'][0] );
+				$item->setID3Artist( $this->getid3->info['comments']['artist'][0] );
+				$item->setID3Album( $this->getid3->info['comments']['album'][0] );					
+				$item->setID3Comment( $this->getid3->info['comments']['comment'][0] );
+				
+				$item->setDuration( $this->getid3->info['playtime_string']);
+				
+				
+				$item->setAnalyzed(true);
+				unset($this->getid3->info);
+			} 
+			catch (Exception $e)
+			{
+				// oh well! No MP3 info for us, eh?
+			}
+		}
+	}
 }
 
 class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
@@ -269,17 +329,16 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
 	
 	public function addNamespaceTo(DOMElement $d, DOMDocument $doc)
 	{
-		$attr = $d->appendChild($doc->createAttribute('xmlns:itunes'));
-		$attr->appendChild(new DOMText($this->getNSURI()));
+		$d->appendChild( $doc->createAttribute( 'xmlns:itunes' ) )
+			->appendChild( new DOMText( $this->getNSURI() ) );
 	}
 	
-	public function appendTo(DOMElement $channel, DOMDocument $doc)
+	public function appendToChannel(DOMElement $channel, DOMDocument $doc)
 	{
 		foreach ($this->parameters as $name => $val)
 		{
-			$element = $doc->createElement('itunes:' . $name);
-			$channel->appendChild($element);
-			$element->appendChild(new DOMText($val));
+			$channel->appendChild( $doc->createElement('itunes:' . $name) )
+				->appendChild( new DOMText($val)	);
 		}
 		
 		foreach ($this->categories as $category => $subcats)
@@ -289,34 +348,50 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
 		
 		if(!empty($this->owner_name) || !empty($this->owner_email))
 		{
-			$owner = $doc->createElement('itunes:owner');
-			$channel->appendChild($owner);
+			$owner = $channel->appendChild( $doc->createElement('itunes:owner') );
 
 			if(!empty($this->owner_name))
 			{
-				$owner_name = $doc->createElement('itunes:name');
-				$owner->appendChild($owner_name);
-				$owner_name->appendChild(new DOMText($this->owner_name));
+				$owner->appendChild( $doc->createElement('itunes:name') )
+					->appendChild( new DOMText( $this->owner_name ) );
 			}
 			
 			if(!empty($this->owner_email))
 			{
-				$owner_email = $doc->createElement('itunes:email');
-				$owner->appendChild($owner_email);
-				$owner_email->appendChild(new DOMText($this->owner_email));
+				$owner->appendChild( $doc->createElement('itunes:email') )
+					->appendChild( new DOMText( $this->owner_email ) );
 			}
 		}
 	}
 	
+	public function appendToItem(DOMElement $item_element, DOMDocument $doc, RSS_Item $item)
+	{
+		/*
+		 * 	<itunes:author>John Doe</itunes:author>
+		 *	<itunes:subtitle>A short primer on table spices</itunes:subtitle>
+		 *	<itunes:summary>This week we talk about salt and pepper shakers, comparing and contrasting pour rates, construction materials, and overall aesthetics. Come and join the party!</itunes:summary>
+		 *	<itunes:duration>7:04</itunes:duration>
+		 *	<itunes:keywords>salt, pepper, shaker, exciting</itunes:keywords>
+		 */
+
+		$elements = array(
+			'author' => $item->getID3Artist(),
+			'duration' => $item->getDuration(),
+		);
+				
+		foreach($elements as $key => $val)
+			$item_element->appendChild( $doc->createElement('itunes:' . $key) )
+				->appendChild( new DOMText($val) );
+	}
+	
 	public function appendCategory($category, $subcats, DOMElement $e, DOMDocument $doc)
 	{
-		$element = $doc->createElement('itunes:category');
-		$e->appendChild($element);
-		$element->setAttribute('text', $category);
-		if(is_array($subcats)) {
+		$e->appendChild( $doc->createElement('itunes:category') )
+			->setAttribute('text', $category);
+			
+		if(is_array($subcats)) 
 			foreach($subcats as $subcategory => $subsubcats)
 				$this->appendCategory($subcategory, $subsubcats, $element, $doc);
-		}
 	}
 	
 	public function addCategories($cats) {
@@ -340,9 +415,15 @@ class RSS_Item extends GetterSetter {
 	
 	public function __construct() { }
 	
-	public function appendTo(DOMElement $channel, DOMDocument $doc)
+	public function appendToChannel(DOMElement $channel, DOMDocument $doc)
 	{
-		$item_element = $channel->appendChild(new DOMElement('item'));
+		$item_element = $channel->appendChild( new DOMElement('item') );
+
+		foreach($this->helpers as $helper)
+		{
+			// do helpers first; they may fill in the stuff we add down below.
+			$helper->appendToItem($item_element, $doc, $this);
+		}
 		
 		$item_elements = array(
 			'title' => $this->getTitle(),
@@ -351,13 +432,10 @@ class RSS_Item extends GetterSetter {
 			'pubDate' => $this->getPubDate()
 		);
 		
-		foreach($this->helpers as $helper)
-			$item_elements += $helpers->getItemElements();
-		
 		foreach($item_elements as $name => $val)
 		{
-			$element = $item_element->appendChild(new DOMElement($name));
-			$element->appendChild(new DOMText($val));
+			$item_element->appendChild( new DOMElement($name) )
+				->appendChild(new DOMText($val));
 		}
 		
 		$enclosure = $item_element->appendChild(new DOMElement('enclosure'));
@@ -365,12 +443,21 @@ class RSS_Item extends GetterSetter {
 		$enclosure->setAttribute('length', $this->getLength());
 		$enclosure->setAttribute('type', $this->getType());
 	}
+	
+	public function addHelper(Podcast_Helper $helper)
+	{
+		$this->helpers[] = $helper;
+		return $helper;
+	}
 }
 
 class RSS_File_Item extends RSS_Item {
 	
+	protected $filename;
+	
 	public function __construct($filename)
 	{
+		$this->filename = $filename;
 		$this->setLinkFromFilename($filename);
 		parent::__construct();
 	}
@@ -385,6 +472,11 @@ class RSS_File_Item extends RSS_Item {
 	{
 		return 'application/octet-stream';
 	}
+	
+	public function getFilename()
+	{
+		return $this->filename;
+	}
 }
 
 class MP3_RSS_Item extends RSS_File_Item {
@@ -397,24 +489,7 @@ class MP3_RSS_Item extends RSS_File_Item {
 
     public function setFromMP3File($file)
     { 
-    	// read the ID3v1 from the MP3 file    	
-		$id_start = filesize($file) - 128;
-		$fp = fopen($file, 'r');
-		fseek($fp, $id_start);
-		if ('TAG' == fread($fp,3))
-		{
-			$this->setID3Title(trim(fread($fp, 30)));
-			$this->setID3Artist(trim(fread($fp, 30)));
-			$this->setID3Album(trim(fread($fp, 30)));
-			$this->setID3Year(trim(fread($fp, 4)));
-			$this->setID3Comment(trim(fread($fp, 30)));
-			$this->setID3Genre(trim(fread($fp, 1)));
-			fclose($fp);
-		}
-		
-		// do the length
 		$this->setLength(filesize($file));
-		
 		$this->setPubDate(date('r', filectime($file)));
     }
     
@@ -504,19 +579,19 @@ abstract class Podcast extends GetterSetter
 				
 		foreach($channel_elements as $name => $val)
 		{
-			$element = $channel->appendChild(new DOMElement($name));
-			$element->appendChild(new DOMText($val));
+			$channel->appendChild( new DOMElement($name) )
+				->appendChild(new DOMText($val));
 		}
 		
 		foreach($this->helpers as $helper)
 		{
-			$helper->appendTo($channel, $doc);
+			$helper->appendToChannel($channel, $doc);
 		}
 		
 		// channel item list
 		foreach($this->getItems() as $item)
 		{
-			$item->appendTo($channel, $doc);
+			$item->appendToChannel($channel, $doc);
 		}
 
 		$this->post_generate($doc);
@@ -533,9 +608,14 @@ abstract class Podcast extends GetterSetter
 			case 'mp3': 
 				// one array per mtime, just in case several MP3s share the same mtime.
 				$filectime = filectime($filename);
-				$this->unsorted_items[$filectime][] = new MP3_RSS_Item($filename);
+				$the_item = new MP3_RSS_Item($filename);
+				$this->unsorted_items[$filectime][] = $the_item;
 				if($filectime > $this->max_mtime)
 					$this->max_mtime = $filectime;
+				
+				foreach($this->helpers as $helper)
+					$the_item->addHelper($helper);
+
 				break;
 			
 			default:
@@ -701,6 +781,8 @@ function get_url_path($dir)
 /* DISPATCH *********************************************/
 
 $podcast = new Cached_Dir_Podcast(DIR, TMPDIR);
+
+$getid3 = $podcast->addHelper(new getID3_Podcast_Helper());
 $itunes = $podcast->addHelper(new iTunes_Podcast_Helper());
 
 $podcast->setTitle(TITLE);
