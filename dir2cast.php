@@ -121,29 +121,11 @@ if(!defined('MIN_CACHE_TIME'))
 
 define('VERSION', '0.1');
 
-/* DISPATCH *********************************************/
-
-$podcast = new Cached_Dir_Podcast(DIR, TMPDIR);
-
-$podcast->setTitle(TITLE);
-$podcast->setLink(LINK);
-$podcast->setDescription(DESCRIPTION);
-$podcast->setLanguage(LANGUAGE);
-$podcast->setCopyright(COPYRIGHT);
-$podcast->setWebMaster(WEBMASTER);
-$podcast->setTtl(TTL);
-
-$podcast->setGenerator('dir2cast ' . VERSION . ' by Ben XO');
-
-$podcast->http_headers();
-echo $podcast->generate();
-exit();
-
 /* CLASSES **********************************************/
 
 abstract class GetterSetter {
 	
-	var $parameters = array();
+	protected $parameters = array();
 	
 	/**
 	 * Missing Method Magic Accessor
@@ -155,6 +137,7 @@ abstract class GetterSetter {
 	public function __call($method, $params)
 	{
 		$var_name = substr($method, 3);
+		$var_name{0} = strtolower($var_name{0});
 		switch(strtolower(substr($method, 0, 3)))
 		{
 			case 'get':
@@ -169,8 +152,68 @@ abstract class GetterSetter {
 	}	
 }
 
-class RSS_Item extends GetterSetter {
+interface Podcast_Helper   {
+	public function appendTo(DOMElement $d, DOMDocument $doc);
+	public function addNamespaceTo(DOMElement $d, DOMDocument $doc);
+}
+
+class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
+	
 	public function __construct() { }
+	
+	public function getNSURI()
+	{
+		return 'http://www.itunes.com/dtds/podcast-1.0.dtd';
+	}
+	
+	public function addNamespaceTo(DOMElement $d, DOMDocument $doc)
+	{
+		$attr = $d->appendChild($doc->createAttribute('xmlns:itunes'));
+		$attr->appendChild(new DOMText($this->getNSURI()));
+	}
+	
+	public function appendTo(DOMElement $channel, DOMDocument $doc)
+	{
+		foreach ($this->parameters as $name => $key)
+		{
+			$element = $doc->createElement('itunes:' . $name);
+			$channel->appendChild($element);
+			$element->appendChild(new DOMText($val));
+		}
+	}
+}
+
+class RSS_Item extends GetterSetter {
+	
+	protected $helpers = array();
+	
+	public function __construct() { }
+	
+	public function appendTo(DOMElement $channel, DOMDocument $doc)
+	{
+		$item_element = $channel->appendChild(new DOMElement('item'));
+		
+		$item_elements = array(
+			'title' => $this->getTitle(),
+			'link' => $this->getLink(),
+			'description' => $this->getDescription(),
+			'pubDate' => $this->getPubDate()
+		);
+		
+		foreach($this->helpers as $helper)
+			$item_elements += $helpers->getItemElements();
+		
+		foreach($item_elements as $name => $val)
+		{
+			$element = $item_element->appendChild(new DOMElement($name));
+			$element->appendChild(new DOMText($val));
+		}
+		
+		$enclosure = $item_element->appendChild(new DOMElement('enclosure'));
+		$enclosure->setAttribute('url', $this->getLink());
+		$enclosure->setAttribute('length', $this->getLength());
+		$enclosure->setAttribute('type', $this->getType());
+	}
 }
 
 class RSS_File_Item extends RSS_Item {
@@ -185,6 +228,11 @@ class RSS_File_Item extends RSS_Item {
 	{
 		$url = URL_BASE . '/' . urlencode(basename($filename));
 		$this->setLink($url);
+	}
+	
+	public function getType()
+	{
+		return 'application/octet-stream';
 	}
 }
 
@@ -243,15 +291,27 @@ abstract class Podcast extends GetterSetter
 {
 	protected $max_mtime = 0;
 	protected $items = array();
+	protected $helpers = array();
 	
 	/**
 	 * Constructor
 	 */
 	public function __construct() {	}
 	
+	public function addHelper(Podcast_Helper $helper)
+	{
+		$this->helpers[] = $helper;
+		return $helper;
+	}
+	
+	public function getNSURI()
+	{
+		return 'http://backend.userland.com/rss2';
+	}
+	
 	public function http_headers()
 	{
-		header('Content-type: text/xml');
+		header('Content-type: text/xml; charset: utf-8');
 		header('Last-modified: ' . $this->getLastBuildDate());
 	}
 	
@@ -266,11 +326,16 @@ abstract class Podcast extends GetterSetter
 		
 		$this->setLastBuildDate(date('r'));
 		
-		$doc = new DOMDocument('1.0');
+		$doc = new DOMDocument('1.0', 'UTF-8');
 		$doc->formatOutput = true;
 		
-		$rss = $doc->appendChild(new DOMElement('rss'));
+		$rss = $doc->createElementNS($this->getNSURI(), 'rss');
+		$doc->appendChild($rss);
+		
 		$rss->setAttribute('version', '2.0');
+		
+		foreach($this->helpers as $helper)
+			$helper->addNamespaceTo($rss, $doc);
 		
 		// the channel
 		$channel = $rss->appendChild(new DOMElement('channel'));
@@ -285,39 +350,27 @@ abstract class Podcast extends GetterSetter
 			'webMaster' => $this->getWebMaster(),
 			'ttl' => $this->getTtl()
 		);
-		
+				
 		foreach($channel_elements as $name => $val)
 		{
 			$element = $channel->appendChild(new DOMElement($name));
 			$element->appendChild(new DOMText($val));
 		}
 		
+		foreach($this->helpers as $helper)
+		{
+			$helper->appendTo($channel, $doc);
+		}
+		
 		// channel item list
 		foreach($this->getItems() as $item)
 		{
-			$item_element = $channel->appendChild(new DOMElement('item'));
-			
-			$item_elements = array(
-				'title' => $item->getTitle(),
-				'link' => $item->getLink(),
-				'description' => $item->getDescription(),
-				'pubDate' => $item->getPubDate()
-			);
-			
-			foreach($item_elements as $name => $val)
-			{
-				$element = $item_element->appendChild(new DOMElement($name));
-				$element->appendChild(new DOMText($val));
-			}
-			
-			$enclosure = $item_element->appendChild(new DOMElement('enclosure'));
-			$enclosure->setAttribute('url', $item->getLink());
-			$enclosure->setAttribute('length', $item->getLength());
-			$enclosure->setAttribute('type', $item->getType());
+			$item->appendTo($channel, $doc);
 		}
 
 		$this->post_generate($doc);
 		
+		$doc->normalizeDocument();
 		return $doc->saveXML();
 	}
 	
@@ -493,3 +546,32 @@ function get_url_path($dir)
 	// assumes that $dir is under DOCUMENT_ROOT otherwise the results are undefined
 	return '/' . ltrim( substr($dir, strlen($_SERVER['DOCUMENT_ROOT'])), '/' );
 }
+
+/* DISPATCH *********************************************/
+
+$podcast = new Cached_Dir_Podcast(DIR, TMPDIR);
+$itunes = $podcast->addHelper(new iTunes_Podcast_Helper());
+
+$podcast->setTitle(TITLE);
+$podcast->setLink(LINK);
+$podcast->setDescription(DESCRIPTION);
+$podcast->setLanguage(LANGUAGE);
+$podcast->setCopyright(COPYRIGHT);
+$podcast->setWebMaster(WEBMASTER);
+$podcast->setTtl(TTL);
+
+$itunes->setSubtitle(ITUNES_SUBTITLE);
+$itunes->setAuthor(ITUNES_AUTHOR);
+$itunes->setSummary(ITUNES_SUMMARY);
+$itunes->setImage(ITUNES_IMAGE);
+
+$itunes->addOwnerName(ITUNES_OWNER_NAME);
+$itunes->addOwnerEmail(ITUNES_OWNER_Email);
+$itunes->addCategories($itunes_categories);
+
+$podcast->setGenerator('dir2cast ' . VERSION . ' by Ben XO');
+
+$podcast->http_headers();
+echo $podcast->generate();
+
+/* THE END *********************************************/
