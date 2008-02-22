@@ -46,6 +46,14 @@ define('WEBMASTER', 'Ben XO (me@ben-xo.com)');
 # This defaults to 60 minutes
 # define('TTL', 60);
 
+# Number of items to show in the feed
+# This defaults to 10
+# define('ITEM_COUNT', 10);
+
+# Number of seconds for which the cache file is guaranteed valid
+# Defaults to 5
+# define('MIN_CACHE_TIME', 5);
+
 /* DEFAULTS *********************************************/
 
 if(!defined('TMPDIR'))
@@ -105,7 +113,12 @@ if(!defined('URL_BASE'))
 		define('URL_BASE', 'file://' . DIR);
 }
 	
+if(!defined('ITEM_COUNT'))
+	define('ITEM_COUNT', 10);
 	
+if(!defined('MIN_CACHE_TIME'))
+	define('MIN_CACHE_TIME', 5);
+
 define('VERSION', '0.1');
 
 /* DISPATCH *********************************************/
@@ -228,6 +241,7 @@ class MP3_RSS_Item extends RSS_File_Item {
 
 abstract class Podcast extends GetterSetter
 {
+	protected $max_mtime = 0;
 	protected $items = array();
 	
 	/**
@@ -313,15 +327,41 @@ abstract class Podcast extends GetterSetter
 		switch(strtolower($file_ext))
 		{
 			case 'mp3': 
-				$this->items[] = new MP3_RSS_Item($filename);
+				// one array per mtime, just in case several MP3s share the same mtime.
+				$filemtime = filemtime($filename);
+				$this->unsorted_items[$filemtime][] = new MP3_RSS_Item($filename);
+				if($filemtime > $this->max_mtime)
+					$this->max_mtime = $filemtime;
 				break;
 			
 			default:
 		}
 	}
 	
+	/**
+	 * Get the final list of items, sorting and limiting as we do so.
+	 * You should not addItem() any more items after this.
+	 */
 	public function getItems()
 	{
+		if(empty($this->items)) {
+			krsort($this->unsorted_items); // newest first
+			$this->items = array();
+
+			$i = 0;
+			foreach($this->unsorted_items as $item_list)
+			{
+				foreach($item_list as $item)
+				{
+					$this->items[$i++] = $item;
+					if($i >= ITEM_COUNT)
+						break 2;
+				}
+			}
+
+			unset($this->unsorted_items);
+		}
+
 		return $this->items;
 	}
 	
@@ -333,6 +373,7 @@ abstract class Podcast extends GetterSetter
 class Dir_Podcast extends Podcast
 {
 	protected $source_dir;
+	protected $scanned = false;
 	
 	/**
 	 * Constructor
@@ -352,17 +393,18 @@ class Dir_Podcast extends Podcast
 		$di = new DirectoryIterator($this->source_dir);
 		foreach($di as $file)
 			$this->addItem($file->getPath() . '/' . $file->getFileName());
-		$this->post_scan();		
+		$this->scanned = true;
+		$this->post_scan();
 	}
 	
 	protected function pre_scan() { }
 	protected function post_scan() { }
-	
+
 	protected function pre_generate()
 	{
-		$this->scan();
+		if(!$this->scanned)
+			$this->scan();
 	}
-
 }
 
 /**
@@ -372,7 +414,8 @@ class Cached_Dir_Podcast extends Dir_Podcast
 {
 	protected $temp_dir;
 	protected $temp_file;
-	
+	protected $cache_date;
+
 	/**
 	 * Constructor
 	 *
@@ -386,27 +429,48 @@ class Cached_Dir_Podcast extends Dir_Podcast
 		
 		// something unique, safe, stable and easily identifiable
 		$this->temp_file = rtrim($temp_dir, '/') . '/' . md5($source_dir) . '_' . $safe_source_dir . '.xml';
-		
+
 		parent::__construct($source_dir);
+
+		if(file_exists($this->temp_file))
+		{
+			$this->cache_date = filemtime($this->temp_file);
+
+			if( $this->cache_date <= time() - MIN_CACHE_TIME ) 
+			{
+				$this->scan();
+				if( $this->cache_date <= $this->max_mtime )
+				{
+					unset($this->cache_date);
+					unlink($this->temp_file);
+				}
+				else
+				{
+					touch($this->temp_file); // renew cache file life expectancy
+				}
+			}
+		}
+
 	}
 	
 	public function generate()
 	{
-		if(file_exists($this->temp_file))
+		if(isset($this->cache_date))
 		{
-			if(filemtime($this->temp_file) > filemtime($this->source_dir))
-			{
-				return file_get_contents($this->temp_file); // serve cached copy
-			}
-			else
-			{
-				unlink($this->temp_file);
-			}
+			return file_get_contents($this->temp_file); // serve cached copy
 		}
 		
 		$output = parent::generate();
 		file_put_contents($this->temp_file, $output); // save cached copy
 		return $output;
+	}
+
+	function getLastBuildDate()
+	{
+		if(isset($this->cache_date))
+			return date('r', $this->cache_date);
+		else
+			return $this->__call('getLastBuildDate', array());
 	}
 
 }
