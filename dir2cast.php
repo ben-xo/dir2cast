@@ -385,20 +385,24 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
 	{
 		/*
 		 * 	<itunes:author>John Doe</itunes:author>
+		 *	<itunes:duration>7:04</itunes:duration>
 		 *	<itunes:subtitle>A short primer on table spices</itunes:subtitle>
 		 *	<itunes:summary>This week we talk about salt and pepper shakers, comparing and contrasting pour rates, construction materials, and overall aesthetics. Come and join the party!</itunes:summary>
-		 *	<itunes:duration>7:04</itunes:duration>
 		 *	<itunes:keywords>salt, pepper, shaker, exciting</itunes:keywords>
 		 */
 
 		$elements = array(
 			'author' => $item->getID3Artist(),
 			'duration' => $item->getDuration(),
+			'subtitle' => $item->getID3Comment(),
+			'summary' => $item->getSummaryFromFile(),
+			//'keywords' => 'not supported yet.'
 		);
 				
 		foreach($elements as $key => $val)
-			$item_element->appendChild( $doc->createElement('itunes:' . $key) )
-				->appendChild( new DOMText($val) );
+			if(!empty($val))
+				 $item_element->appendChild( $doc->createElement('itunes:' . $key) )
+					->appendChild( new DOMText($val) );
 	}
 	
 	public function appendCategory($category, $subcats, DOMElement $e, DOMDocument $doc)
@@ -471,10 +475,12 @@ class RSS_Item extends GetterSetter {
 class RSS_File_Item extends RSS_Item {
 	
 	protected $filename;
+	protected $extension;
 	
 	public function __construct($filename)
 	{
 		$this->filename = $filename;
+		$this->extension = 
 		$this->setLinkFromFilename($filename);
 		parent::__construct();
 	}
@@ -493,6 +499,27 @@ class RSS_File_Item extends RSS_Item {
 	public function getFilename()
 	{
 		return $this->filename;
+	}
+	
+	public function getExtension()
+	{
+		if(empty($this->extension))
+			$this->extension = substr($this->getFilename(), strrpos($this->getFilename(), '.') + 1);
+		
+		return $this->extension;
+	}
+	
+	/**
+	 * Place a file with the same name but .txt instead of .<whatever> and the contents will be used
+	 * as the summary for the item in the podcast.
+	 *
+	 * @return String the summary, or null if there's no summary file
+	 */
+	public function getSummaryFromFile()
+	{
+		$summary_file_name = dirname($this->getFilename()) . '/' . basename($this->getFilename(), '.' . $this->getExtension()) . '.txt';
+		if(file_exists( $summary_file_name ))
+			return file_get_contents($summary_file_name);
 	}
 }
 
