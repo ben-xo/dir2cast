@@ -216,7 +216,7 @@ class MP3_RSS_Item extends RSS_File_Item {
 		// do the length
 		$this->setLength(filesize($file));
 		
-		$this->setPubDate(date('r', filemtime($file)));
+		$this->setPubDate(date('r', filectime($file)));
     }
     
     public function getTitle()
@@ -328,10 +328,10 @@ abstract class Podcast extends GetterSetter
 		{
 			case 'mp3': 
 				// one array per mtime, just in case several MP3s share the same mtime.
-				$filemtime = filemtime($filename);
-				$this->unsorted_items[$filemtime][] = new MP3_RSS_Item($filename);
-				if($filemtime > $this->max_mtime)
-					$this->max_mtime = $filemtime;
+				$filectime = filectime($filename);
+				$this->unsorted_items[$filectime][] = new MP3_RSS_Item($filename);
+				if($filectime > $this->max_mtime)
+					$this->max_mtime = $filectime;
 				break;
 			
 			default:
@@ -434,7 +434,7 @@ class Cached_Dir_Podcast extends Dir_Podcast
 
 		if(file_exists($this->temp_file))
 		{
-			$this->cache_date = filemtime($this->temp_file);
+			$this->cache_date = filectime($this->temp_file);
 
 			if( $this->cache_date <= time() - MIN_CACHE_TIME ) 
 			{
