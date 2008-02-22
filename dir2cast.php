@@ -9,30 +9,8 @@
  * commented if you want.                               *
  ********************************************************/
 
-# Where to cache RSS feeds
-# This defaults to a folder called 'temp' alongside the script
-# define('TEMPDIR', '/tmp');
 
-# Where to serve files from
-# This defaults to the directory of the script
-# define('DIR', 'somewhere');
-
-# Title of the feed
-# This defaults to the name of the directory you're casting
-# define('TITLE', 'My First dir2cast Podcast');
-
-# URL of the feed's home page
-# This defaults to the URL of the script or http://www.example.com/
-define('LINK', 'http://www.ben-xo.com/');
-
-# Description of the feed
-# This defaults to empty, or if the file 'description.txt' exists
-# in the same dir as the script, that will be read and the contents used
-# define('DESCRIPTION', 'My First Podcast');
-
-# Language of the feed
-# This defaults to en-us (US English)
-# define('LANGUAGE', 'en-us');
+# You should specify the following
 
 # Copyright notice of the feed
 # This defaults to this year (e.g. '2008')
@@ -42,17 +20,96 @@ define('COPYRIGHT', 'Ben XO (2008)');
 # This defaults to empty
 define('WEBMASTER', 'Ben XO (me@ben-xo.com)');
 
-# Time-to-live (Expiry time) of the feed
-# This defaults to 60 minutes
-# define('TTL', 60);
+# URL of the feed's home page
+# This defaults to the URL of the script or http://www.example.com/
+define('LINK', 'http://www.ben-xo.com/');
+
+# Title of the feed
+# This defaults to the name of the directory you're casting
+//define('TITLE', 'My First dir2cast Podcast');
+
+# Author of the podcast for iTunes
+# This defaults to whatever WEBMASTER is set to
+//define('ITUNES_AUTHOR', 'Ben XO');
+
+# Name of the Owner of the podcast for iTunes
+# This defaults to whatever WEBMASTER is set to
+define('ITUNES_OWNER_NAME', 'Ben XO');
+
+# Email of the Author of the podcast for iTunes
+# This defaults to empty
+define('ITUNES_OWNER_EMAIL', 'me@ben-xo.com');
+
+# Categories for iTunes
+# You may add as many as you like from the category list at 
+# http://www.apple.com/itunes/store/podcaststechspecs.html
+# This is PHP array syntax - it's easy, but be careful.
+# Here's an example:
+//$itunes_categories = array(
+//  "Music" => true,
+//  "Technology" => array( "Gadgets" => true ),
+//);    
+$itunes_categories = array(
+	"Music" => true,
+);
+
+
+# The following attempt to read files named like the define
+
+# Description of the feed
+# This defaults to empty, or if the file 'description.txt' exists
+# in the target dir, or in the same dir as the script, that will be read 
+# and the contents used
+//define('DESCRIPTION', 'My First Podcast');
+
+# Subtitle of the feed for iTunes
+# This defaults to DESCRIPTION, or if the file 'itunes_subtitle.txt' exists
+# in the target dir, or in the same dir as the script, that will be read 
+# and the contents used
+//define('ITUNES_SUBTITLE', 'Check it out! It's brilliant.');
+
+# Subtitle of the feed for iTunes
+# This defaults to DESCRIPTION, or if the file 'itunes_summary.txt' exists
+# in the target dir, or in the same dir as the script, that will be read 
+# and the contents used
+//define('ITUNES_SUMMARY', 'i could go on for hours about how amazing this podcast is [...] etc');
+
+# Image for the podcast for iTunes
+# This defaults to no image, or if the file 'itunes_image.jpg' exists
+# in the target dir, or in the same dir as the script, then the URL for that 
+# will be used
+//define('ITUNES_IMAGE', 'http://www.somewhere.com/podcast.jpg');
+
+
+# You should check that the following are OK.
+
+# Where to serve files from
+# This defaults to the directory of the script
+//define('DIR', 'somewhere');
+
+# Where to cache RSS feeds (this must be writable by the web server)
+# This defaults to a folder called 'temp' alongside the script
+//define('TEMPDIR', '/tmp');
+
+# Language of the feed
+# This defaults to en-us (US English)
+//define('LANGUAGE', 'en-us');
+
+
+# The following have sensible defaults and should probably not be changed
 
 # Number of items to show in the feed
 # This defaults to 10
-# define('ITEM_COUNT', 10);
+//define('ITEM_COUNT', 10);
 
 # Number of seconds for which the cache file is guaranteed valid
 # Defaults to 5
-# define('MIN_CACHE_TIME', 5);
+//define('MIN_CACHE_TIME', 5);
+
+# Time-to-live (Expiry time) of the feed
+# This defaults to 60 minutes
+//define('TTL', 60);
+
 
 /* DEFAULTS *********************************************/
 
@@ -87,7 +144,9 @@ if(!defined('LINK'))
 
 if(!defined('DESCRIPTION'))
 {
-	if(file_exists(dirname(__FILE__) . '/description.txt'))
+	if(file_exists(DIR . '/description.txt'))
+		define('DESCRIPTION', file_get_contents(DIR . '/description.txt'));
+	elseif(file_exists(dirname(__FILE__) . '/description.txt'))
 		define('DESCRIPTION', file_get_contents(dirname(__FILE__) . '/description.txt'));
 	else
 		define('DESCRIPTION', '');
@@ -118,7 +177,47 @@ if(!defined('ITEM_COUNT'))
 	
 if(!defined('MIN_CACHE_TIME'))
 	define('MIN_CACHE_TIME', 5);
+	
+if(!defined('ITUNES_SUBTITLE'))
+{
+	if(file_exists(DIR . '/itunes_subtitle.txt'))
+		define('ITUNES_SUBTITLE', file_get_contents(DIR . '/itunes_subtitle.txt'));
+	elseif(file_exists(dirname(__FILE__) . '/itunes_subtitle.txt'))
+		define('ITUNES_SUBTITLE', file_get_contents(dirname(__FILE__) . '/itunes_subtitle.txt'));
+	else
+		define('ITUNES_SUBTITLE', DESCRIPTION);
+}
 
+if(!defined('ITUNES_SUMMARY'))
+{
+	if(file_exists(DIR . '/itunes_summary.txt'))
+		define('ITUNES_SUMMARY', file_get_contents(DIR . '/itunes_summary.txt'));
+	elseif(file_exists(dirname(__FILE__) . '/itunes_summary.txt'))
+		define('ITUNES_SUMMARY', file_get_contents(dirname(__FILE__) . '/itunes_summary.txt'));
+	else
+		define('ITUNES_SUMMARY', DESCRIPTION);
+}
+
+if(!defined('ITUNES_IMAGE'))
+{
+	if(file_exists(DIR . '/itunes_image.jpg'))
+		define('ITUNES_IMAGE', get_url_path(DIR . '/itunes_image.jpg'));
+	elseif(file_exists(dirname(__FILE__) . '/itunes_image.jpg'))
+		define('ITUNES_IMAGE', get_url_path(dirname(__FILE__) . '/itunes_image.jpg'));
+	else
+		define('ITUNES_IMAGE', '');
+}
+
+
+if(!defined('ITUNES_AUTHOR'))
+	define('ITUNES_AUTHOR', WEBMASTER);
+
+if(!defined('ITUNES_OWNER_NAME'))
+	define('ITUNES_OWNER_NAME', WEBMASTER);
+
+if(!defined('ITUNES_OWNER_EMAIL'))
+	define('ITUNES_OWNER_EMAIL', '');
+	
 define('VERSION', '0.1');
 
 /* CLASSES **********************************************/
@@ -159,6 +258,8 @@ interface Podcast_Helper   {
 
 class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
 	
+	protected $owner_name, $owner_email;
+	
 	public function __construct() { }
 	
 	public function getNSURI()
@@ -174,12 +275,62 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
 	
 	public function appendTo(DOMElement $channel, DOMDocument $doc)
 	{
-		foreach ($this->parameters as $name => $key)
+		foreach ($this->parameters as $name => $val)
 		{
 			$element = $doc->createElement('itunes:' . $name);
 			$channel->appendChild($element);
 			$element->appendChild(new DOMText($val));
 		}
+		
+		foreach ($this->categories as $category => $subcats)
+		{
+			$this->appendCategory($category, $subcats, $channel, $doc);
+		}
+		
+		if(!empty($this->owner_name) || !empty($this->owner_email))
+		{
+			$owner = $doc->createElement('itunes:owner');
+			$channel->appendChild($owner);
+
+			if(!empty($this->owner_name))
+			{
+				$owner_name = $doc->createElement('itunes:name');
+				$owner->appendChild($owner_name);
+				$owner_name->appendChild(new DOMText($this->owner_name));
+			}
+			
+			if(!empty($this->owner_email))
+			{
+				$owner_email = $doc->createElement('itunes:email');
+				$owner->appendChild($owner_email);
+				$owner_email->appendChild(new DOMText($this->owner_email));
+			}
+		}
+	}
+	
+	public function appendCategory($category, $subcats, DOMElement $e, DOMDocument $doc)
+	{
+		$element = $doc->createElement('itunes:category');
+		$e->appendChild($element);
+		$element->setAttribute('text', $category);
+		if(is_array($subcats)) {
+			foreach($subcats as $subcategory => $subsubcats)
+				$this->appendCategory($subcategory, $subsubcats, $element, $doc);
+		}
+	}
+	
+	public function addCategories($cats) {
+		$this->categories = $cats;
+	}
+	
+	public function setOwnerName($name)
+	{
+		$this->owner_name = $name;
+	}
+
+	public function setOwnerEmail($email)
+	{
+		$this->owner_email = $email;
 	}
 }
 
@@ -565,8 +716,9 @@ $itunes->setAuthor(ITUNES_AUTHOR);
 $itunes->setSummary(ITUNES_SUMMARY);
 $itunes->setImage(ITUNES_IMAGE);
 
-$itunes->addOwnerName(ITUNES_OWNER_NAME);
-$itunes->addOwnerEmail(ITUNES_OWNER_Email);
+$itunes->setOwnerName(ITUNES_OWNER_NAME);
+$itunes->setOwnerEmail(ITUNES_OWNER_EMAIL);
+
 $itunes->addCategories($itunes_categories);
 
 $podcast->setGenerator('dir2cast ' . VERSION . ' by Ben XO');
