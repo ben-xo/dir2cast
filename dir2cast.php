@@ -1,7 +1,23 @@
 <?php
 
 /*
- * 2008 Ben XO (me@ben-xo.com). Released as freeware.
+ * Copyright 2008 Ben XO (me@ben-xo.com).
+ * 
+ * USAGE:
+ * 
+ * After editing the settings below,
+ * 
+ * http://www.whatever.com/dir2cast.php
+ * 
+ * or
+ * 
+ * http://www.whatever.com/dir2cast.php?dir=subdir 
+ * ^-- use this form with mod_rewrite perhaps
+ * 
+ * or
+ * 
+ * user$ php ./dir2cast.php somedir 
+ * ^-- from the command line
  */
 
 /* SETTINGS *********************************************
@@ -56,6 +72,11 @@ $itunes_categories = array(
 
 # The following attempt to read files named like the define
 
+# Where to serve files from
+# This defaults to the directory of the script
+# If you run this from the command line, it'll also accept the first parameter
+//define('DIR', 'somewhere');
+
 # Description of the feed
 # This defaults to empty, or if the file 'description.txt' exists
 # in the target dir, or in the same dir as the script, that will be read 
@@ -82,10 +103,6 @@ $itunes_categories = array(
 
 
 # You should check that the following are OK.
-
-# Where to serve files from
-# This defaults to the directory of the script
-//define('DIR', 'somewhere');
 
 # Where to cache RSS feeds (this must be writable by the web server)
 # This defaults to a folder called 'temp' alongside the script
@@ -169,7 +186,7 @@ if(!defined('URL_BASE'))
 	if(!empty($_SERVER['HTTP_HOST']))
 		define('URL_BASE', 'http' . ($_SERVER['HTTPS'] ? 's' : '') . '://' . $_SERVER['HTTP_HOST'] . get_url_path(DIR) );
 	else
-		define('URL_BASE', 'file://' . DIR);
+		define('URL_BASE', 'file://' . rtrim(DIR, '/') . '/' );
 }
 	
 if(!defined('ITEM_COUNT'))
@@ -200,10 +217,10 @@ if(!defined('ITUNES_SUMMARY'))
 
 if(!defined('ITUNES_IMAGE'))
 {
-	if(file_exists(DIR . '/itunes_image.jpg'))
-		define('ITUNES_IMAGE', get_url_path(DIR . '/itunes_image.jpg'));
+	if(file_exists(rtrim(DIR, '/') . '/itunes_image.jpg'))
+		define('ITUNES_IMAGE', rtrim(URL_BASE, '/') . get_url_path(rtrim(DIR, '/') . '/itunes_image.jpg'));
 	elseif(file_exists(dirname(__FILE__) . '/itunes_image.jpg'))
-		define('ITUNES_IMAGE', get_url_path(dirname(__FILE__) . '/itunes_image.jpg'));
+		define('ITUNES_IMAGE', rtrim(URL_BASE, '/') . get_url_path(dirname(__FILE__) . '/itunes_image.jpg'));
 	else
 		define('ITUNES_IMAGE', '');
 }
@@ -464,7 +481,7 @@ class RSS_File_Item extends RSS_Item {
 	
 	public function setLinkFromFilename($filename)
 	{
-		$url = URL_BASE . '/' . urlencode(basename($filename));
+		$url = URL_BASE . urlencode(basename($filename));
 		$this->setLink($url);
 	}
 	
