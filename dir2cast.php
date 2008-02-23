@@ -819,7 +819,7 @@ function magic_stripslashes($s)
 function get_url_path($dir)
 {
 	// assumes that $dir is under DOCUMENT_ROOT otherwise the results are undefined
-	return '/' . ltrim( substr($dir, strlen($_SERVER['DOCUMENT_ROOT'])), '/' );
+	return '/' . ltrim( rtrim(substr($dir, strlen($_SERVER['DOCUMENT_ROOT'])), '/'), '/' ) ;
 }
 
 /* DISPATCH *********************************************/
