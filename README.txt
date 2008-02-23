@@ -1,4 +1,4 @@
-dir2cast by Ben XO v0.1 (2008-02-22)
+dir2cast by Ben XO v0.2 (2008-02-23)
 ====================================
 
 Hello!
@@ -35,3 +35,8 @@ Features:
 
 -- 
 Ben
+
+HISTORY:
+
+0.1 2008-02-23 Initial Release
+0.2 2008-02-23 Fixed bug with missing '/' and wrong urlencoding on spaces.
