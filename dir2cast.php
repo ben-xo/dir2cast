@@ -487,7 +487,7 @@ class RSS_File_Item extends RSS_Item {
 	
 	public function setLinkFromFilename($filename)
 	{
-		$url = URL_BASE . urlencode(basename($filename));
+		$url = URL_BASE . rawurlencode(basename($filename));
 		$this->setLink($url);
 	}
 	
@@ -819,7 +819,8 @@ function magic_stripslashes($s)
 function get_url_path($dir)
 {
 	// assumes that $dir is under DOCUMENT_ROOT otherwise the results are undefined
-	return '/' . ltrim( rtrim(substr($dir, strlen($_SERVER['DOCUMENT_ROOT'])), '/'), '/' ) ;
+	#return '/' . ltrim( substr($dir, strlen($_SERVER['DOCUMENT_ROOT'])), '/' );
+	return '/' . ltrim( rtrim(substr($dir, strlen($_SERVER['DOCUMENT_ROOT'])), '/'), '/' ) . '/' ;
 }
 
 /* DISPATCH *********************************************/
