@@ -910,7 +910,7 @@ class ErrorHandler
 				<body>
 					<h1>An error occurred generating your podcast.</h1>
 					<div id="the_error">
-						<?php echo htmlspecialchars($message); ?>
+						<?php echo $message; ?>
 						<br><br>
 						<div id="additional_error">
 							This error occurred on line <?php echo $errline; ?> of <?php echo $errfile; ?>.
