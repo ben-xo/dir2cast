@@ -271,7 +271,7 @@ if(!defined('ITUNES_OWNER_NAME'))
 if(!defined('ITUNES_OWNER_EMAIL'))
 	define('ITUNES_OWNER_EMAIL', '');
 	
-define('VERSION', '0.2');
+define('VERSION', '0.3');
 
 /* EXTENALS *********************************************/
 

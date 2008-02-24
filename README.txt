@@ -1,4 +1,4 @@
-dir2cast by Ben XO v0.2 (2008-02-23)
+dir2cast by Ben XO v0.3 (2008-02-24)
 ====================================
 
 Hello!
@@ -38,5 +38,7 @@ Ben
 
 HISTORY:
 
-0.1 2008-02-23 Initial Release
+0.3 2008-02-24 Fixed the auto URL detection code. Made the config clearer.
+               Renamed some of the config parameters for clarity.
 0.2 2008-02-23 Fixed bug with missing '/' and wrong urlencoding on spaces.
+0.1 2008-02-22 Initial Release
