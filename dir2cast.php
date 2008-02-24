@@ -160,6 +160,17 @@ $itunes_categories = array(
 
 /* DEFAULTS *********************************************/
 
+// error handler needs these, so let's set them now.
+define('VERSION', '0.4');
+define('GENERATOR', 'dir2cast ' . VERSION . ' by Ben XO (http://www.ben-xo.com/dir2cast/)');
+
+error_reporting(E_ALL);
+set_error_handler( array('ErrorHandler', 'handle_error') );
+set_exception_handler( array( 'ErrorHandler', 'handle_exception') );
+
+// Best do everything in UTC.
+date_default_timezone_set( 'UTC' );
+
 if(!defined('TMP_DIR'))
 	define('TMP_DIR', dirname(__FILE__) . '/temp');
 
@@ -169,10 +180,10 @@ if(!defined('MP3_DIR'))
 		define('MP3_DIR', magic_stripslashes($_GET['dir']));
 	elseif(!empty($argv[1]))
 		define('MP3_DIR', $argv[1]);
-	elseif(!empty($_SERVER['SCRIPT_FILENAME']))
+	elseif(!empty($_SERVER['HTTP_HOST']))
 		define('MP3_DIR', dirname($_SERVER['SCRIPT_FILENAME']));
 	else
-		define('MP3_DIR', dirname(__FILE__));
+		define('MP3_DIR', dirname(__FILE__));		
 }
 
 if(!defined('MP3_URL'))
@@ -184,7 +195,7 @@ if(!defined('MP3_URL'))
 	$path_part = substr(MP3_DIR, strlen($_SERVER['DOCUMENT_ROOT']));	
 	if(!empty($_SERVER['HTTP_HOST']))
 		define('MP3_URL', 
-			'http' . ($_SERVER['HTTPS'] ? 's' : '') . '://' . $_SERVER['HTTP_HOST'] . '/' .	ltrim( rtrim( $path_part, '/' ) . '/', '/' ));
+			'http' . (!empty($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['HTTP_HOST'] . '/' .	ltrim( rtrim( $path_part, '/' ) . '/', '/' ));
 	else
 		define('MP3_URL', 'file://' . MP3_DIR );
 	
@@ -274,8 +285,6 @@ if(!defined('ITUNES_OWNER_NAME'))
 
 if(!defined('ITUNES_OWNER_EMAIL'))
 	define('ITUNES_OWNER_EMAIL', '');
-	
-define('VERSION', '0.3');
 
 /* EXTENALS *********************************************/
 
@@ -350,17 +359,23 @@ class getID3_Podcast_Helper implements Podcast_Helper {
 		{
 			try {
 				
-				@$this->getid3->Analyze($item->getFilename());
+				ErrorHandler::errors(false);
+				$this->getid3->Analyze($item->getFilename());
+				ErrorHandler::errors(true);
 				
-				$item->setBitrate($this->getid3->info['bitrate']);
+				if(!empty($this->getid3->info['bitrate']))
+					$item->setBitrate($this->getid3->info['bitrate']);
+
+				if(!empty($this->getid3->info['comments']))
+				{
+					$item->setID3Title( $this->getid3->info['comments']['title'][0] );
+					$item->setID3Artist( $this->getid3->info['comments']['artist'][0] );
+					$item->setID3Album( $this->getid3->info['comments']['album'][0] );					
+					$item->setID3Comment( $this->getid3->info['comments']['comment'][0] );
+				}
 				
-				$item->setID3Title( $this->getid3->info['comments']['title'][0] );
-				$item->setID3Artist( $this->getid3->info['comments']['artist'][0] );
-				$item->setID3Album( $this->getid3->info['comments']['album'][0] );					
-				$item->setID3Comment( $this->getid3->info['comments']['comment'][0] );
-				
-				$item->setDuration( $this->getid3->info['playtime_string']);
-				
+				if(!empty($this->getid3->info['playtime_string']))
+					$item->setDuration( $this->getid3->info['playtime_string']);
 				
 				$item->setAnalyzed(true);
 				unset($this->getid3->info);
@@ -683,53 +698,13 @@ abstract class Podcast extends GetterSetter
 		$doc->normalizeDocument();
 		return $doc->saveXML();
 	}
-	
-	public function addItem($filename)
-	{
-		$file_ext = substr($filename, strrpos($filename, '.') + 1);
-		switch(strtolower($file_ext))
-		{
-			case 'mp3': 
-				// one array per mtime, just in case several MP3s share the same mtime.
-				$filectime = filectime($filename);
-				$the_item = new MP3_RSS_Item($filename);
-				$this->unsorted_items[$filectime][] = $the_item;
-				if($filectime > $this->max_mtime)
-					$this->max_mtime = $filectime;
-				
-				foreach($this->helpers as $helper)
-					$the_item->addHelper($helper);
-
-				break;
-			
-			default:
-		}
-	}
-	
+		
 	/**
 	 * Get the final list of items, sorting and limiting as we do so.
 	 * You should not addItem() any more items after this.
 	 */
 	public function getItems()
 	{
-		if(empty($this->items)) {
-			krsort($this->unsorted_items); // newest first
-			$this->items = array();
-
-			$i = 0;
-			foreach($this->unsorted_items as $item_list)
-			{
-				foreach($item_list as $item)
-				{
-					$this->items[$i++] = $item;
-					if($i >= ITEM_COUNT)
-						break 2;
-				}
-			}
-
-			unset($this->unsorted_items);
-		}
-
 		return $this->items;
 	}
 	
@@ -742,6 +717,7 @@ class Dir_Podcast extends Podcast
 {
 	protected $source_dir;
 	protected $scanned = false;
+	protected $unsorted_items = array();
 	
 	/**
 	 * Constructor
@@ -757,21 +733,71 @@ class Dir_Podcast extends Podcast
 	protected function scan()
 	{
 		$this->pre_scan();
+		
 		// scan the dir
 		$di = new DirectoryIterator($this->source_dir);
+		
+		$item_count = 0;
 		foreach($di as $file)
+		{
 			$this->addItem($file->getPath() . '/' . $file->getFileName());
+			$item_count++;
+		}
+			
+		if(0 == $item_count)
+			throw new Exception("No MP3s found in {$this->source_dir}");
+
 		$this->scanned = true;
 		$this->post_scan();
 	}
 	
-	protected function pre_scan() { }
-	protected function post_scan() { }
+	public function addItem($filename)
+	{
+		$file_ext = substr($filename, strrpos($filename, '.') + 1);
+		switch(strtolower($file_ext))
+		{
+			case 'mp3': 
+				// one array per ctime, just in case several MP3s share the same ctime.
+				$filectime = filectime($filename);
+				$the_item = new MP3_RSS_Item($filename);
+				$this->unsorted_items[$filectime][] = $the_item;
+				if($filectime > $this->max_mtime)
+					$this->max_mtime = $filectime;
+				
+				foreach($this->helpers as $helper)
+					$the_item->addHelper($helper);
 
+				break;
+			
+			default:
+		}
+	}
+	
 	protected function pre_generate()
 	{
 		if(!$this->scanned)
 			$this->scan();
+	}
+		
+	protected function pre_scan() { }
+	
+	protected function post_scan()
+	{
+		krsort($this->unsorted_items); // newest first
+		$this->items = array();
+
+		$i = 0;
+		foreach($this->unsorted_items as $item_list)
+		{
+			foreach($item_list as $item)
+			{
+				$this->items[$i++] = $item;
+				if($i >= ITEM_COUNT)
+					break 2;
+			}
+		}
+
+		unset($this->unsorted_items);		 
 	}
 }
 
@@ -828,8 +854,8 @@ class Cached_Dir_Podcast extends Dir_Podcast
 			return file_get_contents($this->temp_file); // serve cached copy
 		}
 		
-		$output = parent::generate();
-		file_put_contents($this->temp_file, $output); // save cached copy
+		$output = parent::generate();		
+		file_put_contents($this->temp_file, $output); // save cached copy	
 		return $output;
 	}
 
@@ -841,6 +867,68 @@ class Cached_Dir_Podcast extends Dir_Podcast
 			return $this->__call('getLastBuildDate', array());
 	}
 
+}
+
+class ErrorHandler
+{
+	private static $errors = true;
+	
+	public static function errors($state)
+	{
+		self::$errors = $state;
+	}
+	
+	public static function handle_error($errno, $errstr, $errfile=null, $errline=null, $errcontext=null)
+	{
+		ErrorHandler::display($errstr, $errfile, $errline);
+	}
+	
+	public static  function handle_exception( Exception $e )
+	{
+		ErrorHandler::display($e->getMessage(), $e->getFile(), $e->getLine());
+	}
+	
+	public static  function display($message, $errfile, $errline)
+	{
+	
+		if(self::$errors)
+		{
+			if(ini_get('html_errors'))
+			{
+				header("Content-type: text/html"); // reset the content-type
+						
+				?><!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+				<html><head><title>dir2cast <?php echo VERSION; ?> error</title>
+				<style type="text/css">
+					body { font-family: Calibri, Arial, Helvetica, sans-serif; font-size: 16px; }
+					h1 { font-weight: bold; text-size: 125%; }
+					#footer { font-size: 12px; margin-top: 1em;}
+					#the_error { border: 1px red solid; padding: 1em; } 
+					#additional_error { font-size: 14px; }
+				</style>
+				</head>
+				<body>
+					<h1>An error occurred generating your podcast.</h1>
+					<div id="the_error">
+						<?php echo htmlspecialchars($message); ?>
+						<br><br>
+						<div id="additional_error">
+							This error occurred on line <?php echo $errline; ?> of <?php echo $errfile; ?>.
+						</div>
+					</div>
+					<div id="footer"><a href="http://www.ben-xo.com/dir2cast">dir2cast</a> <?php echo VERSION; ?> by Ben XO</div>
+				</body></html>
+				<?php
+			}
+			else
+			{
+				header("Content-type: text/plain"); // reset the content-type
+				echo "Error: $message (on line $errline of $errfile)\n";
+			}
+			exit(-1);
+		}
+	}
+	
 }
 
 /* FUNCTIONS **********************************************/
@@ -881,9 +969,10 @@ $itunes->setOwnerEmail(ITUNES_OWNER_EMAIL);
 
 $itunes->addCategories($itunes_categories);
 
-$podcast->setGenerator('dir2cast ' . VERSION . ' by Ben XO');
+$podcast->setGenerator(GENERATOR);
 
 $podcast->http_headers();
+
 echo $podcast->generate();
 
 /* THE END *********************************************/
