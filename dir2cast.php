@@ -32,11 +32,15 @@
 # This defaults to the same folder as the script
 # NOTE: you can specify this in the URL with ?dir=...
 # NOTE: you can specify this on the command line as the first param.
+# examples:
 //define('MP3_DIR', '/home/ben_xo/public_html/my_mp3_folder');
+//define('MP3_DIR', dirname(__FILE__).'/my_mp3_folder');
 
-# The relative URL of the MP3 folder
+# The URL of the MP3 folder
 #
-# This defaults to the directory of the script
+# This defaults to the directory of the script.
+# dir2cast can usually work this out for you, but under some circumstances
+# it will fail. If your MP3 URLs are all wrong, try putting this in manually.
 //define('MP3_URL', 'http://www.example.foo/my_mp3_folder/');
 
 # *** INFORMATION ABOUT YOUR PODCAST - you SHOULD set this how you like it *** 
