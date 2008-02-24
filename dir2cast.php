@@ -5,14 +5,14 @@
  * 
  * USAGE:
  * 
- * After editing the settings below,
+ * After editing the settings below, visit:
  * 
  * http://www.whatever.com/dir2cast.php
  * 
  * or
  * 
  * http://www.whatever.com/dir2cast.php?dir=subdir 
- * ^-- use this form with mod_rewrite perhaps
+ * ^-- use this form with mod_rewrite perhaps...
  * 
  * or
  * 
@@ -25,40 +25,63 @@
  * commented if you want.                               *
  ********************************************************/
 
+# *** SETTINGS TO MAKE THIS WORK - try with the defaults first ***
 
-# You should specify the following
+# The filesystem path to the MP3 folder
+#
+# This defaults to the same folder as the script
+# NOTE: you can specify this in the URL with ?dir=...
+# NOTE: you can specify this on the command line as the first param.
+//define('MP3_DIR', '/home/ben_xo/public_html/my_mp3_folder');
 
-# Copyright notice of the feed
+# The relative URL of the MP3 folder
+#
+# This defaults to the directory of the script
+//define('MP3_URL', 'http://www.example.foo/my_mp3_folder/');
+
+# *** INFORMATION ABOUT YOUR PODCAST - you SHOULD set this how you like it *** 
+
+# The copyright notice of the feed
+#
 # This defaults to this year (e.g. '2008')
 define('COPYRIGHT', 'Ben XO (2008)');
 
 # Webmaster of the feed
+#
 # This defaults to empty
-define('WEBMASTER', 'Ben XO (me@ben-xo.com)');
+define('WEBMASTER', 'Ben XO (me-dir2cast@ben-xo.com)');
 
-# URL of the feed's home page
+# URL of the feed's home page (this is NOT where the MP3s are! It is
+# just the link to your "about" page).
+# 
 # This defaults to the URL of the script or http://www.example.com/
 define('LINK', 'http://www.ben-xo.com/');
 
-# Title of the feed
+# The title of the feed.
+#
 # This defaults to the name of the directory you're casting
-//define('TITLE', 'My First dir2cast Podcast');
+define('TITLE', 'My First dir2cast Podcast');
 
-# Author of the podcast for iTunes
+# The Author of the podcast for iTunes
+#
 # This defaults to whatever WEBMASTER is set to
-//define('ITUNES_AUTHOR', 'Ben XO');
+define('ITUNES_AUTHOR', 'Ben XO');
 
 # Name of the Owner of the podcast for iTunes
+#
 # This defaults to whatever WEBMASTER is set to
 define('ITUNES_OWNER_NAME', 'Ben XO');
 
 # Email of the Author of the podcast for iTunes
+#
 # This defaults to empty
-define('ITUNES_OWNER_EMAIL', 'me@ben-xo.com');
+define('ITUNES_OWNER_EMAIL', 'me-dir2cast@ben-xo.com');
 
 # Categories for iTunes
+#
 # You may add as many as you like from the category list at 
 # http://www.apple.com/itunes/store/podcaststechspecs.html
+#
 # This is PHP array syntax - it's easy, but be careful.
 # Here's an example:
 //$itunes_categories = array(
@@ -72,30 +95,29 @@ $itunes_categories = array(
 
 # The following attempt to read files named like the define
 
-# Where to serve files from
-# This defaults to the directory of the script
-# If you run this from the command line, it'll also accept the first parameter
-//define('DIR', 'somewhere');
-
 # Description of the feed
+#
 # This defaults to empty, or if the file 'description.txt' exists
 # in the target dir, or in the same dir as the script, that will be read 
 # and the contents used
 //define('DESCRIPTION', 'My First Podcast');
 
 # Subtitle of the feed for iTunes
+#
 # This defaults to DESCRIPTION, or if the file 'itunes_subtitle.txt' exists
 # in the target dir, or in the same dir as the script, that will be read 
 # and the contents used
 //define('ITUNES_SUBTITLE', 'Check it out! It's brilliant.');
 
 # Subtitle of the feed for iTunes
+#
 # This defaults to DESCRIPTION, or if the file 'itunes_summary.txt' exists
 # in the target dir, or in the same dir as the script, that will be read 
 # and the contents used
 //define('ITUNES_SUMMARY', 'i could go on for hours about how amazing this podcast is [...] etc');
 
 # Image for the podcast for iTunes
+#
 # This defaults to no image, or if the file 'itunes_image.jpg' exists
 # in the target dir, or in the same dir as the script, then the URL for that 
 # will be used
@@ -109,6 +131,7 @@ $itunes_categories = array(
 //define('TEMPDIR', '/tmp');
 
 # Language of the feed
+#
 # This defaults to en-us (US English)
 //define('LANGUAGE', 'en-us');
 
@@ -116,37 +139,58 @@ $itunes_categories = array(
 # The following have sensible defaults and should probably not be changed
 
 # Number of items to show in the feed
+#
 # This defaults to 10
 //define('ITEM_COUNT', 10);
 
 # Number of seconds for which the cache file is guaranteed valid
+#
 # Defaults to 5
 //define('MIN_CACHE_TIME', 5);
 
 # Time-to-live (Expiry time) of the feed
+#
 # This defaults to 60 minutes
 //define('TTL', 60);
 
 
 /* DEFAULTS *********************************************/
 
-if(!defined('TMPDIR'))
-	define('TMPDIR', dirname(__FILE__) . '/temp');
+if(!defined('TMP_DIR'))
+	define('TMP_DIR', dirname(__FILE__) . '/temp');
 
-if(!defined('DIR'))
+if(!defined('MP3_DIR'))
 {
 	if(!empty($_GET['dir']))
-		define('DIR', magic_stripslashes($_GET['dir']));
+		define('MP3_DIR', magic_stripslashes($_GET['dir']));
 	elseif(!empty($argv[1]))
-		define('DIR', magic_stripslashes($argv[1]));
+		define('MP3_DIR', $argv[1]);
+	elseif(!empty($_SERVER['SCRIPT_FILENAME']))
+		define('MP3_DIR', dirname($_SERVER['SCRIPT_FILENAME']));
 	else
-		define('DIR', dirname(__FILE__));
-}	
+		define('MP3_DIR', dirname(__FILE__));
+}
+
+if(!defined('MP3_URL'))
+{
+	# This works on the principle that MP3_DIR must be under DOCUMENT_ROOT (otherwise how will you serve the MP3s?)
+	# This may fail if MP3_DIR, or one of its parents under DOCUMENT_ROOT, is a symlink. In that case you will have
+	# to set this manually.
+	
+	$path_part = substr(MP3_DIR, strlen($_SERVER['DOCUMENT_ROOT']));	
+	if(!empty($_SERVER['HTTP_HOST']))
+		define('MP3_URL', 
+			'http' . ($_SERVER['HTTPS'] ? 's' : '') . '://' . $_SERVER['HTTP_HOST'] . '/' .	ltrim( rtrim( $path_part, '/' ) . '/', '/' ));
+	else
+		define('MP3_URL', 'file://' . MP3_DIR );
+	
+	unset($path_part);
+}
 
 if(!defined('TITLE'))
 {
-	if(basename(DIR))
-		define('TITLE', basename(DIR));
+	if(basename(MP3_DIR))
+		define('TITLE', basename(MP3_DIR));
 	else
 		define('TITLE', 'My First dir2cast Podcast');
 }
@@ -161,8 +205,8 @@ if(!defined('LINK'))
 
 if(!defined('DESCRIPTION'))
 {
-	if(file_exists(DIR . '/description.txt'))
-		define('DESCRIPTION', file_get_contents(DIR . '/description.txt'));
+	if(file_exists(MP3_DIR . '/description.txt'))
+		define('DESCRIPTION', file_get_contents(MP3_DIR . '/description.txt'));
 	elseif(file_exists(dirname(__FILE__) . '/description.txt'))
 		define('DESCRIPTION', file_get_contents(dirname(__FILE__) . '/description.txt'));
 	else
@@ -180,14 +224,6 @@ if(!defined('WEBMASTER'))
 	
 if(!defined('TTL'))
 	define('TTL', 60);
-
-if(!defined('URL_BASE'))
-{
-	if(!empty($_SERVER['HTTP_HOST']))
-		define('URL_BASE', 'http' . ($_SERVER['HTTPS'] ? 's' : '') . '://' . $_SERVER['HTTP_HOST'] . get_url_path(DIR) );
-	else
-		define('URL_BASE', 'file://' . rtrim(DIR, '/') . '/' );
-}
 	
 if(!defined('ITEM_COUNT'))
 	define('ITEM_COUNT', 10);
@@ -197,8 +233,8 @@ if(!defined('MIN_CACHE_TIME'))
 	
 if(!defined('ITUNES_SUBTITLE'))
 {
-	if(file_exists(DIR . '/itunes_subtitle.txt'))
-		define('ITUNES_SUBTITLE', file_get_contents(DIR . '/itunes_subtitle.txt'));
+	if(file_exists(MP3_DIR . '/itunes_subtitle.txt'))
+		define('ITUNES_SUBTITLE', file_get_contents(MP3_DIR . '/itunes_subtitle.txt'));
 	elseif(file_exists(dirname(__FILE__) . '/itunes_subtitle.txt'))
 		define('ITUNES_SUBTITLE', file_get_contents(dirname(__FILE__) . '/itunes_subtitle.txt'));
 	else
@@ -207,8 +243,8 @@ if(!defined('ITUNES_SUBTITLE'))
 
 if(!defined('ITUNES_SUMMARY'))
 {
-	if(file_exists(DIR . '/itunes_summary.txt'))
-		define('ITUNES_SUMMARY', file_get_contents(DIR . '/itunes_summary.txt'));
+	if(file_exists(MP3_DIR . '/itunes_summary.txt'))
+		define('ITUNES_SUMMARY', file_get_contents(MP3_DIR . '/itunes_summary.txt'));
 	elseif(file_exists(dirname(__FILE__) . '/itunes_summary.txt'))
 		define('ITUNES_SUMMARY', file_get_contents(dirname(__FILE__) . '/itunes_summary.txt'));
 	else
@@ -217,10 +253,10 @@ if(!defined('ITUNES_SUMMARY'))
 
 if(!defined('ITUNES_IMAGE'))
 {
-	if(file_exists(rtrim(DIR, '/') . '/itunes_image.jpg'))
-		define('ITUNES_IMAGE', rtrim(URL_BASE, '/') . get_url_path(rtrim(DIR, '/') . '/itunes_image.jpg'));
+	if(file_exists(rtrim(MP3_DIR, '/') . '/itunes_image.jpg'))
+		define('ITUNES_IMAGE', rtrim(MP3_URL, '/') . '/itunes_image.jpg');
 	elseif(file_exists(dirname(__FILE__) . '/itunes_image.jpg'))
-		define('ITUNES_IMAGE', rtrim(URL_BASE, '/') . get_url_path(dirname(__FILE__) . '/itunes_image.jpg'));
+		define('ITUNES_IMAGE', rtrim(MP3_URL, '/') . '/itunes_image.jpg');
 	else
 		define('ITUNES_IMAGE', '');
 }
@@ -487,7 +523,7 @@ class RSS_File_Item extends RSS_Item {
 	
 	public function setLinkFromFilename($filename)
 	{
-		$url = URL_BASE . rawurlencode(basename($filename));
+		$url = rtrim(MP3_URL, '/') . '/' . rawurlencode(basename($filename));
 		$this->setLink($url);
 	}
 	
@@ -816,16 +852,9 @@ function magic_stripslashes($s)
 	return get_magic_quotes_gpc() ? stripslashes($s) : $s; 
 }
 
-function get_url_path($dir)
-{
-	// assumes that $dir is under DOCUMENT_ROOT otherwise the results are undefined
-	#return '/' . ltrim( substr($dir, strlen($_SERVER['DOCUMENT_ROOT'])), '/' );
-	return '/' . ltrim( rtrim(substr($dir, strlen($_SERVER['DOCUMENT_ROOT'])), '/'), '/' ) . '/' ;
-}
-
 /* DISPATCH *********************************************/
 
-$podcast = new Cached_Dir_Podcast(DIR, TMPDIR);
+$podcast = new Cached_Dir_Podcast(MP3_DIR, TMP_DIR);
 
 $getid3 = $podcast->addHelper(new getID3_Podcast_Helper());
 $itunes = $podcast->addHelper(new iTunes_Podcast_Helper());
