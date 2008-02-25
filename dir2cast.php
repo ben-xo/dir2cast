@@ -628,7 +628,7 @@ class MP3_RSS_Item extends RSS_File_Item {
     	// don't do any heavy-lifting here as this is called by the constructor, which 
     	// is called once for every file in the dir (not just the ITEM_COUNT in the cast) 
 		$this->setLength(filesize($file));
-		$this->setPubDate(date('r', filectime($file)));
+		$this->setPubDate(date('r', filemtime($file)));
     }
     
     public function getTitle()
@@ -681,7 +681,7 @@ abstract class Podcast extends GetterSetter
 	
 	public function http_headers()
 	{
-		header('Content-type: text/xml; charset: utf-8');
+		header('Content-type: application/xml');
 		header('Last-modified: ' . $this->getLastBuildDate());
 	}
 	
@@ -801,12 +801,12 @@ class Dir_Podcast extends Podcast
 		switch(strtolower($file_ext))
 		{
 			case 'mp3': 
-				// one array per ctime, just in case several MP3s share the same ctime.
-				$filectime = filectime($filename);
+				// one array per mtime, just in case several MP3s share the same mtime.
+				$filemtime = filemtime($filename);
 				$the_item = new MP3_RSS_Item($filename);
-				$this->unsorted_items[$filectime][] = $the_item;
-				if($filectime > $this->max_mtime)
-					$this->max_mtime = $filectime;
+				$this->unsorted_items[$filemtime][] = $the_item;
+				if($filemtime > $this->max_mtime)
+					$this->max_mtime = $filemtime;
 				
 				foreach($this->helpers as $helper)
 					$the_item->addHelper($helper);
@@ -871,12 +871,12 @@ class Cached_Dir_Podcast extends Dir_Podcast
 
 		if(file_exists($this->temp_file))
 		{
-			$cache_date = filectime($this->temp_file);
+			$cache_date = filemtime($this->temp_file);
 
 			if( $cache_date < time() - MIN_CACHE_TIME ) 
 			{
 				$this->scan();
-				if( $cache_date < $this->max_mtime || $cache_date < filectime($this->source_dir))
+				if( $cache_date < $this->max_mtime || $cache_date < filemtime($this->source_dir))
 				{
 					unlink($this->temp_file);
 				}
