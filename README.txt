@@ -44,11 +44,11 @@ REQUIREMENTS
 
 dir2cast requires PHP 5.1.
 
-dir2cast makes use of getID3 by James Heinrich, Allan Hansen, although it does
+dir2cast makes use of getID3 by James Heinrich & Allan Hansen, although it does
 not require the whole thing. A cut down version of getID3 is supplied at
 http://www.ben-xo.com/dir2cast. You will need to download this and install it
 with dir2cast.php. (It is not bundled in the same file for licensing reasons.
-The full version of getID3 is available at http://getid3.sourceforge.net/
+The full version of getID3 is available at http://getid3.sourceforge.net/ ).
 
 
 INSTALLATION
@@ -59,7 +59,7 @@ Step 2. Upload getID3 to a folder called 'getID3'. You can download getID3 from
         the same place as dir2cast.
 
 
-COPYRIGHT
+COPYRIGHT & LICENSE
 ================================================================================
 
 Copyright (c) 2008, Ben XO (me@ben-xo.com).
