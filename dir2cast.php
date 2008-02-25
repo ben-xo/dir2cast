@@ -77,10 +77,10 @@
 # This defaults to this year (e.g. '2008')
 define('COPYRIGHT', 'Ben XO (2008)');
 
-# Webmaster of the feed
+# Webmaster of the feed. This must be an email address.
 #
 # This defaults to empty
-define('WEBMASTER', 'Ben XO (me-dir2cast@ben-xo.com)');
+define('WEBMASTER', 'me-dir2cast@ben-xo.com');
 
 # URL of the feed's home page (this is NOT where the MP3s are! It is
 # just the link to your "about" page).
@@ -425,7 +425,7 @@ class getID3_Podcast_Helper implements Podcast_Helper {
 
 class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
 	
-	protected $owner_name, $owner_email;
+	protected $owner_name, $owner_email, $image_href;
 	
 	public function __construct() { }
 	
@@ -442,7 +442,6 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
 	
 	public function appendToChannel(DOMElement $channel, DOMDocument $doc)
 	{
-		echo "HERE";
 		foreach ($this->parameters as $name => $val)
 		{
 			$channel->appendChild( $doc->createElement('itunes:' . $name) )
@@ -469,6 +468,12 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
 				$owner->appendChild( $doc->createElement('itunes:email') )
 					->appendChild( new DOMText( $this->owner_email ) );
 			}
+		}
+		
+		if(!empty($this->image_href))
+		{
+			$owner->appendChild( $doc->createElement('itunes:image') )
+				->setAttribute('href', $this->image_href);
 		}
 	}
 	
@@ -519,6 +524,11 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
 	public function setOwnerEmail($email)
 	{
 		$this->owner_email = $email;
+	}
+	
+	public function setImage($href)
+	{
+		$this->image_href = $href;
 	}
 }
 
