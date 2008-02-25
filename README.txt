@@ -1,4 +1,4 @@
-dir2cast by Ben XO v0.6 (2008-02-25)
+dir2cast by Ben XO v0.7 (2008-02-25)
 ================================================================================
 
 http://www.ben-xo.com/dir2cast
@@ -96,6 +96,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 HISTORY
 ================================================================================
 
+0.7 2008-02-25 W3 feed validator conformance fixes and fixed itunes:image.
 0.6 2008-02-25 Updated the licensing information.
 0.5 2008-02-25 Fixed losing itunes item tags when a dir changes.
 0.4 2008-02-24 Added a whole error handler with pretty errors
