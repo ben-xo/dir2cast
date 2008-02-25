@@ -77,10 +77,11 @@
 # This defaults to this year (e.g. '2008')
 define('COPYRIGHT', 'Ben XO (2008)');
 
-# Webmaster of the feed. This must be an email address.
+# Webmaster of the feed. This must be an email address, 
+# and it should be in the format 'my@email.address (My Name)'
 #
 # This defaults to empty
-define('WEBMASTER', 'me-dir2cast@ben-xo.com');
+define('WEBMASTER', 'me-dir2cast@ben-xo.com (Ben XO)');
 
 # URL of the feed's home page (this is NOT where the MP3s are! It is
 # just the link to your "about" page).
@@ -188,7 +189,7 @@ $itunes_categories = array(
 /* DEFAULTS *********************************************/
 
 // error handler needs these, so let's set them now.
-define('VERSION', '0.6');
+define('VERSION', '0.7');
 define('DIR2CAST_HOMEPAGE', 'http://www.ben-xo.com/dir2cast/');
 define('GENERATOR', 'dir2cast ' . VERSION . ' by Ben XO (' . DIR2CAST_HOMEPAGE . ')');
 
@@ -472,7 +473,7 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
 		
 		if(!empty($this->image_href))
 		{
-			$owner->appendChild( $doc->createElement('itunes:image') )
+			$channel->appendChild( $doc->createElement('itunes:image') )
 				->setAttribute('href', $this->image_href);
 		}
 	}
@@ -554,6 +555,9 @@ class RSS_Item extends GetterSetter {
 			'description' => $this->getDescription(),
 			'pubDate' => $this->getPubDate()
 		);
+		
+		if(empty($item_elements['title']))
+			$item_elements['title'] = '(untitled)';
 		
 		foreach($item_elements as $name => $val)
 		{
@@ -709,7 +713,7 @@ abstract class Podcast extends GetterSetter
 		$doc = new DOMDocument('1.0', 'UTF-8');
 		$doc->formatOutput = true;
 		
-		$rss = $doc->createElementNS($this->getNSURI(), 'rss');
+		$rss = $doc->createElement('rss');
 		$doc->appendChild($rss);
 		
 		$rss->setAttribute('version', '2.0');
@@ -751,7 +755,13 @@ abstract class Podcast extends GetterSetter
 		$this->post_generate($doc);
 		
 		$doc->normalizeDocument();
-		return $doc->saveXML();
+		
+		// see http://validator.w3.org/feed/docs/warning/CharacterData.html
+		return str_replace( 
+			array('&amp;', '&lt;', '&gt;'), 
+			array('&#x26;', '&#x3C;', '&#x3E;'), 
+			$doc->saveXML()
+		);
 	}
 		
 	public function getItems()
