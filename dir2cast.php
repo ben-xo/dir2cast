@@ -961,7 +961,7 @@ class ErrorHandler
 							This error occurred on line <?php echo $errline; ?> of <?php echo $errfile; ?>.
 						</div>
 					</div>
-					<div id="footer"><a href="http://www.ben-xo.com/dir2cast">dir2cast</a> <?php echo VERSION; ?> by Ben XO</div>
+					<div id="footer"><a href="<?php echo DIR2CAST_HOMEPAGE ?>">dir2cast</a> <?php echo VERSION; ?> by Ben XO</div>
 				</body></html>
 				<?php
 			}
