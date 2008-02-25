@@ -744,10 +744,6 @@ abstract class Podcast extends GetterSetter
 		return $doc->saveXML();
 	}
 		
-	/**
-	 * Get the final list of items, sorting and limiting as we do so.
-	 * You should not addItem() any more items after this.
-	 */
 	public function getItems()
 	{
 		return $this->items;
@@ -844,7 +840,7 @@ class Dir_Podcast extends Podcast
 			}
 		}
 
-		unset($this->unsorted_items);		 
+		unset($this->unsorted_items);
 	}
 }
 
