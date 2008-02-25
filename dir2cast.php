@@ -161,7 +161,7 @@ $itunes_categories = array(
 /* DEFAULTS *********************************************/
 
 // error handler needs these, so let's set them now.
-define('VERSION', '0.4');
+define('VERSION', '0.5');
 define('GENERATOR', 'dir2cast ' . VERSION . ' by Ben XO (http://www.ben-xo.com/dir2cast/)');
 
 error_reporting(E_ALL);
@@ -407,6 +407,7 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
 	
 	public function appendToChannel(DOMElement $channel, DOMDocument $doc)
 	{
+		echo "HERE";
 		foreach ($this->parameters as $name => $val)
 		{
 			$channel->appendChild( $doc->createElement('itunes:' . $name) )
@@ -588,6 +589,8 @@ class MP3_RSS_Item extends RSS_File_Item {
 
     public function setFromMP3File($file)
     { 
+    	// don't do any heavy-lifting here as this is called by the constructor, which 
+    	// is called once for every file in the dir (not just the ITEM_COUNT in the cast) 
 		$this->setLength(filesize($file));
 		$this->setPubDate(date('r', filectime($file)));
     }
@@ -626,6 +629,12 @@ abstract class Podcast extends GetterSetter
 	public function addHelper(Podcast_Helper $helper)
 	{
 		$this->helpers[] = $helper;
+		
+		// attach helper to items already added.
+		// new items will have the helper attacged when they are added.
+		foreach($this->items as $item)
+			$item->addHelper($helper);
+			
 		return $helper;
 	}
 	
@@ -732,23 +741,26 @@ class Dir_Podcast extends Podcast
 
 	protected function scan()
 	{
-		$this->pre_scan();
-		
-		// scan the dir
-		$di = new DirectoryIterator($this->source_dir);
-		
-		$item_count = 0;
-		foreach($di as $file)
+		if(!$this->scanned)
 		{
-			$this->addItem($file->getPath() . '/' . $file->getFileName());
-			$item_count++;
-		}
+			$this->pre_scan();
 			
-		if(0 == $item_count)
-			throw new Exception("No MP3s found in {$this->source_dir}");
-
-		$this->scanned = true;
-		$this->post_scan();
+			// scan the dir
+			$di = new DirectoryIterator($this->source_dir);
+			
+			$item_count = 0;
+			foreach($di as $file)
+			{
+				$this->addItem($file->getPath() . '/' . $file->getFileName());
+				$item_count++;
+			}
+				
+			if(0 == $item_count)
+				throw new Exception("No Items found in {$this->source_dir}");
+	
+			$this->scanned = true;
+			$this->post_scan();
+		}
 	}
 	
 	public function addItem($filename)
@@ -775,8 +787,7 @@ class Dir_Podcast extends Podcast
 	
 	protected function pre_generate()
 	{
-		if(!$this->scanned)
-			$this->scan();
+		$this->scan();
 	}
 		
 	protected function pre_scan() { }
@@ -828,14 +839,13 @@ class Cached_Dir_Podcast extends Dir_Podcast
 
 		if(file_exists($this->temp_file))
 		{
-			$this->cache_date = filectime($this->temp_file);
+			$cache_date = filectime($this->temp_file);
 
-			if( $this->cache_date <= time() - MIN_CACHE_TIME ) 
+			if( $cache_date < time() - MIN_CACHE_TIME ) 
 			{
 				$this->scan();
-				if( $this->cache_date <= $this->max_mtime )
+				if( $cache_date < $this->max_mtime || $cache_date < filectime($this->source_dir))
 				{
-					unset($this->cache_date);
 					unlink($this->temp_file);
 				}
 				else
@@ -849,13 +859,16 @@ class Cached_Dir_Podcast extends Dir_Podcast
 	
 	public function generate()
 	{
-		if(isset($this->cache_date))
+		if(file_exists($this->temp_file))
 		{
-			return file_get_contents($this->temp_file); // serve cached copy
+			$output = file_get_contents($this->temp_file); // serve cached copy
 		}
-		
-		$output = parent::generate();		
-		file_put_contents($this->temp_file, $output); // save cached copy	
+		else
+		{
+			$output = parent::generate();		
+			file_put_contents($this->temp_file, $output); // save cached copy
+		}
+			
 		return $output;
 	}
 
