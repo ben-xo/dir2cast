@@ -315,7 +315,7 @@ if(!defined('ITUNES_OWNER_NAME'))
 if(!defined('ITUNES_OWNER_EMAIL'))
 	define('ITUNES_OWNER_EMAIL', '');
 
-/* EXTENALS *********************************************/
+/* EXTERNALS ********************************************/
 
 if(file_exists('getID3/getid3.php'))
 	include_once('getID3/getid3.php');
