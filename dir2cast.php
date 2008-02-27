@@ -189,7 +189,7 @@ $itunes_categories = array(
 /* DEFAULTS *********************************************/
 
 // error handler needs these, so let's set them now.
-define('VERSION', '0.7');
+define('VERSION', '0.8');
 define('DIR2CAST_HOMEPAGE', 'http://www.ben-xo.com/dir2cast/');
 define('GENERATOR', 'dir2cast ' . VERSION . ' by Ben XO (' . DIR2CAST_HOMEPAGE . ')');
 
