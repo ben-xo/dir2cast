@@ -207,13 +207,13 @@ if(!defined('TMP_DIR'))
 if(!defined('MP3_DIR'))
 {
 	if(!empty($_GET['dir']))
-		define('MP3_DIR', magic_stripslashes($_GET['dir']));
-	elseif(!empty($argv[1]))
-		define('MP3_DIR', $argv[1]);
+		define('MP3_DIR', dirname($_SERVER['SCRIPT_FILENAME']) . '/' . safe_path(magic_stripslashes($_GET['dir'])));
+	elseif(!empty($argv[1]) && realpath($argv[1]))
+		define('MP3_DIR', realpath($argv[1]));
 	elseif(!empty($_SERVER['HTTP_HOST']))
 		define('MP3_DIR', dirname($_SERVER['SCRIPT_FILENAME']));
 	else
-		define('MP3_DIR', dirname(__FILE__));		
+		define('MP3_DIR', dirname(__FILE__));
 }
 
 if(!defined('MP3_URL'))
@@ -1007,6 +1007,16 @@ class ErrorHandler
 function magic_stripslashes($s) 
 { 
 	return get_magic_quotes_gpc() ? stripslashes($s) : $s; 
+}
+
+/*
+ * Filters a path so that it is not absolute and contains no ".." components.
+ * 
+ * @param string the path to filter
+ */
+function safe_path($p)
+{
+	return preg_replace('#(?<=^|/)(?:\.\.(?:/|$)|/)#', '', $p);
 }
 
 /* DISPATCH *********************************************/
