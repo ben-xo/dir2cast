@@ -39,6 +39,7 @@ Features:
 
 * Works from the command line, if you want.
 
+
 REQUIREMENTS
 ================================================================================
 
@@ -77,7 +78,7 @@ Assuming the following:
   htdocs/dir2cast/cast2
 
 Step 1: Make 2 extra copies of dir2cast.ini (one for each cast), and then edit 
-        to taste.(Any settings not specified will be taken from the main 
+        to taste. (Any settings not specified will be taken from the main 
         dir2cast.ini - the one that is in the same folder as dir2cast.php).
 Step 2: Upload these additional dir2cast.ini files to the htdocs/dir2cast/cast1/ 
         and htdocs/dir2cast/cast2/ folders, respectively.
