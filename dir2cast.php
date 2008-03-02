@@ -32,167 +32,36 @@
  *
  * USAGE:
  * 
- * After editing the settings below, visit:
+ * 1) copy dir2cast.ini.example to dir2cast.ini and fill in the settings.
+ * 
+ * 2) visit:
  * 
  * http://www.whatever.com/dir2cast.php
  * 
  * or
  * 
- * http://www.whatever.com/dir2cast.php?dir=subdir 
+ * http://www.whatever.com/dir2cast.php?dir=my_mp3_subdir 
  * ^-- use this form with mod_rewrite perhaps...
  * 
  * or
  * 
- * user$ php ./dir2cast.php somedir 
+ * user$ php ./dir2cast.php my_mp3_dir 
  * ^-- from the command line
+ * 
+ * If MP3_DIR is different from the dir the script is in, then you can have
+ * have one dir2cast.ini in the same dir as dir2cast.php, and one in the same
+ * dir as your MP3s. 
  */
 
-/* SETTINGS *********************************************
- * Most of these have defaults, which you can leave     *
- * commented if you want.                               *
- ********************************************************/
-
-# *** SETTINGS TO MAKE THIS WORK - try with the defaults first ***
-
-# The filesystem path to the MP3 folder
-#
-# This defaults to the same folder as the script
-# NOTE: you can specify this in the URL with ?dir=...
-# NOTE: you can specify this on the command line as the first param.
-# examples:
-//define('MP3_DIR', '/home/ben_xo/public_html/my_mp3_folder');
-//define('MP3_DIR', dirname(__FILE__).'/my_mp3_folder');
-
-# The URL of the MP3 folder
-#
-# This defaults to the directory of the script.
-# dir2cast can usually work this out for you, but under some circumstances
-# it will fail. If your MP3 URLs are all wrong, try putting this in manually.
-//define('MP3_URL', 'http://www.example.foo/my_mp3_folder/');
-
-# *** INFORMATION ABOUT YOUR PODCAST - you SHOULD set this how you like it *** 
-
-# The copyright notice of the feed
-#
-# This defaults to this year (e.g. '2008')
-define('COPYRIGHT', 'Ben XO (2008)');
-
-# Webmaster of the feed. This must be an email address, 
-# and it should be in the format 'my@email.address (My Name)'
-#
-# This defaults to empty
-define('WEBMASTER', 'me-dir2cast@ben-xo.com (Ben XO)');
-
-# URL of the feed's home page (this is NOT where the MP3s are! It is
-# just the link to your "about" page).
-# 
-# This defaults to the URL of the script or http://www.example.com/
-define('LINK', 'http://www.ben-xo.com/');
-
-# The title of the feed.
-#
-# This defaults to the name of the directory you're casting
-define('TITLE', 'My First dir2cast Podcast');
-
-# The Author of the podcast for iTunes
-#
-# This defaults to whatever WEBMASTER is set to
-define('ITUNES_AUTHOR', 'Ben XO');
-
-# Name of the Owner of the podcast for iTunes
-#
-# This defaults to whatever WEBMASTER is set to
-define('ITUNES_OWNER_NAME', 'Ben XO');
-
-# Email of the Author of the podcast for iTunes
-#
-# This defaults to empty
-define('ITUNES_OWNER_EMAIL', 'me-dir2cast@ben-xo.com');
-
-# Categories for iTunes
-#
-# You may add as many as you like from the category list at 
-# http://www.apple.com/itunes/store/podcaststechspecs.html
-#
-# This is PHP array syntax - it's easy, but be careful.
-# Here's an example:
-//$itunes_categories = array(
-//  "Music" => true,
-//  "Technology" => array( "Gadgets" => true ),
-//);    
-$itunes_categories = array(
-	"Music" => true,
-);
-
-
-# The following attempt to read files named like the define
-
-# Description of the feed
-#
-# This defaults to empty, or if the file 'description.txt' exists
-# in the target dir, or in the same dir as the script, that will be read 
-# and the contents used
-//define('DESCRIPTION', 'My First Podcast');
-
-# Subtitle of the feed for iTunes
-#
-# This defaults to DESCRIPTION, or if the file 'itunes_subtitle.txt' exists
-# in the target dir, or in the same dir as the script, that will be read 
-# and the contents used
-//define('ITUNES_SUBTITLE', 'Check it out! It's brilliant.');
-
-# Subtitle of the feed for iTunes
-#
-# This defaults to DESCRIPTION, or if the file 'itunes_summary.txt' exists
-# in the target dir, or in the same dir as the script, that will be read 
-# and the contents used
-//define('ITUNES_SUMMARY', 'i could go on for hours about how amazing this podcast is [...] etc');
-
-# Image for the podcast for iTunes
-#
-# This defaults to no image, or if the file 'itunes_image.jpg' exists
-# in the target dir, or in the same dir as the script, then the URL for that 
-# will be used
-//define('ITUNES_IMAGE', 'http://www.somewhere.com/podcast.jpg');
-
-
-# You should check that the following are OK.
-
-# Where to cache RSS feeds (this must be writable by the web server)
-# This defaults to a folder called 'temp' alongside the script
-//define('TEMPDIR', '/tmp');
-
-# Language of the feed
-#
-# This defaults to en-us (US English)
-//define('LANGUAGE', 'en-us');
-
-
-# The following have sensible defaults and should probably not be changed
-
-# Number of items to show in the feed
-#
-# This defaults to 10
-//define('ITEM_COUNT', 10);
-
-# Number of seconds for which the cache file is guaranteed valid
-#
-# Defaults to 5
-//define('MIN_CACHE_TIME', 5);
-
-# Time-to-live (Expiry time) of the feed
-#
-# This defaults to 60 minutes
-//define('TTL', 60);
-
+/*** DO NOT CHANGE ANYTHING BELOW THIS LINE ************************/ 
+/*** unless you are really sure you know what you are doing. *******/
 
 /* DEFAULTS *********************************************/
 
 // error handler needs these, so let's set them now.
-define('VERSION', '0.8');
+define('VERSION', '0.9');
 define('DIR2CAST_HOMEPAGE', 'http://www.ben-xo.com/dir2cast/');
 define('GENERATOR', 'dir2cast ' . VERSION . ' by Ben XO (' . DIR2CAST_HOMEPAGE . ')');
-
 
 error_reporting(E_ALL);
 set_error_handler( array('ErrorHandler', 'handle_error') );
@@ -200,6 +69,14 @@ set_exception_handler( array( 'ErrorHandler', 'handle_exception') );
 
 // Best do everything in UTC.
 date_default_timezone_set( 'UTC' );
+
+// if an installation-wide config file exists, load it now.
+// installation-wide config can contain TMP_DIR, MP3_DIR and MP3_URL
+if(file_exists( dirname(__FILE__) . '/dir2cast.ini' ))
+{
+	SettingsHandler::load_from_ini(dirname(__FILE__) . '/dir2cast.ini' );
+	SettingsHandler::finalize(array('TMP_DIR', 'MP3_DIR', 'MP3_URL'));
+}
 
 if(!defined('TMP_DIR'))
 	define('TMP_DIR', dirname(__FILE__) . '/temp');
@@ -232,6 +109,16 @@ if(!defined('MP3_URL'))
 	unset($path_part);
 }
 
+// if an MP3_DIR specific config file exists, load it now, as long as it's not the same file as the global one!
+if( 
+	file_exists( MP3_DIR . '/dir2cast.ini' ) and	
+	realpath(dirname(__FILE__) . '/dir2cast.ini') != realpath( MP3_DIR . '/dir2cast.ini' ) 
+) {
+	SettingsHandler::load_from_ini( MP3_DIR . '/dir2cast.ini' );
+}
+
+SettingsHandler::finalize();
+
 if(!defined('TITLE'))
 {
 	if(basename(MP3_DIR))
@@ -243,7 +130,7 @@ if(!defined('TITLE'))
 if(!defined('LINK'))
 {
 	if(!empty($_SERVER['HTTP_HOST']))
-		define('LINK', 'http' . ($_SERVER['HTTPS'] ? 's' : '') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF']);
+		define('LINK', 'http' . (empty($_SERVER['HTTPS']) ? '' : 's') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF']);
 	else
 		define('LINK', 'http://www.example.com/');
 }
@@ -263,9 +150,6 @@ if(!defined('LANGUAGE'))
 
 if(!defined('COPYRIGHT'))
 	define('COPYRIGHT', date('Y'));
-
-if(!defined('WEBMASTER'))
-	define('WEBMASTER', '');
 	
 if(!defined('TTL'))
 	define('TTL', 60);
@@ -306,16 +190,26 @@ if(!defined('ITUNES_IMAGE'))
 		define('ITUNES_IMAGE', '');
 }
 
-
-if(!defined('ITUNES_AUTHOR'))
-	define('ITUNES_AUTHOR', WEBMASTER);
-
 if(!defined('ITUNES_OWNER_NAME'))
-	define('ITUNES_OWNER_NAME', WEBMASTER);
+	define('ITUNES_OWNER_NAME', '');
 
 if(!defined('ITUNES_OWNER_EMAIL'))
 	define('ITUNES_OWNER_EMAIL', '');
 
+if(!defined('WEBMASTER'))
+{
+	if(ITUNES_OWNER_NAME != '' and ITUNES_OWNER_EMAIL != '')
+		define('WEBMASTER', ITUNES_OWNER_EMAIL . ' (' . ITUNES_OWNER_NAME . ')');
+	else
+		define('WEBMASTER', '');
+}
+
+if(!defined('ITUNES_AUTHOR'))
+	define('ITUNES_AUTHOR', WEBMASTER);
+
+if(!defined('ITUNES_CATEGORIES'))
+	define('ITUNES_CATEGORIES', '');
+	
 /* EXTERNALS ********************************************/
 
 if(file_exists('getID3/getid3.php'))
@@ -513,8 +407,40 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
 				$this->appendCategory($subcategory, $subsubcats, $element, $doc);
 	}
 	
-	public function addCategories($cats) {
-		$this->categories = $cats;
+	/**
+	 * Takes a category specification string and arrayifies it.
+	 * e.g.  
+	 * 'Music | Technology > Gadgets '
+	 * becomes
+	 * array( 'Music' => true, 'Technology' => array( 'Gadgets' ) );
+	 * @param string $category_string
+	 */
+	public function addCategories($category_string) {
+		$categories = array();
+		foreach(explode('|', $category_string) as $top_level_category)
+		{
+			$sub_categories = explode('>', $top_level_category);
+			$top_level_category = trim( array_shift($sub_categories) );
+			if('' != $top_level_category)
+			{
+				if(empty($sub_categories))
+				{
+					$categories[$top_level_category] = true;
+				}
+				else
+				{
+					foreach($sub_categories as $sub_category)
+					{
+						$sub_category = trim($sub_category);
+						if('' != $sub_category)
+						{
+							$categories[$top_level_category][$sub_category] = true;
+						}
+					}
+				}
+			}
+		}
+		$this->categories = $categories;
 	}
 	
 	public function setOwnerName($name)
@@ -793,11 +719,14 @@ class Dir_Podcast extends Podcast
 
 	protected function scan()
 	{
+		global $error_primer;
+		
 		if(!$this->scanned)
 		{
 			$this->pre_scan();
 			
 			// scan the dir
+
 			$di = new DirectoryIterator($this->source_dir);
 			
 			$item_count = 0;
@@ -936,7 +865,18 @@ class Cached_Dir_Podcast extends Dir_Podcast
 
 class ErrorHandler
 {
+	public static $primer;
 	private static $errors = true;
+	
+	public static function prime($type)
+	{
+		self::$error_primer = $type;
+	}
+	
+	public static function defuse()
+	{
+		self::$error_primer = null;
+	}
 	
 	public static function errors($state)
 	{
@@ -944,7 +884,7 @@ class ErrorHandler
 	}
 	
 	public static function handle_error($errno, $errstr, $errfile=null, $errline=null, $errcontext=null)
-	{
+	{	
 		ErrorHandler::display($errstr, $errfile, $errline);
 	}
 	
@@ -953,9 +893,17 @@ class ErrorHandler
 		ErrorHandler::display($e->getMessage(), $e->getFile(), $e->getLine());
 	}
 	
-	public static  function display($message, $errfile, $errline)
+	public static function get_primed_error($type)
 	{
+		switch($type)
+		{
+			case 'ini':
+				return 'Suggestion: Make sure that your ini file is valid. If the error is on a specific line, try enclosing the value in "quotes".';
+		}
+	}
 	
+	public static function display($message, $errfile, $errline)
+	{	
 		if(self::$errors)
 		{
 			if(ini_get('html_errors'))
@@ -977,6 +925,10 @@ class ErrorHandler
 					<div id="the_error">
 						<?php echo $message; ?>
 						<br><br>
+						<?php if(!empty(ErrorHandler::$error_primer)): ?>
+							<?php echo self::get_primed_error($error_primer); ?>
+							<br><br>
+						<?php endif; ?>
 						<div id="additional_error">
 							This error occurred on line <?php echo $errline; ?> of <?php echo $errfile; ?>.
 						</div>
@@ -996,6 +948,35 @@ class ErrorHandler
 	
 }
 
+class SettingsHandler
+{
+	private static $settings_cache = array();
+	
+	public static function load_from_ini($file)
+	{
+		ErrorHandler::prime('ini');
+		$settings = parse_ini_file($file); 
+		ErrorHandler::defuse();
+		
+		self::$settings_cache = array_merge(self::$settings_cache, $settings);
+	}
+	
+	public static function finalize($setting_names=null)
+	{
+		if(is_array($setting_names))
+			// define only those listed
+			foreach($setting_names as $s)
+				!defined($s) and 
+					isset(self::$settings_cache[$s]) and
+						define($s, self::$settings_cache[$s]);
+		else
+			// define all
+			foreach(self::$settings_cache as $s => $s_val)
+				!defined($s) and 
+					define($s, $s_val);
+	}
+}
+
 /* FUNCTIONS **********************************************/
 
 /**
@@ -1006,7 +987,7 @@ class ErrorHandler
  */
 function magic_stripslashes($s) 
 { 
-	return get_magic_quotes_gpc() ? stripslashes($s) : $s; 
+	return get_magic_quotes_gpc() ? stripslashes($s) : $s;
 }
 
 /*
@@ -1042,7 +1023,7 @@ $itunes->setImage(ITUNES_IMAGE);
 $itunes->setOwnerName(ITUNES_OWNER_NAME);
 $itunes->setOwnerEmail(ITUNES_OWNER_EMAIL);
 
-$itunes->addCategories($itunes_categories);
+$itunes->addCategories(ITUNES_CATEGORIES);
 
 $podcast->setGenerator(GENERATOR);
 
