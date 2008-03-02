@@ -1,4 +1,4 @@
-dir2cast by Ben XO v0.8 (2008-02-27)
+dir2cast by Ben XO v0.9 (2008-03-02)
 ================================================================================
 
 http://www.ben-xo.com/dir2cast
@@ -54,9 +54,65 @@ The full version of getID3 is available at http://getid3.sourceforge.net/ ).
 INSTALLATION
 ================================================================================
 
-Step 1. Upload dir2cast.php to the web server.
-Step 2. Upload getID3 to a folder called 'getID3'. You can download getID3 from
-        the same place as dir2cast.
+Please note: the config file will make more sense if you read all of this README
+before trying the installation instructions.
+
+Step 1. Edit dir2cast.ini to your taste.
+Step 2. Upload dir2cast.php and dir2cast.ini to the web server.
+Step 3. Upload getID3 to a folder called 'getID3'. (You can download getID3 from
+        the same place as dir2cast.)
+
+
+CASTING SEVERAL FOLDERS FROM ONE DIR2CAST.PHP
+================================================================================
+
+If you have more than one folder of MP3s that you are casting, you can serve 
+them all from a single install of dir2cast.php, and customise dir2cast.ini for 
+each individual folder.
+
+Assuming the following:
+* your web root folder is called htdocs/ and this maps to http://www.mysite.com/
+* you installed dir2cast to the folder htdocs/dir2cast 
+* you have two podcasts, and the MP3s live in htdocs/dir2cast/cast1 and 
+  htdocs/dir2cast/cast2
+
+Step 1: Make 2 extra copies of dir2cast.ini (one for each cast), and then edit 
+        to taste.(Any settings not specified will be taken from the main 
+        dir2cast.ini - the one that is in the same folder as dir2cast.php).
+Step 2: Upload these additional dir2cast.ini files to the htdocs/dir2cast/cast1/ 
+        and htdocs/dir2cast/cast2/ folders, respectively.
+
+The podcast URLs will now be:
+
+http://www.mysite.com/dir2cast/dir2cast.php?dir=cast1 and
+http://www.mysite.com/dir2cast/dir2cast.php?dir=cast2 .
+
+
+"PRETTY" URLS FOR YOUR PODCASTS
+================================================================================
+
+This hint requires your web server to be Apache with 'mod_rewrite' enabled.
+
+From the example above, your podcast URL will be:
+
+    http://www.mysite.com/dir2cast/dir2cast.php?dir=cast1
+
+...but much nicer would be something along the lines of
+
+    http://www.mysite.com/dir2cast/cast1/rss
+
+To achieve this, you must configure apache with a rewrite rule such as: 
+
+  RewriteEngine on
+  RewriteRule (.+)/rss$ dir2cast.php?dir=$1 [L]
+
+Put this in your VHOST configuration (inside a <Location> block) or in a 
+.htaccess file alongside dir2cast.php .
+
+PLEASE NOTE: just to check that you understand this section... 
+* If you use the RewriteRule supplied, dir2cast.php must be in the folder above
+  the MP3 folders. (If this is not the case, you will have to set MP3_BASE in 
+  the ini file, and change the rule for your circumstance.)
 
 
 COPYRIGHT & LICENSE
@@ -96,6 +152,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 HISTORY
 ================================================================================
 
+0.9 2008-03-02 Added .ini file configuration, added MP3_BASE option.
 0.8 2008-02-27 Fixed ?dir= so it works intuitively, and much more safely.
 0.7 2008-02-25 W3 feed validator conformance fixes and fixed itunes:image.
 0.6 2008-02-25 Updated the licensing information.

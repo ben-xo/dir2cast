@@ -75,22 +75,28 @@ date_default_timezone_set( 'UTC' );
 if(file_exists( dirname(__FILE__) . '/dir2cast.ini' ))
 {
 	SettingsHandler::load_from_ini(dirname(__FILE__) . '/dir2cast.ini' );
-	SettingsHandler::finalize(array('TMP_DIR', 'MP3_DIR', 'MP3_URL'));
+	SettingsHandler::finalize(array('TMP_DIR', 'MP3_BASE', 'MP3_DIR', 'MP3_URL'));
 }
 
 if(!defined('TMP_DIR'))
 	define('TMP_DIR', dirname(__FILE__) . '/temp');
 
+if(!defined('MP3_BASE'))
+{
+	if(!empty($_SERVER['HTTP_HOST']))
+		define('MP3_BASE', dirname($_SERVER['SCRIPT_FILENAME']));
+	else
+		define('MP3_BASE', dirname(__FILE__));
+}
+	
 if(!defined('MP3_DIR'))
 {
 	if(!empty($_GET['dir']))
-		define('MP3_DIR', dirname($_SERVER['SCRIPT_FILENAME']) . '/' . safe_path(magic_stripslashes($_GET['dir'])));
+		define('MP3_DIR', MP3_BASE . '/' . safe_path(magic_stripslashes($_GET['dir'])));
 	elseif(!empty($argv[1]) && realpath($argv[1]))
 		define('MP3_DIR', realpath($argv[1]));
-	elseif(!empty($_SERVER['HTTP_HOST']))
-		define('MP3_DIR', dirname($_SERVER['SCRIPT_FILENAME']));
 	else
-		define('MP3_DIR', dirname(__FILE__));
+		define('MP3_DIR', MP3_BASE);
 }
 
 if(!defined('MP3_URL'))
@@ -718,9 +724,7 @@ class Dir_Podcast extends Podcast
 	}
 
 	protected function scan()
-	{
-		global $error_primer;
-		
+	{		
 		if(!$this->scanned)
 		{
 			$this->pre_scan();
@@ -732,13 +736,12 @@ class Dir_Podcast extends Podcast
 			$item_count = 0;
 			foreach($di as $file)
 			{
-				$this->addItem($file->getPath() . '/' . $file->getFileName());
-				$item_count++;
+				$item_count = $this->addItem($file->getPath() . '/' . $file->getFileName());
 			}
-				
+			
 			if(0 == $item_count)
 				throw new Exception("No Items found in {$this->source_dir}");
-	
+					
 			$this->scanned = true;
 			$this->post_scan();
 		}
@@ -764,6 +767,8 @@ class Dir_Podcast extends Podcast
 			
 			default:
 		}
+		
+		return count($this->unsorted_items);
 	}
 	
 	protected function pre_generate()
@@ -870,12 +875,12 @@ class ErrorHandler
 	
 	public static function prime($type)
 	{
-		self::$error_primer = $type;
+		self::$primer = $type;
 	}
 	
 	public static function defuse()
 	{
-		self::$error_primer = null;
+		self::$primer = null;
 	}
 	
 	public static function errors($state)
@@ -912,9 +917,11 @@ class ErrorHandler
 						
 				?><!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 				<html><head><title>dir2cast <?php echo VERSION; ?> error</title>
+				<meta http-equiv="Content-Type" content="text/html; charset=utf-8"> 
 				<style type="text/css">
 					body { font-family: Calibri, Arial, Helvetica, sans-serif; font-size: 16px; }
-					h1 { font-weight: bold; text-size: 125%; }
+					h1 { font-weight: bold; font-size: 200%; }
+					a img { border: 0px; }
 					#footer { font-size: 12px; margin-top: 1em;}
 					#the_error { border: 1px red solid; padding: 1em; } 
 					#additional_error { font-size: 14px; }
@@ -925,8 +932,8 @@ class ErrorHandler
 					<div id="the_error">
 						<?php echo $message; ?>
 						<br><br>
-						<?php if(!empty(ErrorHandler::$error_primer)): ?>
-							<?php echo self::get_primed_error($error_primer); ?>
+						<?php if(!empty(ErrorHandler::$primer)): ?>
+							<?php echo self::get_primed_error(ErrorHandler::$primer); ?>
 							<br><br>
 						<?php endif; ?>
 						<div id="additional_error">
@@ -934,6 +941,11 @@ class ErrorHandler
 						</div>
 					</div>
 					<div id="footer"><a href="<?php echo DIR2CAST_HOMEPAGE ?>">dir2cast</a> <?php echo VERSION; ?> by Ben XO</div>
+					<p>
+					    <a href="http://validator.w3.org/check?uri=referer"><img
+					        src="http://www.w3.org/Icons/valid-html401"
+					        alt="Valid HTML 4.01 Strict" height="31" width="88"></a>
+					</p>
 				</body></html>
 				<?php
 			}
