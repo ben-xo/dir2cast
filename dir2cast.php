@@ -762,7 +762,12 @@ class Dir_Podcast extends Podcast
 	
 	public function addItem($filename)
 	{
-		$file_ext = substr($filename, strrpos($filename, '.') + 1);
+		$pos = strrpos($filename, '.');
+		if(false === $pos)
+			$file_ext = '';
+		else
+			$file_ext = substr($filename, $pos + 1);
+
 		switch(strtolower($file_ext))
 		{
 			case 'mp3': 
@@ -829,7 +834,7 @@ class Cached_Dir_Podcast extends Dir_Podcast
 	public function __construct($source_dir, $temp_dir)
 	{
 		$this->temp_dir = $temp_dir;
-		$safe_source_dir = str_replace('/', '_', $source_dir);
+		$safe_source_dir = str_replace(array('/', '\\'), '_', $source_dir);
 		
 		// something unique, safe, stable and easily identifiable
 		$this->temp_file = rtrim($temp_dir, '/') . '/' . md5($source_dir) . '_' . $safe_source_dir . '.xml';
