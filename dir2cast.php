@@ -304,10 +304,14 @@ class getID3_Podcast_Helper implements Podcast_Helper {
 
 				if(!empty($this->getid3->info['comments']))
 				{
-					$item->setID3Title( $this->getid3->info['comments']['title'][0] );
-					$item->setID3Artist( $this->getid3->info['comments']['artist'][0] );
-					$item->setID3Album( $this->getid3->info['comments']['album'][0] );					
-					$item->setID3Comment( $this->getid3->info['comments']['comment'][0] );
+					if(!empty($this->getid3->info['comments']['title'][0]))
+						$item->setID3Title( $this->getid3->info['comments']['title'][0] );
+					if(!empty($this->getid3->info['comments']['artist'][0]))
+						$item->setID3Artist( $this->getid3->info['comments']['artist'][0] );
+					if(!empty($this->getid3->info['comments']['album'][0]))
+						$item->setID3Album( $this->getid3->info['comments']['album'][0] );					
+					if(!empty($this->getid3->info['comments']['comment'][0]))
+						$item->setID3Comment( $this->getid3->info['comments']['comment'][0] );
 				}
 				
 				if(!empty($this->getid3->info['playtime_string']))
@@ -541,12 +545,21 @@ class RSS_File_Item extends RSS_Item {
 	
 	public function getExtension()
 	{
-		if(empty($this->extension))
-			$this->extension = substr($this->getFilename(), strrpos($this->getFilename(), '.') + 1);
-		
+		if(!isset($this->extension))
+		{
+			$pos = strrpos($this->getFilename(), '.');
+			if($pos !== false)
+			{
+				$this->extension = substr($this->getFilename(), $pos + 1);
+			}
+			else
+			{
+				$this->extension = '';
+			}
+		}
 		return $this->extension;
 	}
-	
+		
 	/**
 	 * Place a file with the same name but .txt instead of .<whatever> and the contents will be used
 	 * as the summary for the item in the podcast.
