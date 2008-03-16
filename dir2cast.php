@@ -115,107 +115,6 @@ if(!defined('MP3_URL'))
 	unset($path_part);
 }
 
-// if an MP3_DIR specific config file exists, load it now, as long as it's not the same file as the global one!
-if( 
-	file_exists( MP3_DIR . '/dir2cast.ini' ) and	
-	realpath(dirname(__FILE__) . '/dir2cast.ini') != realpath( MP3_DIR . '/dir2cast.ini' ) 
-) {
-	SettingsHandler::load_from_ini( MP3_DIR . '/dir2cast.ini' );
-}
-
-SettingsHandler::finalize();
-
-if(!defined('TITLE'))
-{
-	if(basename(MP3_DIR))
-		define('TITLE', basename(MP3_DIR));
-	else
-		define('TITLE', 'My First dir2cast Podcast');
-}
-
-if(!defined('LINK'))
-{
-	if(!empty($_SERVER['HTTP_HOST']))
-		define('LINK', 'http' . (empty($_SERVER['HTTPS']) ? '' : 's') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF']);
-	else
-		define('LINK', 'http://www.example.com/');
-}
-
-if(!defined('DESCRIPTION'))
-{
-	if(file_exists(MP3_DIR . '/description.txt'))
-		define('DESCRIPTION', file_get_contents(MP3_DIR . '/description.txt'));
-	elseif(file_exists(dirname(__FILE__) . '/description.txt'))
-		define('DESCRIPTION', file_get_contents(dirname(__FILE__) . '/description.txt'));
-	else
-		define('DESCRIPTION', '');
-}
-
-if(!defined('LANGUAGE'))
-	define('LANGUAGE', 'en-us');
-
-if(!defined('COPYRIGHT'))
-	define('COPYRIGHT', date('Y'));
-	
-if(!defined('TTL'))
-	define('TTL', 60);
-	
-if(!defined('ITEM_COUNT'))
-	define('ITEM_COUNT', 10);
-	
-if(!defined('MIN_CACHE_TIME'))
-	define('MIN_CACHE_TIME', 5);
-	
-if(!defined('ITUNES_SUBTITLE'))
-{
-	if(file_exists(MP3_DIR . '/itunes_subtitle.txt'))
-		define('ITUNES_SUBTITLE', file_get_contents(MP3_DIR . '/itunes_subtitle.txt'));
-	elseif(file_exists(dirname(__FILE__) . '/itunes_subtitle.txt'))
-		define('ITUNES_SUBTITLE', file_get_contents(dirname(__FILE__) . '/itunes_subtitle.txt'));
-	else
-		define('ITUNES_SUBTITLE', DESCRIPTION);
-}
-
-if(!defined('ITUNES_SUMMARY'))
-{
-	if(file_exists(MP3_DIR . '/itunes_summary.txt'))
-		define('ITUNES_SUMMARY', file_get_contents(MP3_DIR . '/itunes_summary.txt'));
-	elseif(file_exists(dirname(__FILE__) . '/itunes_summary.txt'))
-		define('ITUNES_SUMMARY', file_get_contents(dirname(__FILE__) . '/itunes_summary.txt'));
-	else
-		define('ITUNES_SUMMARY', DESCRIPTION);
-}
-
-if(!defined('ITUNES_IMAGE'))
-{
-	if(file_exists(rtrim(MP3_DIR, '/') . '/itunes_image.jpg'))
-		define('ITUNES_IMAGE', rtrim(MP3_URL, '/') . '/itunes_image.jpg');
-	elseif(file_exists(dirname(__FILE__) . '/itunes_image.jpg'))
-		define('ITUNES_IMAGE', rtrim(MP3_URL, '/') . '/itunes_image.jpg');
-	else
-		define('ITUNES_IMAGE', '');
-}
-
-if(!defined('ITUNES_OWNER_NAME'))
-	define('ITUNES_OWNER_NAME', '');
-
-if(!defined('ITUNES_OWNER_EMAIL'))
-	define('ITUNES_OWNER_EMAIL', '');
-
-if(!defined('WEBMASTER'))
-{
-	if(ITUNES_OWNER_NAME != '' and ITUNES_OWNER_EMAIL != '')
-		define('WEBMASTER', ITUNES_OWNER_EMAIL . ' (' . ITUNES_OWNER_NAME . ')');
-	else
-		define('WEBMASTER', '');
-}
-
-if(!defined('ITUNES_AUTHOR'))
-	define('ITUNES_AUTHOR', WEBMASTER);
-
-if(!defined('ITUNES_CATEGORIES'))
-	define('ITUNES_CATEGORIES', '');
-	
 /* EXTERNALS ********************************************/
 
 if(file_exists('getID3/getid3.php'))
@@ -841,7 +740,7 @@ class Cached_Dir_Podcast extends Dir_Podcast
 
 		parent::__construct($source_dir);
 
-		if(file_exists($this->temp_file))
+		if($this->isCached())
 		{
 			$cache_date = filemtime($this->temp_file);
 
@@ -850,7 +749,7 @@ class Cached_Dir_Podcast extends Dir_Podcast
 				$this->scan();
 				if( $cache_date < $this->max_mtime || $cache_date < filemtime($this->source_dir))
 				{
-					unlink($this->temp_file);
+					unlink($this->temp_file); // cache stale; uncache
 				}
 				else
 				{
@@ -876,12 +775,17 @@ class Cached_Dir_Podcast extends Dir_Podcast
 		return $output;
 	}
 
-	function getLastBuildDate()
+	public function getLastBuildDate()
 	{
 		if(isset($this->cache_date))
 			return date('r', $this->cache_date);
 		else
 			return $this->__call('getLastBuildDate', array());
+	}
+	
+	public function isCached()
+	{
+		return file_exists($this->temp_file);
 	}
 
 }
@@ -1005,6 +909,110 @@ class SettingsHandler
 				!defined($s) and 
 					define($s, $s_val);
 	}
+	
+	public static function defaults()
+	{
+		// if an MP3_DIR specific config file exists, load it now, as long as it's not the same file as the global one!
+		if( 
+			file_exists( MP3_DIR . '/dir2cast.ini' ) and	
+			realpath(dirname(__FILE__) . '/dir2cast.ini') != realpath( MP3_DIR . '/dir2cast.ini' ) 
+		) {
+			self::load_from_ini( MP3_DIR . '/dir2cast.ini' );
+		}
+		
+		self::finalize();
+		
+		if(!defined('TITLE'))
+		{
+			if(basename(MP3_DIR))
+				define('TITLE', basename(MP3_DIR));
+			else
+				define('TITLE', 'My First dir2cast Podcast');
+		}
+		
+		if(!defined('LINK'))
+		{
+			if(!empty($_SERVER['HTTP_HOST']))
+				define('LINK', 'http' . (empty($_SERVER['HTTPS']) ? '' : 's') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF']);
+			else
+				define('LINK', 'http://www.example.com/');
+		}
+		
+		if(!defined('DESCRIPTION'))
+		{
+			if(file_exists(MP3_DIR . '/description.txt'))
+				define('DESCRIPTION', file_get_contents(MP3_DIR . '/description.txt'));
+			elseif(file_exists(dirname(__FILE__) . '/description.txt'))
+				define('DESCRIPTION', file_get_contents(dirname(__FILE__) . '/description.txt'));
+			else
+				define('DESCRIPTION', '');
+		}
+		
+		if(!defined('LANGUAGE'))
+			define('LANGUAGE', 'en-us');
+		
+		if(!defined('COPYRIGHT'))
+			define('COPYRIGHT', date('Y'));
+			
+		if(!defined('TTL'))
+			define('TTL', 60);
+			
+		if(!defined('ITEM_COUNT'))
+			define('ITEM_COUNT', 10);
+			
+		if(!defined('MIN_CACHE_TIME'))
+			define('MIN_CACHE_TIME', 5);
+			
+		if(!defined('ITUNES_SUBTITLE'))
+		{
+			if(file_exists(MP3_DIR . '/itunes_subtitle.txt'))
+				define('ITUNES_SUBTITLE', file_get_contents(MP3_DIR . '/itunes_subtitle.txt'));
+			elseif(file_exists(dirname(__FILE__) . '/itunes_subtitle.txt'))
+				define('ITUNES_SUBTITLE', file_get_contents(dirname(__FILE__) . '/itunes_subtitle.txt'));
+			else
+				define('ITUNES_SUBTITLE', DESCRIPTION);
+		}
+		
+		if(!defined('ITUNES_SUMMARY'))
+		{
+			if(file_exists(MP3_DIR . '/itunes_summary.txt'))
+				define('ITUNES_SUMMARY', file_get_contents(MP3_DIR . '/itunes_summary.txt'));
+			elseif(file_exists(dirname(__FILE__) . '/itunes_summary.txt'))
+				define('ITUNES_SUMMARY', file_get_contents(dirname(__FILE__) . '/itunes_summary.txt'));
+			else
+				define('ITUNES_SUMMARY', DESCRIPTION);
+		}
+		
+		if(!defined('ITUNES_IMAGE'))
+		{
+			if(file_exists(rtrim(MP3_DIR, '/') . '/itunes_image.jpg'))
+				define('ITUNES_IMAGE', rtrim(MP3_URL, '/') . '/itunes_image.jpg');
+			elseif(file_exists(dirname(__FILE__) . '/itunes_image.jpg'))
+				define('ITUNES_IMAGE', rtrim(MP3_URL, '/') . '/itunes_image.jpg');
+			else
+				define('ITUNES_IMAGE', '');
+		}
+		
+		if(!defined('ITUNES_OWNER_NAME'))
+			define('ITUNES_OWNER_NAME', '');
+		
+		if(!defined('ITUNES_OWNER_EMAIL'))
+			define('ITUNES_OWNER_EMAIL', '');
+		
+		if(!defined('WEBMASTER'))
+		{
+			if(ITUNES_OWNER_NAME != '' and ITUNES_OWNER_EMAIL != '')
+				define('WEBMASTER', ITUNES_OWNER_EMAIL . ' (' . ITUNES_OWNER_NAME . ')');
+			else
+				define('WEBMASTER', '');
+		}
+		
+		if(!defined('ITUNES_AUTHOR'))
+			define('ITUNES_AUTHOR', WEBMASTER);
+		
+		if(!defined('ITUNES_CATEGORIES'))
+			define('ITUNES_CATEGORIES', '');		
+	}
 }
 
 /* FUNCTIONS **********************************************/
@@ -1033,29 +1041,33 @@ function safe_path($p)
 /* DISPATCH *********************************************/
 
 $podcast = new Cached_Dir_Podcast(MP3_DIR, TMP_DIR);
-
-$getid3 = $podcast->addHelper(new getID3_Podcast_Helper());
-$itunes = $podcast->addHelper(new iTunes_Podcast_Helper());
-
-$podcast->setTitle(TITLE);
-$podcast->setLink(LINK);
-$podcast->setDescription(DESCRIPTION);
-$podcast->setLanguage(LANGUAGE);
-$podcast->setCopyright(COPYRIGHT);
-$podcast->setWebMaster(WEBMASTER);
-$podcast->setTtl(TTL);
-
-$itunes->setSubtitle(ITUNES_SUBTITLE);
-$itunes->setAuthor(ITUNES_AUTHOR);
-$itunes->setSummary(ITUNES_SUMMARY);
-$itunes->setImage(ITUNES_IMAGE);
-
-$itunes->setOwnerName(ITUNES_OWNER_NAME);
-$itunes->setOwnerEmail(ITUNES_OWNER_EMAIL);
-
-$itunes->addCategories(ITUNES_CATEGORIES);
-
-$podcast->setGenerator(GENERATOR);
+if(!$podcast->isCached())
+{
+	SettingsHandler::defaults();
+	
+	$getid3 = $podcast->addHelper(new getID3_Podcast_Helper());
+	$itunes = $podcast->addHelper(new iTunes_Podcast_Helper());
+	
+	$podcast->setTitle(TITLE);
+	$podcast->setLink(LINK);
+	$podcast->setDescription(DESCRIPTION);
+	$podcast->setLanguage(LANGUAGE);
+	$podcast->setCopyright(COPYRIGHT);
+	$podcast->setWebMaster(WEBMASTER);
+	$podcast->setTtl(TTL);
+	
+	$itunes->setSubtitle(ITUNES_SUBTITLE);
+	$itunes->setAuthor(ITUNES_AUTHOR);
+	$itunes->setSummary(ITUNES_SUMMARY);
+	$itunes->setImage(ITUNES_IMAGE);
+	
+	$itunes->setOwnerName(ITUNES_OWNER_NAME);
+	$itunes->setOwnerEmail(ITUNES_OWNER_EMAIL);
+	
+	$itunes->addCategories(ITUNES_CATEGORIES);
+	
+	$podcast->setGenerator(GENERATOR);
+}
 
 $podcast->http_headers();
 
