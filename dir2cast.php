@@ -59,7 +59,7 @@
 /* DEFAULTS *********************************************/
 
 // error handler needs these, so let's set them now.
-define('VERSION', '0.9');
+define('VERSION', '1.0');
 define('DIR2CAST_HOMEPAGE', 'http://www.ben-xo.com/dir2cast/');
 define('GENERATOR', 'dir2cast ' . VERSION . ' by Ben XO (' . DIR2CAST_HOMEPAGE . ')');
 
@@ -75,7 +75,7 @@ date_default_timezone_set( 'UTC' );
 if(file_exists( dirname(__FILE__) . '/dir2cast.ini' ))
 {
 	SettingsHandler::load_from_ini(dirname(__FILE__) . '/dir2cast.ini' );
-	SettingsHandler::finalize(array('TMP_DIR', 'MP3_BASE', 'MP3_DIR', 'MP3_URL'));
+	SettingsHandler::finalize(array('TMP_DIR', 'MP3_BASE', 'MP3_DIR', 'MP3_URL', 'MIN_CACHE_TIME'));
 }
 
 if(!defined('TMP_DIR'))
@@ -114,6 +114,9 @@ if(!defined('MP3_URL'))
 	
 	unset($path_part);
 }
+
+if(!defined('MIN_CACHE_TIME'))
+	define('MIN_CACHE_TIME', 5);
 
 /* EXTERNALS ********************************************/
 
@@ -690,13 +693,11 @@ class Dir_Podcast extends Podcast
 	
 	protected function pre_generate()
 	{
-		$this->scan();
+		$this->scan();	
+		$this->sort();
 	}
-		
-	protected function pre_scan() { }
 	
-	protected function post_scan()
-	{
+	protected function sort() { 
 		krsort($this->unsorted_items); // newest first
 		$this->items = array();
 
@@ -711,8 +712,12 @@ class Dir_Podcast extends Podcast
 			}
 		}
 
-		unset($this->unsorted_items);
+		unset($this->unsorted_items);		
 	}
+		
+	protected function pre_scan() { }
+	
+	protected function post_scan() { }
 }
 
 /**
@@ -959,9 +964,6 @@ class SettingsHandler
 			
 		if(!defined('ITEM_COUNT'))
 			define('ITEM_COUNT', 10);
-			
-		if(!defined('MIN_CACHE_TIME'))
-			define('MIN_CACHE_TIME', 5);
 			
 		if(!defined('ITUNES_SUBTITLE'))
 		{
