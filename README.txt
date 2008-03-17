@@ -1,4 +1,4 @@
-dir2cast by Ben XO v0.9 (2008-03-02)
+dir2cast by Ben XO v1.0 (2008-03-17)
 ================================================================================
 
 http://www.ben-xo.com/dir2cast
@@ -153,6 +153,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 HISTORY
 ================================================================================
 
+1.0 2008-03-17 Fixed a couple of bugs with incomplete ID3 tags.
+               The most-common case, that of hitting the cache, has been 
+	       streamlined so that it doesn't hit the defaults-setup code
+	       or parse the .ini files unless necessary.
 0.9 2008-03-02 Added .ini file configuration, added MP3_BASE option.
 0.8 2008-02-27 Fixed ?dir= so it works intuitively, and much more safely.
 0.7 2008-02-25 W3 feed validator conformance fixes and fixed itunes:image.
