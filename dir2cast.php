@@ -32,29 +32,26 @@
  *
  * USAGE:
  * 
- * 1) copy dir2cast.ini.example to dir2cast.ini and fill in the settings.
+ * 1) edit dir2cast.ini and fill in the settings.
  * 
  * 2) visit:
  * 
- * http://www.whatever.com/dir2cast.php
+ * http://www.yoursite.com/dir2cast.php
  * 
  * or
  * 
- * http://www.whatever.com/dir2cast.php?dir=my_mp3_subdir 
- * ^-- use this form with mod_rewrite perhaps...
+ * http://www.yoursite.com/dir2cast.php?dir=my_mp3_subdir 
+ * ^-- check in the README.txt for a way to get pretty URLS using mod_rewrite
  * 
  * or
  * 
  * user$ php ./dir2cast.php my_mp3_dir 
  * ^-- from the command line
  * 
- * If MP3_DIR is different from the dir the script is in, then you can have
- * have one dir2cast.ini in the same dir as dir2cast.php, and one in the same
- * dir as your MP3s. 
+ * If your MP3 dir is different from the dir the script is in, then you can have
+ * have a master dir2cast.ini in the same dir as dir2cast.php, and cast-specific
+ * configuration in another dir2cast.ini in the same dir as your MP3s. 
  */
-
-/*** DO NOT CHANGE ANYTHING BELOW THIS LINE ************************/ 
-/*** unless you are really sure you know what you are doing. *******/
 
 /* DEFAULTS *********************************************/
 
@@ -70,8 +67,9 @@ set_exception_handler( array( 'ErrorHandler', 'handle_exception') );
 // Best do everything in UTC.
 date_default_timezone_set( 'UTC' );
 
-// if an installation-wide config file exists, load it now.
-// installation-wide config can contain TMP_DIR, MP3_DIR and MP3_URL
+// If an installation-wide config file exists, load it now.
+// Installation-wide config can contain TMP_DIR, MP3_DIR, MP3_URL and MIN_CACHE_TIME.
+// Anything else it contains will be used as a fall-back if no dir-specific dir2cast.ini exists
 if(file_exists( dirname(__FILE__) . '/dir2cast.ini' ))
 {
 	SettingsHandler::load_from_ini(dirname(__FILE__) . '/dir2cast.ini' );
@@ -126,7 +124,6 @@ elseif(file_exists('getid3/getid3.php'))
 	include_once('getid3/getid3.php');
 else
 	throw new Exception('dir2cast requires getID3. You should download this from <a href="' . DIR2CAST_HOMEPAGE . '">' . DIR2CAST_HOMEPAGE .'</a> and install it with dir2cast.');
-
 
 /* CLASSES **********************************************/
 
