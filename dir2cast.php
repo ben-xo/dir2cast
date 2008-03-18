@@ -118,12 +118,24 @@ if(!defined('MIN_CACHE_TIME'))
 
 /* EXTERNALS ********************************************/
 
-if(file_exists('getID3/getid3.php'))
-	include_once('getID3/getid3.php');
-elseif(file_exists('getid3/getid3.php'))
-	include_once('getid3/getid3.php');
-else
-	throw new Exception('dir2cast requires getID3. You should download this from <a href="' . DIR2CAST_HOMEPAGE . '">' . DIR2CAST_HOMEPAGE .'</a> and install it with dir2cast.');
+function __autoload($class_name) 
+{
+	switch(strtolower($class_name))
+	{
+		case 'getid3':
+			
+			ErrorHandler::prime('getid3');
+			if(file_exists('getID3/getid3.php'))
+				require_once('getID3/getid3.php');
+			else
+				require_once('getid3/getid3.php');
+			ErrorHandler::defuse();
+			break;
+			
+		default:
+    		require_once $class_name . '.php';
+	}
+}
 
 /* CLASSES **********************************************/
 
@@ -181,10 +193,6 @@ class getID3_Podcast_Helper implements Podcast_Helper {
 	public function appendToChannel(DOMElement $d, DOMDocument $doc) { /* nothing */ }
 	public function addNamespaceTo(DOMElement $d, DOMDocument $doc) { /* nothing */ }
 
-	public function __construct() { 
-		$this->getid3 = new getid3();
-	}
-	
 	/**
 	 * Fills in a bunch of info on the Item by using getid3->Analyse()
 	 */
@@ -193,6 +201,9 @@ class getID3_Podcast_Helper implements Podcast_Helper {
 		if($item instanceof MP3_RSS_Item && !$item->getAnalyzed())
 		{
 			try {
+				
+				if(!isset($this->getid3))
+					$this->getid3 = new getid3();
 				
 				ErrorHandler::errors(false);
 				$this->getid3->Analyze($item->getFilename());
@@ -828,6 +839,9 @@ class ErrorHandler
 		{
 			case 'ini':
 				return 'Suggestion: Make sure that your ini file is valid. If the error is on a specific line, try enclosing the value in "quotes".';
+			
+			case 'getid3':
+				return 'dir2cast requires getID3. You should download this from <a href="' . DIR2CAST_HOMEPAGE . '">' . DIR2CAST_HOMEPAGE .'</a> and install it with dir2cast.';
 		}
 	}
 	
@@ -877,6 +891,8 @@ class ErrorHandler
 			{
 				header("Content-type: text/plain"); // reset the content-type
 				echo "Error: $message (on line $errline of $errfile)\n";
+				if(!empty(ErrorHandler::$primer))
+					echo strip_tags(self::get_primed_error(ErrorHandler::$primer)) . "\n";
 			}
 			exit(-1);
 		}
