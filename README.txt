@@ -1,4 +1,4 @@
-dir2cast by Ben XO v1.0 (2008-03-17)
+dir2cast by Ben XO v1.1 (2009-04-23)
 ================================================================================
 
 http://www.ben-xo.com/dir2cast
@@ -153,6 +153,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 HISTORY
 ================================================================================
 
+1.1 2009-04-23 Fix an error in the default dir2cast.ini
 1.0 2008-03-17 Fixed a couple of bugs with incomplete ID3 tags.
                The most-common case, that of hitting the cache, has been 
 	       streamlined so that it doesn't hit the defaults-setup code
