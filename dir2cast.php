@@ -203,41 +203,31 @@ class getID3_Podcast_Helper implements Podcast_Helper {
 	{
 		if($item instanceof MP3_RSS_Item && !$item->getAnalyzed())
 		{
-			try {
-				
-				if(!isset($this->getid3))
-					$this->getid3 = new getid3();
-				
-				// getID3 is not E_ALL clean by any stretch of the imagination
-				ErrorHandler::errors(false);
-				$this->getid3->Analyze($item->getFilename());
-				ErrorHandler::errors(true);
-				
-				if(!empty($this->getid3->info['bitrate']))
-					$item->setBitrate($this->getid3->info['bitrate']);
+			if(!isset($this->getid3))
+				$this->getid3 = new getid3();
+			
+			$info = $this->getid3->Analyze($item->getFilename());
+			
+			if(!empty($info['bitrate']))
+				$item->setBitrate($info['bitrate']);
 
-				if(!empty($this->getid3->info['comments']))
-				{
-					if(!empty($this->getid3->info['comments']['title'][0]))
-						$item->setID3Title( $this->getid3->info['comments']['title'][0] );
-					if(!empty($this->getid3->info['comments']['artist'][0]))
-						$item->setID3Artist( $this->getid3->info['comments']['artist'][0] );
-					if(!empty($this->getid3->info['comments']['album'][0]))
-						$item->setID3Album( $this->getid3->info['comments']['album'][0] );					
-					if(!empty($this->getid3->info['comments']['comment'][0]))
-						$item->setID3Comment( $this->getid3->info['comments']['comment'][0] );
-				}
-				
-				if(!empty($this->getid3->info['playtime_string']))
-					$item->setDuration( $this->getid3->info['playtime_string']);
-				
-				$item->setAnalyzed(true);
-				unset($this->getid3->info);
-			} 
-			catch (Exception $e)
+			if(!empty($info['comments']))
 			{
-				// oh well! No MP3 info for us, eh?
+				if(!empty($info['comments']['title'][0]))
+					$item->setID3Title( $info['comments']['title'][0] );
+				if(!empty($info['comments']['artist'][0]))
+					$item->setID3Artist( $info['comments']['artist'][0] );
+				if(!empty($info['comments']['album'][0]))
+					$item->setID3Album( $info['comments']['album'][0] );
+				if(!empty($info['comments']['comment'][0]))
+					$item->setID3Comment( $info['comments']['comment'][0] );
 			}
+			
+			if(!empty($info['playtime_string']))
+				$item->setDuration( $info['playtime_string'] );
+			
+			$item->setAnalyzed(true);
+			unset($this->getid3);
 		}
 	}
 }
@@ -838,7 +828,13 @@ class ErrorHandler
 	
 	public static function handle_error($errno, $errstr, $errfile=null, $errline=null, $errcontext=null)
 	{	
-		ErrorHandler::display($errstr, $errfile, $errline);
+		// note: this is required to support the @ operator
+        // but the @ operator should still NOT BE USED for great justice
+        // (but getID3 does extensively)
+        if(error_reporting() & $errno)
+        {
+			ErrorHandler::display($errstr, $errfile, $errline);
+        }
 	}
 	
 	public static  function handle_exception( Exception $e )
