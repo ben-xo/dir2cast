@@ -116,6 +116,9 @@ if(!defined('MP3_URL'))
 if(!defined('MIN_CACHE_TIME'))
 	define('MIN_CACHE_TIME', 5);
 
+if(!defined('FORCE_PASSWORD'))
+	define('FORCE_PASSWORD', '');
+	
 /* EXTERNALS ********************************************/
 
 function __autoload($class_name) 
