@@ -1069,7 +1069,7 @@ function safe_path($p)
 /* DISPATCH *********************************************/
 
 $podcast = new Cached_Dir_Podcast(MP3_DIR, TMP_DIR);
-if( FORCE_PASSWORD && isset($_GET['force']) && FORCE_PASSWORD == $_GET['force'] )
+if( strlen(FORCE_PASSWORD) && isset($_GET['force']) && FORCE_PASSWORD == $_GET['force'] )
 {
 	$podcast->uncache();	
 }
