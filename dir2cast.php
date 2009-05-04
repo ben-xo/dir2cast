@@ -56,7 +56,7 @@
 /* DEFAULTS *********************************************/
 
 // error handler needs these, so let's set them now.
-define('VERSION', '1.1');
+define('VERSION', '1.2');
 define('DIR2CAST_HOMEPAGE', 'http://www.ben-xo.com/dir2cast/');
 define('GENERATOR', 'dir2cast ' . VERSION . ' by Ben XO (' . DIR2CAST_HOMEPAGE . ')');
 
@@ -73,7 +73,7 @@ date_default_timezone_set( 'UTC' );
 if(file_exists( dirname(__FILE__) . '/dir2cast.ini' ))
 {
 	SettingsHandler::load_from_ini(dirname(__FILE__) . '/dir2cast.ini' );
-	SettingsHandler::finalize(array('TMP_DIR', 'MP3_BASE', 'MP3_DIR', 'MP3_URL', 'MIN_CACHE_TIME'));
+	SettingsHandler::finalize(array('TMP_DIR', 'MP3_BASE', 'MP3_DIR', 'MP3_URL', 'MIN_CACHE_TIME', 'FORCE_PASSWORD'));
 }
 
 if(!defined('TMP_DIR'))
@@ -205,6 +205,7 @@ class getID3_Podcast_Helper implements Podcast_Helper {
 				if(!isset($this->getid3))
 					$this->getid3 = new getid3();
 				
+				// getID3 is not E_ALL clean by any stretch of the imagination
 				ErrorHandler::errors(false);
 				$this->getid3->Analyze($item->getFilename());
 				ErrorHandler::errors(true);
@@ -503,8 +504,11 @@ class MP3_RSS_Item extends RSS_File_Item {
     public function getTitle()
     {
     	$title_parts = array();
-    	if($this->getID3Album()) $title_parts[] = $this->getID3Album();
-    	if($this->getID3Artist()) $title_parts[] = $this->getID3Artist();
+    	if(LONG_TITLES)
+    	{
+	    	if($this->getID3Album()) $title_parts[] = $this->getID3Album();
+    		if($this->getID3Artist()) $title_parts[] = $this->getID3Artist();
+    	}
     	if($this->getID3Title()) $title_parts[] = $this->getID3Title();
     	return implode(' - ', $title_parts);
     }
@@ -773,6 +777,12 @@ class Cached_Dir_Podcast extends Dir_Podcast
 
 	}
 	
+	public function uncache()
+	{
+		if($this->isCached())
+			unlink($this->temp_file);
+	}
+	
 	public function generate()
 	{
 		if(file_exists($this->temp_file))
@@ -1026,7 +1036,10 @@ class SettingsHandler
 			define('ITUNES_AUTHOR', WEBMASTER);
 		
 		if(!defined('ITUNES_CATEGORIES'))
-			define('ITUNES_CATEGORIES', '');		
+			define('ITUNES_CATEGORIES', '');
+			
+		if(!defined('LONG_TITLES'))
+			define('LONG_TITLES', false);
 	}
 }
 
@@ -1056,6 +1069,11 @@ function safe_path($p)
 /* DISPATCH *********************************************/
 
 $podcast = new Cached_Dir_Podcast(MP3_DIR, TMP_DIR);
+if( FORCE_PASSWORD && isset($_GET['force']) && FORCE_PASSWORD == $_GET['force'] )
+{
+	$podcast->uncache();	
+}
+
 if(!$podcast->isCached())
 {
 	SettingsHandler::defaults();

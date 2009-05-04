@@ -153,6 +153,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 HISTORY
 ================================================================================
 
+1.2 2009-05-04 Changed the contents of the <title> tag per item. Added a new 
+               configuration option LONG_TITLE to enable the old behaviour.
+               Added new URL parameter ?force=password to enable clearing of
+               the cache if, for some reason, the URL is not generated
+               correctly.
 1.1 2009-04-23 Fix an error in the default dir2cast.ini
 1.0 2008-03-17 Fixed a couple of bugs with incomplete ID3 tags.
                The most-common case, that of hitting the cache, has been 
