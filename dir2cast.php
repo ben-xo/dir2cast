@@ -152,7 +152,12 @@ class getID3_Podcast_Helper implements Podcast_Helper {
 		if($item instanceof MP3_RSS_Item && !$item->getAnalyzed())
 		{
 			if(!isset($this->getid3))
+			{
 				$this->getid3 = new getid3();
+				$this->getid3->option_tag_lyrics3 = false;
+				$this->getid3->option_tag_apetag = false;
+				$this->getid3->encoding = 'UTF-8';
+			}
 			
 			$info = $this->getid3->Analyze($item->getFilename());
 			
@@ -471,11 +476,6 @@ abstract class Podcast extends GetterSetter
 	protected $items = array();
 	protected $helpers = array();
 	
-	/**
-	 * Constructor
-	 */
-	public function __construct() {	}
-	
 	public function addHelper(Podcast_Helper $helper)
 	{
 		$this->helpers[] = $helper;
@@ -588,7 +588,6 @@ class Dir_Podcast extends Podcast
 	public function __construct($source_dir)
 	{
 		$this->source_dir = $source_dir;
-		parent::__construct();
 	}
 
 	protected function scan()
@@ -683,7 +682,6 @@ class Cached_Dir_Podcast extends Dir_Podcast
 	protected $temp_dir;
 	protected $temp_file;
 	protected $cache_date;
-	protected $file_handle;
 	protected $serve_from_cache;
 
 	/**
@@ -702,9 +700,15 @@ class Cached_Dir_Podcast extends Dir_Podcast
 
 		parent::__construct($source_dir);
 
-		$this->acquireLock();
-		
-		if($this->isCached())
+		$this->init();
+	}
+
+	/**
+	 * Initialises the cache file
+	 */
+	public function init()
+	{ 
+		if($this->isCached()) // this call sets $this->serve_from_cache
 		{
 			$cache_date = filemtime($this->temp_file);
 
@@ -722,44 +726,17 @@ class Cached_Dir_Podcast extends Dir_Podcast
 			}
 		}
 	}
-
-	public function __destruct()
-	{
-		$this->releaseLock();
-	}
-
+	
 	public function renew()
 	{
 		touch($this->temp_file); // renew cache file life expectancy		
-	}
-	
-	/**
-	 * acquireLock always creates the cache file.
-	 */
-	protected function acquireLock()
-	{
-		$this->file_handle = fopen($this->temp_file, 'a');
-		if(!flock($this->file_handle, LOCK_EX))
-			throw new Exception('Locking cache file failed.');
-	}
-	
-	/**
-	 * releaseLock will delete the cache file before unlocking if it's empty.
-	 */
-	protected function releaseLock()
-	{
-		if(!$this->serve_from_cache)
-			unlink($this->temp_file);
-		
-		// this releases the lock implicitly
-		fclose($this->file_handle);	
 	}
 	
 	public function uncache()
 	{
 		if($this->isCached())
 		{
-			ftruncate($this->temp_file, 0);
+			unlink($this->temp_file);
 			$this->serve_from_cache = false;
 		}
 	}
@@ -788,20 +765,52 @@ class Cached_Dir_Podcast extends Dir_Podcast
 			return $this->__call('getLastBuildDate', array());
 	}
 	
-	/**
-	 * Instantiating this class will create the cache file if it doesn't exist.
-	 * This method tells you if the cache file contains anything (i.e. if it
-	 * can be served from). After the lock is acquired, we only need to determine
-	 * this from the file-size the very first time, as we're in control after that. 
-	 */
 	public function isCached()
 	{
 		if(!isset($this->serve_from_cache))
-			$this->serve_from_cache = (bool) filesize($this->temp_file);
+			$this->serve_from_cache = file_exists($this->temp_file) && filesize($this->temp_file);
 			
 		return $this->serve_from_cache;
 	}
 
+}
+
+class Locking_Cached_Dir_Podcast extends Cached_Dir_Podcast
+{
+	protected $file_handle;
+	
+	public function init()
+	{
+		$this->acquireLock();
+		parent::init();
+	}
+	
+	/**
+	 * acquireLock always creates the cache file.
+	 */
+	protected function acquireLock()
+	{
+		$this->file_handle = fopen($this->temp_file, 'a');
+		if(!flock($this->file_handle, LOCK_EX))
+			throw new Exception('Locking cache file failed.');
+	}
+	
+	/**
+	 * releaseLock will delete the cache file before unlocking if it's empty.
+	 */
+	protected function releaseLock()
+	{
+		if(!$this->serve_from_cache)
+			unlink($this->temp_file);
+		
+		// this releases the lock implicitly
+		fclose($this->file_handle);	
+	}
+	
+	public function __destruct()
+	{
+		$this->releaseLock();
+	}
 }
 
 class ErrorHandler
