@@ -759,7 +759,7 @@ class Cached_Dir_Podcast extends Dir_Podcast
 	{
 		if($this->isCached())
 		{
-			ftrucate($this->temp_file, 0);
+			ftruncate($this->temp_file, 0);
 			$this->serve_from_cache = false;
 		}
 	}
@@ -913,9 +913,10 @@ class SettingsHandler
 	 * This method sets up all app-wide settings that are required at initialization time.
 	 * 
 	 * @param $SERVER HTTP Server array containing HTTP_HOST, SCRIPT_FILENAME, DOCUMENT_ROOT, HTTPS
-	 * @param $GET HTTP Server
+	 * @param $GET HTTP GET array
+	 * @param $argv command line options array
 	 */
-	public static function bootstrap($SERVER, $GET, $argv, )
+	public static function bootstrap(array $SERVER, array $GET, array $argv)
 	{
 		// If an installation-wide config file exists, load it now.
 		// Installation-wide config can contain TMP_DIR, MP3_DIR, MP3_URL and MIN_CACHE_TIME.
@@ -1128,7 +1129,11 @@ function safe_path($p)
 // define NO_DISPATCHER in, say, your test harness
 if(!defined('NO_DISPATCHER'))
 {
-	SettingsHandler::bootstrap($_SERVER, $_GET, $argv);
+	SettingsHandler::bootstrap(
+		empty($_SERVER) ? array() : $_SERVER, 
+		empty($_GET) ? array() : $_GET, 
+		empty($argv) ? array() : $argv
+	);
 	
 	$podcast = new Cached_Dir_Podcast(MP3_DIR, TMP_DIR);
 	if( strlen(FORCE_PASSWORD) && isset($_GET['force']) && FORCE_PASSWORD == $_GET['force'] )
