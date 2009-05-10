@@ -67,58 +67,6 @@ set_exception_handler( array( 'ErrorHandler', 'handle_exception') );
 // Best do everything in UTC.
 date_default_timezone_set( 'UTC' );
 
-// If an installation-wide config file exists, load it now.
-// Installation-wide config can contain TMP_DIR, MP3_DIR, MP3_URL and MIN_CACHE_TIME.
-// Anything else it contains will be used as a fall-back if no dir-specific dir2cast.ini exists
-if(file_exists( dirname(__FILE__) . '/dir2cast.ini' ))
-{
-	SettingsHandler::load_from_ini(dirname(__FILE__) . '/dir2cast.ini' );
-	SettingsHandler::finalize(array('TMP_DIR', 'MP3_BASE', 'MP3_DIR', 'MP3_URL', 'MIN_CACHE_TIME', 'FORCE_PASSWORD'));
-}
-
-if(!defined('TMP_DIR'))
-	define('TMP_DIR', dirname(__FILE__) . '/temp');
-
-if(!defined('MP3_BASE'))
-{
-	if(!empty($_SERVER['HTTP_HOST']))
-		define('MP3_BASE', dirname($_SERVER['SCRIPT_FILENAME']));
-	else
-		define('MP3_BASE', dirname(__FILE__));
-}
-	
-if(!defined('MP3_DIR'))
-{
-	if(!empty($_GET['dir']))
-		define('MP3_DIR', MP3_BASE . '/' . safe_path(magic_stripslashes($_GET['dir'])));
-	elseif(!empty($argv[1]) && realpath($argv[1]))
-		define('MP3_DIR', realpath($argv[1]));
-	else
-		define('MP3_DIR', MP3_BASE);
-}
-
-if(!defined('MP3_URL'))
-{
-	# This works on the principle that MP3_DIR must be under DOCUMENT_ROOT (otherwise how will you serve the MP3s?)
-	# This may fail if MP3_DIR, or one of its parents under DOCUMENT_ROOT, is a symlink. In that case you will have
-	# to set this manually.
-	
-	$path_part = substr(MP3_DIR, strlen($_SERVER['DOCUMENT_ROOT']));	
-	if(!empty($_SERVER['HTTP_HOST']))
-		define('MP3_URL', 
-			'http' . (!empty($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['HTTP_HOST'] . '/' .	ltrim( rtrim( $path_part, '/' ) . '/', '/' ));
-	else
-		define('MP3_URL', 'file://' . MP3_DIR );
-	
-	unset($path_part);
-}
-
-if(!defined('MIN_CACHE_TIME'))
-	define('MIN_CACHE_TIME', 5);
-
-if(!defined('FORCE_PASSWORD'))
-	define('FORCE_PASSWORD', '');
-	
 /* EXTERNALS ********************************************/
 
 function __autoload($class_name) 
@@ -726,13 +674,17 @@ class Dir_Podcast extends Podcast
 }
 
 /**
- * Podcast with cached output. 
+ * Podcast with cached output. The cache file will be created and a file lock
+ * obtained at object construction time. The lock will be released in the object's
+ * destructor.
  */
 class Cached_Dir_Podcast extends Dir_Podcast
 {
 	protected $temp_dir;
 	protected $temp_file;
 	protected $cache_date;
+	protected $file_handle;
+	protected $serve_from_cache;
 
 	/**
 	 * Constructor
@@ -750,6 +702,8 @@ class Cached_Dir_Podcast extends Dir_Podcast
 
 		parent::__construct($source_dir);
 
+		$this->acquireLock();
+		
 		if($this->isCached())
 		{
 			$cache_date = filemtime($this->temp_file);
@@ -759,33 +713,68 @@ class Cached_Dir_Podcast extends Dir_Podcast
 				$this->scan();
 				if( $cache_date < $this->max_mtime || $cache_date < filemtime($this->source_dir))
 				{
-					unlink($this->temp_file); // cache stale; uncache
+					$this->uncache();
 				}
 				else
 				{
-					touch($this->temp_file); // renew cache file life expectancy
+					$this->renew();
 				}
 			}
 		}
+	}
 
+	public function __destruct()
+	{
+		$this->releaseLock();
+	}
+
+	public function renew()
+	{
+		touch($this->temp_file); // renew cache file life expectancy		
+	}
+	
+	/**
+	 * acquireLock always creates the cache file.
+	 */
+	protected function acquireLock()
+	{
+		$this->file_handle = fopen($this->temp_file, 'a');
+		if(!flock($this->file_handle, LOCK_EX))
+			throw new Exception('Locking cache file failed.');
+	}
+	
+	/**
+	 * releaseLock will delete the cache file before unlocking if it's empty.
+	 */
+	protected function releaseLock()
+	{
+		if(!$this->serve_from_cache)
+			unlink($this->temp_file);
+		
+		// this releases the lock implicitly
+		fclose($this->file_handle);	
 	}
 	
 	public function uncache()
 	{
 		if($this->isCached())
-			unlink($this->temp_file);
+		{
+			ftrucate($this->temp_file, 0);
+			$this->serve_from_cache = false;
+		}
 	}
 	
 	public function generate()
 	{
-		if(file_exists($this->temp_file))
+		if($this->serve_from_cache)
 		{
 			$output = file_get_contents($this->temp_file); // serve cached copy
 		}
 		else
 		{
-			$output = parent::generate();		
+			$output = parent::generate()	
 			file_put_contents($this->temp_file, $output); // save cached copy
+			$this->serve_from_cache = true;
 		}
 			
 		return $output;
@@ -799,9 +788,18 @@ class Cached_Dir_Podcast extends Dir_Podcast
 			return $this->__call('getLastBuildDate', array());
 	}
 	
+	/**
+	 * Instantiating this class will create the cache file if it doesn't exist.
+	 * This method tells you if the cache file contains anything (i.e. if it
+	 * can be served from). After the lock is acquired, we only need to determine
+	 * this from the file-size the very first time, as we're in control after that. 
+	 */
 	public function isCached()
 	{
-		return file_exists($this->temp_file);
+		if(!isset($this->serve_from_cache))
+			$this->serve_from_cache = (bool) filesize($this->temp_file);
+			
+		return $this->serve_from_cache;
 	}
 
 }
@@ -828,16 +826,14 @@ class ErrorHandler
 	
 	public static function handle_error($errno, $errstr, $errfile=null, $errline=null, $errcontext=null)
 	{	
-		// note: this is required to support the @ operator
-        // but the @ operator should still NOT BE USED for great justice
-        // (but getID3 does extensively)
+		// note: this is required to support the @ operator, which getID3 uses extensively
         if(error_reporting() & $errno)
         {
 			ErrorHandler::display($errstr, $errfile, $errline);
         }
 	}
 	
-	public static  function handle_exception( Exception $e )
+	public static function handle_exception( Exception $e )
 	{
 		ErrorHandler::display($e->getMessage(), $e->getFile(), $e->getLine());
 	}
@@ -913,30 +909,68 @@ class SettingsHandler
 {
 	private static $settings_cache = array();
 	
-	public static function load_from_ini($file)
+	/**
+	 * This method sets up all app-wide settings that are required at initialization time.
+	 * 
+	 * @param $SERVER HTTP Server array containing HTTP_HOST, SCRIPT_FILENAME, DOCUMENT_ROOT, HTTPS
+	 * @param $GET HTTP Server
+	 */
+	public static function bootstrap($SERVER, $GET, $argv, )
 	{
-		ErrorHandler::prime('ini');
-		$settings = parse_ini_file($file); 
-		ErrorHandler::defuse();
+		// If an installation-wide config file exists, load it now.
+		// Installation-wide config can contain TMP_DIR, MP3_DIR, MP3_URL and MIN_CACHE_TIME.
+		// Anything else it contains will be used as a fall-back if no dir-specific dir2cast.ini exists
+		if(file_exists( dirname(__FILE__) . '/dir2cast.ini' ))
+		{
+			self::load_from_ini(dirname(__FILE__) . '/dir2cast.ini' );
+			self::finalize(array('TMP_DIR', 'MP3_BASE', 'MP3_DIR', 'MP3_URL', 'MIN_CACHE_TIME', 'FORCE_PASSWORD'));
+		}
 		
-		self::$settings_cache = array_merge(self::$settings_cache, $settings);
+		if(!defined('TMP_DIR'))
+			define('TMP_DIR', dirname(__FILE__) . '/temp');
+		
+		if(!defined('MP3_BASE'))
+		{
+			if(!empty($SERVER['HTTP_HOST']))
+				define('MP3_BASE', dirname($SERVER['SCRIPT_FILENAME']));
+			else
+				define('MP3_BASE', dirname(__FILE__));
+		}
+			
+		if(!defined('MP3_DIR'))
+		{
+			if(!empty($GET['dir']))
+				define('MP3_DIR', MP3_BASE . '/' . safe_path(magic_stripslashes($GET['dir'])));
+			elseif(!empty($argv[1]) && realpath($argv[1]))
+				define('MP3_DIR', realpath($argv[1]));
+			else
+				define('MP3_DIR', MP3_BASE);
+		}
+		
+		if(!defined('MP3_URL'))
+		{
+			# This works on the principle that MP3_DIR must be under DOCUMENT_ROOT (otherwise how will you serve the MP3s?)
+			# This may fail if MP3_DIR, or one of its parents under DOCUMENT_ROOT, is a symlink. In that case you will have
+			# to set this manually.
+			
+			$path_part = substr(MP3_DIR, strlen($SERVER['DOCUMENT_ROOT']));	
+			if(!empty($SERVER['HTTP_HOST']))
+				define('MP3_URL', 
+					'http' . (!empty($SERVER['HTTPS']) ? 's' : '') . '://' . $SERVER['HTTP_HOST'] . '/' . ltrim( rtrim( $path_part, '/' ) . '/', '/' ));
+			else
+				define('MP3_URL', 'file://' . MP3_DIR );
+		}
+		
+		if(!defined('MIN_CACHE_TIME'))
+			define('MIN_CACHE_TIME', 5);
+		
+		if(!defined('FORCE_PASSWORD'))
+			define('FORCE_PASSWORD', '');
 	}
 	
-	public static function finalize($setting_names=null)
-	{
-		if(is_array($setting_names))
-			// define only those listed
-			foreach($setting_names as $s)
-				!defined($s) and 
-					isset(self::$settings_cache[$s]) and
-						define($s, self::$settings_cache[$s]);
-		else
-			// define all
-			foreach(self::$settings_cache as $s => $s_val)
-				!defined($s) and 
-					define($s, $s_val);
-	}
-	
+	/**
+	 * This method sets up all fall-back default instance settings AFTER all .ini files have been loaded.
+	 */
 	public static function defaults()
 	{
 		// if an MP3_DIR specific config file exists, load it now, as long as it's not the same file as the global one!
@@ -1040,6 +1074,30 @@ class SettingsHandler
 		if(!defined('LONG_TITLES'))
 			define('LONG_TITLES', false);
 	}
+	
+	public static function load_from_ini($file)
+	{
+		ErrorHandler::prime('ini');
+		$settings = parse_ini_file($file); 
+		ErrorHandler::defuse();
+		
+		self::$settings_cache = array_merge(self::$settings_cache, $settings);
+	}
+	
+	public static function finalize($setting_names=null)
+	{
+		if(is_array($setting_names))
+			// define only those listed
+			foreach($setting_names as $s)
+				!defined($s) and 
+					isset(self::$settings_cache[$s]) and
+						define($s, self::$settings_cache[$s]);
+		else
+			// define all
+			foreach(self::$settings_cache as $s => $s_val)
+				!defined($s) and 
+					define($s, $s_val);
+	}
 }
 
 /* FUNCTIONS **********************************************/
@@ -1067,42 +1125,48 @@ function safe_path($p)
 
 /* DISPATCH *********************************************/
 
-$podcast = new Cached_Dir_Podcast(MP3_DIR, TMP_DIR);
-if( strlen(FORCE_PASSWORD) && isset($_GET['force']) && FORCE_PASSWORD == $_GET['force'] )
+// define NO_DISPATCHER in, say, your test harness
+if(!defined('NO_DISPATCHER'))
 {
-	$podcast->uncache();	
+	SettingsHandler::bootstrap($_SERVER, $_GET, $argv);
+	
+	$podcast = new Cached_Dir_Podcast(MP3_DIR, TMP_DIR);
+	if( strlen(FORCE_PASSWORD) && isset($_GET['force']) && FORCE_PASSWORD == $_GET['force'] )
+	{
+		$podcast->uncache();	
+	}
+	
+	if(!$podcast->isCached())
+	{
+		SettingsHandler::defaults();
+		
+		$getid3 = $podcast->addHelper(new getID3_Podcast_Helper());
+		$itunes = $podcast->addHelper(new iTunes_Podcast_Helper());
+		
+		$podcast->setTitle(TITLE);
+		$podcast->setLink(LINK);
+		$podcast->setDescription(DESCRIPTION);
+		$podcast->setLanguage(LANGUAGE);
+		$podcast->setCopyright(COPYRIGHT);
+		$podcast->setWebMaster(WEBMASTER);
+		$podcast->setTtl(TTL);
+		
+		$itunes->setSubtitle(ITUNES_SUBTITLE);
+		$itunes->setAuthor(ITUNES_AUTHOR);
+		$itunes->setSummary(ITUNES_SUMMARY);
+		$itunes->setImage(ITUNES_IMAGE);
+		
+		$itunes->setOwnerName(ITUNES_OWNER_NAME);
+		$itunes->setOwnerEmail(ITUNES_OWNER_EMAIL);
+		
+		$itunes->addCategories(ITUNES_CATEGORIES);
+		
+		$podcast->setGenerator(GENERATOR);
+	}
+	
+	$podcast->http_headers();
+	
+	echo $podcast->generate();
 }
-
-if(!$podcast->isCached())
-{
-	SettingsHandler::defaults();
-	
-	$getid3 = $podcast->addHelper(new getID3_Podcast_Helper());
-	$itunes = $podcast->addHelper(new iTunes_Podcast_Helper());
-	
-	$podcast->setTitle(TITLE);
-	$podcast->setLink(LINK);
-	$podcast->setDescription(DESCRIPTION);
-	$podcast->setLanguage(LANGUAGE);
-	$podcast->setCopyright(COPYRIGHT);
-	$podcast->setWebMaster(WEBMASTER);
-	$podcast->setTtl(TTL);
-	
-	$itunes->setSubtitle(ITUNES_SUBTITLE);
-	$itunes->setAuthor(ITUNES_AUTHOR);
-	$itunes->setSummary(ITUNES_SUMMARY);
-	$itunes->setImage(ITUNES_IMAGE);
-	
-	$itunes->setOwnerName(ITUNES_OWNER_NAME);
-	$itunes->setOwnerEmail(ITUNES_OWNER_EMAIL);
-	
-	$itunes->addCategories(ITUNES_CATEGORIES);
-	
-	$podcast->setGenerator(GENERATOR);
-}
-
-$podcast->http_headers();
-
-echo $podcast->generate();
 
 /* THE END *********************************************/
