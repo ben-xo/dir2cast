@@ -772,7 +772,7 @@ class Cached_Dir_Podcast extends Dir_Podcast
 		}
 		else
 		{
-			$output = parent::generate()	
+			$output = parent::generate();
 			file_put_contents($this->temp_file, $output); // save cached copy
 			$this->serve_from_cache = true;
 		}
