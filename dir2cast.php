@@ -56,7 +56,7 @@
 /* DEFAULTS *********************************************/
 
 // error handler needs these, so let's set them now.
-define('VERSION', '1.2');
+define('VERSION', '1.3');
 define('DIR2CAST_HOMEPAGE', 'http://www.ben-xo.com/dir2cast/');
 define('GENERATOR', 'dir2cast ' . VERSION . ' by Ben XO (' . DIR2CAST_HOMEPAGE . ')');
 
@@ -129,7 +129,7 @@ interface Podcast_Helper {
 }
 
 /**
- * Uses external getID3 lib to analyse MP3 files.
+ * Uses external getID3 lib to analyze MP3 files.
  *
  */
 class getID3_Podcast_Helper implements Podcast_Helper {
@@ -145,7 +145,7 @@ class getID3_Podcast_Helper implements Podcast_Helper {
 	public function addNamespaceTo(DOMElement $d, DOMDocument $doc) { /* nothing */ }
 
 	/**
-	 * Fills in a bunch of info on the Item by using getid3->Analyse()
+	 * Fills in a bunch of info on the Item by using getid3->Analyze()
 	 */
 	public function appendToItem(DOMElement $d, DOMDocument $doc, RSS_Item $item)
 	{
@@ -159,7 +159,15 @@ class getID3_Podcast_Helper implements Podcast_Helper {
 				$this->getid3->encoding = 'UTF-8';
 			}
 			
-			$info = $this->getid3->Analyze($item->getFilename());
+			try
+			{
+				$info = $this->getid3->Analyze($item->getFilename());
+			}
+			catch(getid3_exception $e)
+			{
+				// MP3 couldn't be analyzed.
+				return;
+			}
 			
 			if(!empty($info['bitrate']))
 				$item->setBitrate($info['bitrate']);
@@ -624,19 +632,19 @@ class Dir_Podcast extends Podcast
 
 		switch(strtolower($file_ext))
 		{
-			case 'mp3': 
-				// one array per mtime, just in case several MP3s share the same mtime.
-				$filemtime = filemtime($filename);
-				$the_item = new MP3_RSS_Item($filename);
-				$this->unsorted_items[$filemtime][] = $the_item;
-				if($filemtime > $this->max_mtime)
-					$this->max_mtime = $filemtime;
-				
-				foreach($this->helpers as $helper)
-					$the_item->addHelper($helper);
-
+			case 'mp3':
+				// skip 0-length mp3 files. getID3 chokes on them.
+				if(filesize($filename))
+				{
+					// one array per mtime, just in case several MP3s share the same mtime.
+					$filemtime = filemtime($filename);
+					$the_item = new MP3_RSS_Item($filename);
+					$this->unsorted_items[$filemtime][] = $the_item;
+					if($filemtime > $this->max_mtime)
+						$this->max_mtime = $filemtime;
+				}
 				break;
-			
+				
 			default:
 		}
 		
@@ -645,8 +653,14 @@ class Dir_Podcast extends Podcast
 	
 	protected function pre_generate()
 	{
-		$this->scan();	
+		$this->scan();
 		$this->sort();
+		
+		// Add helpers here, NOT during scan(). 
+		// scan() is also used just to get mtimes to see if we need to regenerate the feed.
+		foreach($this->helpers as $helper)
+			foreach($this->items as $the_item)
+				$the_item->addHelper($helper);
 	}
 	
 	protected function sort() { 
@@ -1141,10 +1155,10 @@ if(!defined('NO_DISPATCHER'))
 	SettingsHandler::bootstrap(
 		empty($_SERVER) ? array() : $_SERVER, 
 		empty($_GET) ? array() : $_GET, 
-		empty($argv) ? array() : $argv
+		empty($argv) ? array() : $argv 
 	);
 	
-	$podcast = new Cached_Dir_Podcast(MP3_DIR, TMP_DIR);
+	$podcast = new Locking_Cached_Dir_Podcast(MP3_DIR, TMP_DIR);
 	if( strlen(FORCE_PASSWORD) && isset($_GET['force']) && FORCE_PASSWORD == $_GET['force'] )
 	{
 		$podcast->uncache();	

@@ -1,4 +1,4 @@
-dir2cast by Ben XO v1.2 (2009-05-04)
+dir2cast by Ben XO v1.3 (2009-06-28)
 ================================================================================
 
 http://www.ben-xo.com/dir2cast
@@ -153,6 +153,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 HISTORY
 ================================================================================
 
+1.3 2009-06-28 Fixed nasty regeneration bug where no items in the feed would
+               get any metadata after adding a file to the feed. The workaround
+               was to clear the cache, but this update fixes it. Also, make
+               the feed more robust against getID3's handling of broken MP3s.
 1.2 2009-05-04 Changed the contents of the <title> tag per item. Added a new 
                configuration option LONG_TITLE to enable the old behaviour.
                Added new URL parameter ?force=password to enable clearing of
@@ -161,8 +165,8 @@ HISTORY
 1.1 2009-04-23 Fix an error in the default dir2cast.ini
 1.0 2008-03-17 Fixed a couple of bugs with incomplete ID3 tags.
                The most-common case, that of hitting the cache, has been 
-	       streamlined so that it doesn't hit the defaults-setup code
-	       or parse the .ini files unless necessary.
+               streamlined so that it doesn't hit the defaults-setup code
+               or parse the .ini files unless necessary.
 0.9 2008-03-02 Added .ini file configuration, added MP3_BASE option.
 0.8 2008-02-27 Fixed ?dir= so it works intuitively, and much more safely.
 0.7 2008-02-25 W3 feed validator conformance fixes and fixed itunes:image.
