@@ -1,7 +1,7 @@
 <?php
 
 /******************************************************************************
- * Copyright (c) 2008, Ben XO (me@ben-xo.com).
+ * Copyright (c) 2008-2009, Ben XO (me@ben-xo.com).
  *
  * All rights reserved.
  * 
