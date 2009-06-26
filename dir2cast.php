@@ -193,6 +193,51 @@ class getID3_Podcast_Helper implements Podcast_Helper {
 	}
 }
 
+class Atom_Podcast_Helper extends GetterSetter implements Podcast_Helper {
+	
+	protected $self_link;
+	
+	public function __construct() { }
+	
+	public function getNSURI()
+	{
+			return 'http://www.w3.org/2005/Atom';
+	}
+	
+	public function addNamespaceTo(DOMElement $d, DOMDocument $doc)
+	{
+		$d->appendChild( $doc->createAttribute( 'xmlns:atom' ) )
+			->appendChild( new DOMText( $this->getNSURI() ) );
+	}
+	
+	public function appendToChannel(DOMElement $channel, DOMDocument $doc)
+	{
+		foreach ($this->parameters as $name => $val)
+		{
+			$channel->appendChild( $doc->createElement('atom:' . $name) )
+				->appendChild( new DOMText($val)	);
+		}
+		
+		if(!empty($this->self_link))
+		{
+			$linkNode = $channel->appendChild( $doc->createElement('atom:link') );
+			$linkNode->setAttribute('href', $this->self_link);
+			$linkNode->setAttribute('rel', 'self');
+			$linkNode->setAttribute('type', 'application/rss+xml');
+		}		
+	}
+	
+	public function appendToItem(DOMElement $item_element, DOMDocument $doc, RSS_Item $item)
+	{
+
+	}
+	
+	public function setSelfLink($link)
+	{
+		$this->self_link = $link;
+	}
+}
+
 class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
 	
 	protected $owner_name, $owner_email, $image_href;
@@ -261,8 +306,8 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
 		$elements = array(
 			'author' => $item->getID3Artist(),
 			'duration' => $item->getDuration(),
-			'subtitle' => $item->getID3Comment(),
-			'summary' => $item->getSummaryFromFile(),
+			'subtitle' => $item->getID3Album(),
+			'summary' => $item->getSummary(),
 			//'keywords' => 'not supported yet.'
 		);
 				
@@ -431,7 +476,7 @@ class RSS_File_Item extends RSS_Item {
 	 *
 	 * @return String the summary, or null if there's no summary file
 	 */
-	public function getSummaryFromFile()
+	public function getSummary()
 	{
 		$summary_file_name = dirname($this->getFilename()) . '/' . basename($this->getFilename(), '.' . $this->getExtension()) . '.txt';
 		if(file_exists( $summary_file_name ))
@@ -476,6 +521,16 @@ class MP3_RSS_Item extends RSS_File_Item {
     {
     	return $this->getID3Comment();
     }
+    
+    public function getSummary()
+    {
+    	$summary = parent::getSummary();
+    	if(null == $summary && !LONG_TITLES)
+    	{
+    		// use album name as summary if there's no file-based override
+    		$summary = $this->getID3Album();
+    	}
+    }
 }
 
 abstract class Podcast extends GetterSetter
@@ -496,14 +551,14 @@ abstract class Podcast extends GetterSetter
 		return $helper;
 	}
 	
-	public function getNSURI()
-	{
-		return 'http://backend.userland.com/rss2';
-	}
+//	public function getNSURI()
+//	{
+//		return 'http://backend.userland.com/RSS2';
+//	}
 	
 	public function http_headers()
 	{
-		header('Content-type: application/xml');
+		header('Content-type: application/rss+xml');
 		header('Last-modified: ' . $this->getLastBuildDate());
 	}
 	
@@ -520,12 +575,17 @@ abstract class Podcast extends GetterSetter
 		
 		$doc = new DOMDocument('1.0', 'UTF-8');
 		$doc->formatOutput = true;
-		
+
+					
 		$rss = $doc->createElement('rss');
 		$doc->appendChild($rss);
 		
 		$rss->setAttribute('version', '2.0');
 		
+		// we do not show the default xmlns. Seems to break the validator.
+		//	$rss->appendChild( $doc->createAttribute( 'xmlns' ) )
+		//		->appendChild( new DOMText( $this->getNSURI() ) );
+			
 		foreach($this->helpers as $helper)
 			$helper->addNamespaceTo($rss, $doc);
 		
@@ -1022,6 +1082,14 @@ class SettingsHandler
 			else
 				define('LINK', 'http://www.example.com/');
 		}
+
+		if(!defined('RSS_LINK'))
+		{
+			if(!empty($_SERVER['HTTP_HOST']))
+				define('RSS_LINK', 'http' . (empty($_SERVER['HTTPS']) ? '' : 's') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF']);
+			else
+				define('RSS_LINK', 'http://www.example.com/rss');
+		}
 		
 		if(!defined('DESCRIPTION'))
 		{
@@ -1169,6 +1237,7 @@ if(!defined('NO_DISPATCHER'))
 		SettingsHandler::defaults();
 		
 		$getid3 = $podcast->addHelper(new getID3_Podcast_Helper());
+		$atom   = $podcast->addHelper(new Atom_Podcast_Helper());
 		$itunes = $podcast->addHelper(new iTunes_Podcast_Helper());
 		
 		$podcast->setTitle(TITLE);
@@ -1178,6 +1247,8 @@ if(!defined('NO_DISPATCHER'))
 		$podcast->setCopyright(COPYRIGHT);
 		$podcast->setWebMaster(WEBMASTER);
 		$podcast->setTtl(TTL);
+		
+		$atom->setSelfLink(RSS_LINK);
 		
 		$itunes->setSubtitle(ITUNES_SUBTITLE);
 		$itunes->setAuthor(ITUNES_AUTHOR);
