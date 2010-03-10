@@ -56,7 +56,7 @@
 /* DEFAULTS *********************************************/
 
 // error handler needs these, so let's set them now.
-define('VERSION', '1.3');
+define('VERSION', '1.4');
 define('DIR2CAST_HOMEPAGE', 'http://www.ben-xo.com/dir2cast/');
 define('GENERATOR', 'dir2cast ' . VERSION . ' by Ben XO (' . DIR2CAST_HOMEPAGE . ')');
 
@@ -398,8 +398,11 @@ class RSS_Item extends GetterSetter {
 		$item_elements = array(
 			'title' => $this->getTitle(),
 			'link' => $this->getLink(),
-			'description' => $this->getDescription(),
 			'pubDate' => $this->getPubDate()
+		);
+		
+		$cdata_item_elements = array(
+		    'description' => $this->getDescription()
 		);
 		
 		if(empty($item_elements['title']))
@@ -409,6 +412,12 @@ class RSS_Item extends GetterSetter {
 		{
 			$item_element->appendChild( new DOMElement($name) )
 				->appendChild(new DOMText($val));
+		}
+		
+		foreach($cdata_item_elements as $name => $val)
+		{
+			$item_element->appendChild( new DOMElement($name) )
+				->appendChild( $doc->createCDATASection($val) );
 		}
 		
 		$enclosure = $item_element->appendChild(new DOMElement('enclosure'));
