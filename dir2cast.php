@@ -417,7 +417,11 @@ class RSS_Item extends GetterSetter {
 		foreach($cdata_item_elements as $name => $val)
 		{
 			$item_element->appendChild( new DOMElement($name) )
-				->appendChild( $doc->createCDATASection($val) );
+				->appendChild( $doc->createCDATASection(
+				    // Encode the text but reintroduce newlines as <br />. 
+				    // Helps with most RSS readers, as this is usually parsed as HTML
+				    nl2br(htmlspecialchars($val))) 
+				  );
 		}
 		
 		$enclosure = $item_element->appendChild(new DOMElement('enclosure'));
