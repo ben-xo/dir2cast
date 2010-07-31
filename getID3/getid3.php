@@ -1588,7 +1588,7 @@ class getid3_lib
             if ($hex) {
                 $return_string .= str_pad(dechex(ord($string{$i})), 2, '0', STR_PAD_LEFT);
             } else {
-                $return_string .= ' '.(ereg("[\x20-\x7E]", $string{$i}) ? $string{$i} : '¤');
+                $return_string .= ' '.(preg_match("/[\x20-\x7E]/", $string{$i}) ? $string{$i} : '¤');
             }
             if ($spaces) {
                 $return_string .= ' ';
