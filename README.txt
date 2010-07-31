@@ -1,4 +1,4 @@
-dir2cast by Ben XO v1.4 (2010-03-10)
+dir2cast by Ben XO v1.5 (2010-07-31)
 ================================================================================
 
 http://www.ben-xo.com/dir2cast
@@ -153,6 +153,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 HISTORY
 ================================================================================
 
+1.5 2010-07-31 Add optional RSS <image> tag. This is not the same as the 
+               <itunes:image> tag, as it has size restrictions. 
 1.4 2010-03-10 Make <description> in a CDATA section
 1.3 2009-05-28 Fixed nasty regeneration bug where no items in the feed would
                get any metadata after adding a file to the feed. The workaround

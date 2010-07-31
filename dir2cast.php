@@ -1,7 +1,7 @@
 <?php
 
 /******************************************************************************
- * Copyright (c) 2008-2009, Ben XO (me@ben-xo.com).
+ * Copyright (c) 2008-2010, Ben XO (me@ben-xo.com).
  *
  * All rights reserved.
  * 
@@ -9,13 +9,13 @@
  * modification, are permitted provided that the following conditions are met:
  * 
  *  * Redistributions of source code must retain the above copyright notice, 
- *    this list of conditions and the following disclaimer.
+ *	this list of conditions and the following disclaimer.
  *  * Redistributions in binary form must reproduce the above copyright notice, 
- *    this list of conditions and the following disclaimer in the documentation 
- *    and/or other materials provided with the distribution.
+ *	this list of conditions and the following disclaimer in the documentation 
+ *	and/or other materials provided with the distribution.
  *  * Neither the name of dir2cast nor the names of its contributors may be used 
- *    to endorse or promote products derived from this software without specific 
- *    prior written permission.
+ *	to endorse or promote products derived from this software without specific 
+ *	prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -56,7 +56,7 @@
 /* DEFAULTS *********************************************/
 
 // error handler needs these, so let's set them now.
-define('VERSION', '1.4');
+define('VERSION', '1.5');
 define('DIR2CAST_HOMEPAGE', 'http://www.ben-xo.com/dir2cast/');
 define('GENERATOR', 'dir2cast ' . VERSION . ' by Ben XO (' . DIR2CAST_HOMEPAGE . ')');
 
@@ -84,7 +84,7 @@ function __autoload($class_name)
 			break;
 			
 		default:
-    		require_once $class_name . '.php';
+			require_once $class_name . '.php';
 	}
 }
 
@@ -299,7 +299,7 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
 		 *	<itunes:duration>7:04</itunes:duration>
 		 *	<itunes:subtitle>A short primer on table spices</itunes:subtitle>
 		 *	<itunes:summary>This week we talk about salt and pepper shakers, 
-		 *                  [...] Come and join the party!</itunes:summary>
+		 *				  [...] Come and join the party!</itunes:summary>
 		 *	<itunes:keywords>salt, pepper, shaker, exciting</itunes:keywords>
 		 */
 
@@ -402,7 +402,7 @@ class RSS_Item extends GetterSetter {
 		);
 		
 		$cdata_item_elements = array(
-		    'description' => $this->getDescription()
+			'description' => $this->getDescription()
 		);
 		
 		if(empty($item_elements['title']))
@@ -418,9 +418,9 @@ class RSS_Item extends GetterSetter {
 		{
 			$item_element->appendChild( new DOMElement($name) )
 				->appendChild( $doc->createCDATASection(
-				    // Encode the text but reintroduce newlines as <br />. 
-				    // Helps with most RSS readers, as this is usually parsed as HTML
-				    nl2br(htmlspecialchars($val))) 
+					// Encode the text but reintroduce newlines as <br />. 
+					// Helps with most RSS readers, as this is usually parsed as HTML
+					nl2br(htmlspecialchars($val))) 
 				  );
 		}
 		
@@ -505,45 +505,45 @@ class MP3_RSS_Item extends RSS_File_Item {
 		parent::__construct($filename);
 	}
 
-    public function setFromMP3File($file)
-    { 
-    	// don't do any heavy-lifting here as this is called by the constructor, which 
-    	// is called once for every file in the dir (not just the ITEM_COUNT in the cast) 
+	public function setFromMP3File($file)
+	{ 
+		// don't do any heavy-lifting here as this is called by the constructor, which 
+		// is called once for every file in the dir (not just the ITEM_COUNT in the cast) 
 		$this->setLength(filesize($file));
 		$this->setPubDate(date('r', filemtime($file)));
-    }
-    
-    public function getTitle()
-    {
-    	$title_parts = array();
-    	if(LONG_TITLES)
-    	{
-	    	if($this->getID3Album()) $title_parts[] = $this->getID3Album();
-    		if($this->getID3Artist()) $title_parts[] = $this->getID3Artist();
-    	}
-    	if($this->getID3Title()) $title_parts[] = $this->getID3Title();
-    	return implode(' - ', $title_parts);
-    }
-    
-    public function getType()
-    {
-    	return 'audio/mpeg';
-    }
-    
-    public function getDescription()
-    {
-    	return $this->getID3Comment();
-    }
-    
-    public function getSummary()
-    {
-    	$summary = parent::getSummary();
-    	if(null == $summary && !LONG_TITLES)
-    	{
-    		// use album name as summary if there's no file-based override
-    		$summary = $this->getID3Album();
-    	}
-    }
+	}
+	
+	public function getTitle()
+	{
+		$title_parts = array();
+		if(LONG_TITLES)
+		{
+			if($this->getID3Album()) $title_parts[] = $this->getID3Album();
+			if($this->getID3Artist()) $title_parts[] = $this->getID3Artist();
+		}
+		if($this->getID3Title()) $title_parts[] = $this->getID3Title();
+		return implode(' - ', $title_parts);
+	}
+	
+	public function getType()
+	{
+		return 'audio/mpeg';
+	}
+	
+	public function getDescription()
+	{
+		return $this->getID3Comment();
+	}
+	
+	public function getSummary()
+	{
+		$summary = parent::getSummary();
+		if(null == $summary && !LONG_TITLES)
+		{
+			// use album name as summary if there's no file-based override
+			$summary = $this->getID3Album();
+		}
+	}
 }
 
 abstract class Podcast extends GetterSetter
@@ -622,6 +622,8 @@ abstract class Podcast extends GetterSetter
 				->appendChild(new DOMText($val));
 		}
 		
+		$this->appendImage($channel);
+		
 		foreach($this->helpers as $helper)
 		{
 			$helper->appendToChannel($channel, $doc);
@@ -630,6 +632,7 @@ abstract class Podcast extends GetterSetter
 		// channel item list
 		foreach($this->getItems() as $item)
 		{
+			/* @var $item RSS_Item */
 			$item->appendToChannel($channel, $doc);
 		}
 
@@ -644,10 +647,29 @@ abstract class Podcast extends GetterSetter
 			$doc->saveXML()
 		);
 	}
-		
+
+	/**
+	 * @return array of RSS_Item
+	 */
 	public function getItems()
 	{
 		return $this->items;
+	}
+
+	protected function appendImage(DOMElement $channel)
+	{
+		$image_url = $this->getImage();
+		if(strlen($image_url))
+		{
+			$image = $channel->appendChild( new DOMElement('image'));
+			$image->appendChild( new DOMElement('url') )
+				->appendChild(new DOMText($image_url));
+			$image->appendChild( new DOMElement('link') )
+				->appendChild(new DOMText($this->getLink()));
+			$image->appendChild( new DOMElement('title') )
+			    ->appendChild(new DOMText($this->getTitle()));
+		    $channel->appendChild($image);
+		}
 	}
 	
 	protected function pre_generate() {	}
@@ -923,10 +945,10 @@ class ErrorHandler
 	public static function handle_error($errno, $errstr, $errfile=null, $errline=null, $errcontext=null)
 	{	
 		// note: this is required to support the @ operator, which getID3 uses extensively
-        if(error_reporting() & $errno)
-        {
+		if(error_reporting() & $errno)
+		{
 			ErrorHandler::display($errstr, $errfile, $errline);
-        }
+		}
 	}
 	
 	public static function handle_exception( Exception $e )
@@ -981,9 +1003,9 @@ class ErrorHandler
 					</div>
 					<div id="footer"><a href="<?php echo DIR2CAST_HOMEPAGE ?>">dir2cast</a> <?php echo VERSION; ?> by Ben XO</div>
 					<p>
-					    <a href="http://validator.w3.org/check?uri=referer"><img
-					        src="http://www.w3.org/Icons/valid-html401"
-					        alt="Valid HTML 4.01 Strict" height="31" width="88"></a>
+						<a href="http://validator.w3.org/check?uri=referer"><img
+							src="http://www.w3.org/Icons/valid-html401"
+							alt="Valid HTML 4.01 Strict" height="31" width="88"></a>
 					</p>
 				</body></html>
 				<?php
@@ -1145,6 +1167,16 @@ class SettingsHandler
 			else
 				define('ITUNES_SUMMARY', DESCRIPTION);
 		}
+
+		if(!defined('IMAGE'))
+		{
+			if(file_exists(rtrim(MP3_DIR, '/') . '/image.jpg'))
+				define('IMAGE', rtrim(MP3_URL, '/') . '/image.jpg');
+			elseif(file_exists(dirname(__FILE__) . '/image.jpg'))
+				define('IMAGE', rtrim(MP3_URL, '/') . '/image.jpg');
+			else
+				define('IMAGE', '');
+		}
 		
 		if(!defined('ITUNES_IMAGE'))
 		{
@@ -1260,6 +1292,7 @@ if(!defined('NO_DISPATCHER'))
 		$podcast->setCopyright(COPYRIGHT);
 		$podcast->setWebMaster(WEBMASTER);
 		$podcast->setTtl(TTL);
+		$podcast->setImage(IMAGE);
 		
 		$atom->setSelfLink(RSS_LINK);
 		
