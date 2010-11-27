@@ -1,4 +1,4 @@
-dir2cast by Ben XO v1.5 (2010-07-31)
+dir2cast by Ben XO v1.6 (2010-11-27)
 ================================================================================
 
 http://www.ben-xo.com/dir2cast
@@ -153,6 +153,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 HISTORY
 ================================================================================
 
+1.6 2010-11-27 Fix bug including summary info from either ID3 album field
+               or filename.txt reported by Nilicule. Thanks!
 1.5 2010-07-31 Add optional RSS <image> tag. This is not the same as the 
                <itunes:image> tag, as it has size restrictions. 
 1.4 2010-03-10 Make <description> in a CDATA section

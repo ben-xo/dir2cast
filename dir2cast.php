@@ -56,7 +56,7 @@
 /* DEFAULTS *********************************************/
 
 // error handler needs these, so let's set them now.
-define('VERSION', '1.5');
+define('VERSION', '1.6');
 define('DIR2CAST_HOMEPAGE', 'http://www.ben-xo.com/dir2cast/');
 define('GENERATOR', 'dir2cast ' . VERSION . ' by Ben XO (' . DIR2CAST_HOMEPAGE . ')');
 
@@ -543,6 +543,7 @@ class MP3_RSS_Item extends RSS_File_Item {
 			// use album name as summary if there's no file-based override
 			$summary = $this->getID3Album();
 		}
+		return $summary;
 	}
 }
 
