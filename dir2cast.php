@@ -323,7 +323,7 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
 		$itunes_subtitle = $item->getSubtitle();
 		if($itunes_subtitle !== '')
 		{
-			$elements['subtitle'] = $itunes_subtitle;
+			$elements['subtitle'] = $itunes_subtitle . ITUNES_SUBTITLE_SUFFIX;
 		}
 				
 		foreach($elements as $key => $val)
