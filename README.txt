@@ -1,4 +1,4 @@
-dir2cast by Ben XO v1.6 (2010-11-27)
+dir2cast by Ben XO v1.7 (2010-12-10)
 ================================================================================
 
 http://www.ben-xo.com/dir2cast
@@ -153,6 +153,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 HISTORY
 ================================================================================
 
+1.7 2010-12-10 <itunes:summary> is now excluded if it's not explicitly set, as
+               iTunes will happily fall back to the <description> and there's
+               no point duplicating this. Changed <itunes:subtitle> to pull from
+               ID3 Artist field, rather than ID3 Album field, as this is more
+               useful for me. <itunes:subtitle> can now be set with a file in
+               the same was as <itunes:summary>. Also added new INI parameter
+               ITUNES_SUBTITLE_SUFFIX, which is appended to the subtitle of 
+               every item. I suggest using this for an appropriate 'Click here
+               for more info!' message, to lead people to the description or
+               summary.
 1.6 2010-11-27 Fix bug including summary info from either ID3 album field
                or filename.txt reported by Nilicule. Thanks!
 1.5 2010-07-31 Add optional RSS <image> tag. This is not the same as the 

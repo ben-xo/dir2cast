@@ -56,7 +56,7 @@
 /* DEFAULTS *********************************************/
 
 // error handler needs these, so let's set them now.
-define('VERSION', '1.6');
+define('VERSION', '1.7');
 define('DIR2CAST_HOMEPAGE', 'http://www.ben-xo.com/dir2cast/');
 define('GENERATOR', 'dir2cast ' . VERSION . ' by Ben XO (' . DIR2CAST_HOMEPAGE . ')');
 
@@ -306,10 +306,25 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
 		$elements = array(
 			'author' => $item->getID3Artist(),
 			'duration' => $item->getDuration(),
-			'subtitle' => $item->getID3Album(),
-			'summary' => $item->getSummary(),
 			//'keywords' => 'not supported yet.'
 		);
+
+		// iTunes summary is excluded if it's empty, because the default is to 
+		// duplicate what's in the "description field", but iTunes will fall back 
+		// to showing the <description> if there is no summary anyway.
+		$itunes_summary = $item->getSummary();
+		if($itunes_summary !== '')
+		{
+			$elements['summary'] = $itunes_summary;
+		}
+
+		// iTunes subtitle is excluded if it's empty. iTunes will fall back to
+		// the itunes:summary or description if there's no subtitle.
+		$itunes_subtitle = $item->getSubtitle();
+		if($itunes_subtitle !== '')
+		{
+			$elements['subtitle'] = $itunes_subtitle;
+		}
 				
 		foreach($elements as $key => $val)
 			if(!empty($val))
@@ -486,12 +501,31 @@ class RSS_File_Item extends RSS_Item {
 	/**
 	 * Place a file with the same name but .txt instead of .<whatever> and the contents will be used
 	 * as the summary for the item in the podcast.
+	 * 
+	 * The summary appears in iTunes when you click the 'more info' icon, and can be
+	 * multiple lines long.
 	 *
 	 * @return String the summary, or null if there's no summary file
 	 */
 	public function getSummary()
 	{
 		$summary_file_name = dirname($this->getFilename()) . '/' . basename($this->getFilename(), '.' . $this->getExtension()) . '.txt';
+		if(file_exists( $summary_file_name ))
+			return file_get_contents($summary_file_name);
+	}
+
+	/**
+	 * Place a file with the same name but .txt instead of .<whatever> and the contents will be used
+	 * as the subtitle for the item in the podcast.
+	 * 
+	 * The subtitle appears inline with the podcast item in iTunes, and has a 'more info' icon next
+	 * to it. It should be a single line.
+	 *
+	 * @return String the subtitle, or null if there's no subtitle file
+	 */
+	public function getSubtitle()
+	{
+		$summary_file_name = dirname($this->getFilename()) . '/' . basename($this->getFilename(), '.' . $this->getExtension()) . '_subtitle.txt';
 		if(file_exists( $summary_file_name ))
 			return file_get_contents($summary_file_name);
 	}
@@ -540,10 +574,21 @@ class MP3_RSS_Item extends RSS_File_Item {
 		$summary = parent::getSummary();
 		if(null == $summary && !LONG_TITLES)
 		{
-			// use album name as summary if there's no file-based override
-			$summary = $this->getID3Album();
+			// use description as summary if there's no file-based override
+			$summary = $this->getDescription();
 		}
 		return $summary;
+	}
+
+	public function getSubtitle()
+	{
+		$subtitle = parent::getSubtitle();
+		if(null == $subtitle && !LONG_TITLES)
+		{
+			// use artist as summary if there's no file-based override
+			$subtitle = $this->getID3Artist();
+		}
+		return $subtitle;
 	}
 }
 
@@ -1211,6 +1256,9 @@ class SettingsHandler
 			
 		if(!defined('LONG_TITLES'))
 			define('LONG_TITLES', false);
+
+		if(!defined('ITUNES_SUBTITLE_SUFFIX'))
+			define('ITUNES_SUBTITLE_SUFFIX', '');
 	}
 	
 	public static function load_from_ini($file)
