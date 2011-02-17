@@ -595,12 +595,12 @@ class getid3
                           ),
 
                 // MPC  - audio       - Musepack / MPEGplus SV4-6
-                'mpc_old' => array (
-                            'pattern'   => '^([\x00\x01\x10\x11\x40\x41\x50\x51\x80\x81\x90\x91\xC0\xC1\xD0\xD1][\x20-37][\x00\x20\x40\x60\x80\xA0\xC0\xE0])',
-                            'group'     => 'audio',
-                            'module'    => 'mpc_old',
-                            'mime_type' => 'application/octet-stream',
-                          ),
+                //'mpc_old' => array (
+                //            'pattern'   => '^([\x00\x01\x10\x11\x40\x41\x50\x51\x80\x81\x90\x91\xC0\xC1\xD0\xD1][\x20-37][\x00\x20\x40\x60\x80\xA0\xC0\xE0])',
+                //            'group'     => 'audio',
+                //            'module'    => 'mpc_old',
+                //            'mime_type' => 'application/octet-stream',
+                //         ),
 
 
                 // MP3  - audio       - MPEG-audio Layer 3 (very similar to AAC-ADTS)
