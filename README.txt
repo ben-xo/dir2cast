@@ -1,4 +1,4 @@
-dir2cast by Ben XO v1.7 (2010-12-10)
+dir2cast by Ben XO v1.7.1 (2011-02-17)
 ================================================================================
 
 http://www.ben-xo.com/dir2cast
@@ -153,6 +153,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 HISTORY
 ================================================================================
 
+1.7.1 11-02-17 Remove unused mpc_old code from getID3, which false-positived
+               on one of my MP3s.
 1.7 2010-12-10 <itunes:summary> is now excluded if it's not explicitly set, as
                iTunes will happily fall back to the <description> and there's
                no point duplicating this. Changed <itunes:subtitle> to pull from
