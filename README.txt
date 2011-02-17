@@ -32,12 +32,10 @@ Features:
 * RSS Description, iTunes Subtitle and iTunes Summary can be set by dropping
   files named description.txt, itunes_subtitle.txt and itunes_summary.txt 
   in the same folder as dir2cast.php - but they are not required. (You can
-  also set these in the script).
+  also set these in the config).
 
 * You can set a per-file iTunes Summary by creating a text file with the same
   name as the MP3 (e.g. for file.mp3, create file.txt).
-
-* Works from the command line, if you want.
 
 
 REQUIREMENTS
@@ -48,8 +46,8 @@ dir2cast requires PHP 5.1.
 dir2cast makes use of getID3 by James Heinrich & Allan Hansen, although it does
 not require the whole thing. A cut down version of getID3 is supplied at
 http://www.ben-xo.com/dir2cast. You will need to download this and install it
-with dir2cast.php. (It is not bundled in the same file for licensing reasons.
-The full version of getID3 is available at http://getid3.sourceforge.net/ ).
+with dir2cast.php. The full version of getID3 is available at 
+http://getid3.sourceforge.net/ .
 
 
 INSTALLATION
