@@ -515,7 +515,7 @@ class RSS_File_Item extends RSS_Item {
 	}
 
 	/**
-	 * Place a file with the same name but .txt instead of .<whatever> and the contents will be used
+	 * Place a file with the same name but _subtitle.txt instead of .<whatever> and the contents will be used
 	 * as the subtitle for the item in the podcast.
 	 * 
 	 * The subtitle appears inline with the podcast item in iTunes, and has a 'more info' icon next
