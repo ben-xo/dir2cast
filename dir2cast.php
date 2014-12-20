@@ -1218,8 +1218,12 @@ class SettingsHandler
 		{
 			if(file_exists(rtrim(MP3_DIR, '/') . '/image.jpg'))
 				define('IMAGE', rtrim(MP3_URL, '/') . '/image.jpg');
+			elseif(file_exists(rtrim(MP3_DIR, '/') . '/image.png'))
+				define('IMAGE', rtrim(MP3_URL, '/') . '/image.png');
 			elseif(file_exists(dirname(__FILE__) . '/image.jpg'))
 				define('IMAGE', rtrim(MP3_URL, '/') . '/image.jpg');
+			elseif(file_exists(dirname(__FILE__) . '/image.png'))
+				define('IMAGE', rtrim(MP3_URL, '/') . '/image.png');
 			else
 				define('IMAGE', '');
 		}
@@ -1228,8 +1232,12 @@ class SettingsHandler
 		{
 			if(file_exists(rtrim(MP3_DIR, '/') . '/itunes_image.jpg'))
 				define('ITUNES_IMAGE', rtrim(MP3_URL, '/') . '/itunes_image.jpg');
+			elseif(file_exists(rtrim(MP3_DIR, '/') . '/itunes_image.png'))
+				define('ITUNES_IMAGE', rtrim(MP3_URL, '/') . '/itunes_image.png');
 			elseif(file_exists(dirname(__FILE__) . '/itunes_image.jpg'))
 				define('ITUNES_IMAGE', rtrim(MP3_URL, '/') . '/itunes_image.jpg');
+			elseif(file_exists(dirname(__FILE__) . '/itunes_image.png'))
+				define('ITUNES_IMAGE', rtrim(MP3_URL, '/') . '/itunes_image.png');
 			else
 				define('ITUNES_IMAGE', '');
 		}
