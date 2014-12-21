@@ -330,6 +330,14 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
 			if(!empty($val))
 				 $item_element->appendChild( $doc->createElement('itunes:' . $key) )
 					->appendChild( new DOMText($val) );
+
+		// Look to see if there is a item specific image and include it.
+		$item_image = $item->getImage();
+                if(!empty($item_image))
+                {
+                        $item_element->appendChild( $doc->createElement('itunes:image') )
+                                ->setAttribute('href', $item_image);
+                }
 	}
 	
 	public function appendCategory($category, $subcats, DOMElement $e, DOMDocument $doc)
@@ -438,7 +446,15 @@ class RSS_Item extends GetterSetter {
 					nl2br(htmlspecialchars($val))) 
 				  );
 		}
-		
+
+		// Look to see if there is a item specific image and include it.
+		$item_image = $this->getImage();
+                if(!empty($item_image))
+                {
+                        $item_element->appendChild( $doc->createElement('image') )
+                                ->appendChild(new DOMText($item_image));
+                }
+
 		$enclosure = $item_element->appendChild(new DOMElement('enclosure'));
 		$enclosure->setAttribute('url', $this->getLink());
 		$enclosure->setAttribute('length', $this->getLength());
@@ -529,6 +545,22 @@ class RSS_File_Item extends RSS_Item {
 		if(file_exists( $summary_file_name ))
 			return file_get_contents($summary_file_name);
 	}
+
+	/**
+	 * Place a file with the same name but .jpg or .png instead of .<whatever> and the contents will be used
+	 * as the cover art for the item in the podcast.
+	 * 
+	 * @return String the filename of the cover art or null if there's no subtitle file
+	 */
+	public function getImage()
+	{
+		$image_file_name = dirname($this->getFilename()) . '/' . basename($this->getFilename(), '.' . $this->getExtension()) . '.jpg';
+		if(file_exists( $image_file_name ))
+			return $image_file_name;
+		$image_file_name = dirname($this->getFilename()) . '/' . basename($this->getFilename(), '.' . $this->getExtension()) . '.png';
+		if(file_exists( $image_file_name ))
+			return $image_file_name;
+	}
 }
 
 class MP3_RSS_Item extends RSS_File_Item {
@@ -589,6 +621,12 @@ class MP3_RSS_Item extends RSS_File_Item {
 			$subtitle = $this->getID3Artist();
 		}
 		return $subtitle;
+	}
+
+	public function getImage()
+	{
+		$image = parent::getImage();
+		return $image;
 	}
 }
 
