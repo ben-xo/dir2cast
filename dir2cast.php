@@ -1429,8 +1429,7 @@ if(!defined('NO_DISPATCHER'))
 	}
 	else
 	{
-		echo OUTPUT_FILE;
-		echo "Writing RSS to: ". OUTPUT_FILE;
+		echo "Writing RSS to: ". OUTPUT_FILE ."\n";
 		$fh = fopen(OUTPUT_FILE, "w");
 		fwrite($fh,$podcast->generate());
                 fclose($fh); 
