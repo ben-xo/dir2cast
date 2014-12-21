@@ -945,6 +945,11 @@ class Locking_Cached_Dir_Podcast extends Cached_Dir_Podcast
 	 */
 	protected function acquireLock()
 	{
+		if (!file_exists($this->temp_dir))
+		{
+			mkdir($this->temp_dir, 0755, true);
+		}
+
 		$this->file_handle = fopen($this->temp_file, 'a');
 		if(!flock($this->file_handle, LOCK_EX))
 			throw new Exception('Locking cache file failed.');
