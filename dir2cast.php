@@ -223,7 +223,7 @@ class Atom_Podcast_Helper extends GetterSetter implements Podcast_Helper {
 			$linkNode = $channel->appendChild( $doc->createElement('atom:link') );
 			$linkNode->setAttribute('href', $this->self_link);
 			$linkNode->setAttribute('rel', 'self');
-			$linkNode->setAttribute('type', 'application/rss+xml');
+			$linkNode->setAttribute('type', ATOM_TYPE);
 		}		
 	}
 	
@@ -1234,6 +1234,9 @@ class SettingsHandler
 				define('DESCRIPTION', '');
 		}
 		
+		if(!defined('ATOM_TYPE'))
+			define('ATOM_TYPE','application/rss+xml');
+
 		if(!defined('LANGUAGE'))
 			define('LANGUAGE', 'en-us');
 		
