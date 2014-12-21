@@ -1123,10 +1123,12 @@ class SettingsHandler
 			# This may fail if MP3_DIR, or one of its parents under DOCUMENT_ROOT, is a symlink. In that case you will have
 			# to set this manually.
 			
-			$path_part = substr(MP3_DIR, strlen($SERVER['DOCUMENT_ROOT']));	
 			if(!empty($SERVER['HTTP_HOST']))
+			{
+				$path_part = substr(MP3_DIR, strlen($SERVER['DOCUMENT_ROOT']));	
 				define('MP3_URL', 
 					'http' . (!empty($SERVER['HTTPS']) ? 's' : '') . '://' . $SERVER['HTTP_HOST'] . '/' . ltrim( rtrim( $path_part, '/' ) . '/', '/' ));
+			}
 			else
 				define('MP3_URL', 'file://' . MP3_DIR );
 		}
