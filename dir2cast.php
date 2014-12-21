@@ -1126,12 +1126,12 @@ class SettingsHandler
 	public static function bootstrap(array $SERVER, array $GET, array $argv)
 	{
 		// If an installation-wide config file exists, load it now.
-		// Installation-wide config can contain TMP_DIR, MP3_DIR, MP3_URL and MIN_CACHE_TIME.
+		// Installation-wide config can contain TMP_DIR, MP3_DIR and MIN_CACHE_TIME.
 		// Anything else it contains will be used as a fall-back if no dir-specific dir2cast.ini exists
 		if(file_exists( dirname(__FILE__) . '/dir2cast.ini' ))
 		{
 			self::load_from_ini(dirname(__FILE__) . '/dir2cast.ini' );
-			self::finalize(array('TMP_DIR', 'MP3_BASE', 'MP3_DIR', 'MP3_URL', 'MIN_CACHE_TIME', 'FORCE_PASSWORD'));
+			self::finalize(array('TMP_DIR', 'MP3_BASE', 'MP3_DIR', 'MIN_CACHE_TIME', 'FORCE_PASSWORD'));
 		}
 		
 		if(!defined('TMP_DIR'))
@@ -1160,23 +1160,7 @@ class SettingsHandler
 			if(!empty($argv[2]))
 				define('OUTPUT_FILE', $argv[2]);
 		}
-		
-		if(!defined('MP3_URL'))
-		{
-			# This works on the principle that MP3_DIR must be under DOCUMENT_ROOT (otherwise how will you serve the MP3s?)
-			# This may fail if MP3_DIR, or one of its parents under DOCUMENT_ROOT, is a symlink. In that case you will have
-			# to set this manually.
-			
-			if(!empty($SERVER['HTTP_HOST']))
-			{
-				$path_part = substr(MP3_DIR, strlen($SERVER['DOCUMENT_ROOT']));	
-				define('MP3_URL', 
-					'http' . (!empty($SERVER['HTTPS']) ? 's' : '') . '://' . $SERVER['HTTP_HOST'] . '/' . ltrim( rtrim( $path_part, '/' ) . '/', '/' ));
-			}
-			else
-				define('MP3_URL', 'file://' . MP3_DIR );
-		}
-		
+
 		if(!defined('MIN_CACHE_TIME'))
 			define('MIN_CACHE_TIME', 5);
 		
@@ -1199,6 +1183,23 @@ class SettingsHandler
 		
 		self::finalize();
 		
+		
+		if(!defined('MP3_URL'))
+		{
+			# This works on the principle that MP3_DIR must be under DOCUMENT_ROOT (otherwise how will you serve the MP3s?)
+			# This may fail if MP3_DIR, or one of its parents under DOCUMENT_ROOT, is a symlink. In that case you will have
+			# to set this manually.
+			
+			if(!empty($SERVER['HTTP_HOST']))
+			{
+				$path_part = substr(MP3_DIR, strlen($SERVER['DOCUMENT_ROOT']));	
+				define('MP3_URL', 
+					'http' . (!empty($SERVER['HTTPS']) ? 's' : '') . '://' . $SERVER['HTTP_HOST'] . '/' . ltrim( rtrim( $path_part, '/' ) . '/', '/' ));
+			}
+			else
+				define('MP3_URL', 'file://' . MP3_DIR );
+		}
+
 		if(!defined('TITLE'))
 		{
 			if(basename(MP3_DIR))
@@ -1338,10 +1339,12 @@ class SettingsHandler
 					isset(self::$settings_cache[$s]) and
 						define($s, self::$settings_cache[$s]);
 		else
+		{
 			// define all
 			foreach(self::$settings_cache as $s => $s_val)
-				!defined($s) and 
+				if(!defined($s)) 
 					define($s, $s_val);
+		}
 	}
 }
 
@@ -1378,6 +1381,8 @@ if(!defined('NO_DISPATCHER'))
 		empty($_GET) ? array() : $_GET, 
 		empty($argv) ? array() : $argv 
 	);
+
+	SettingsHandler::defaults();
 	
 	$podcast = new Locking_Cached_Dir_Podcast(MP3_DIR, TMP_DIR);
 	if( strlen(FORCE_PASSWORD) && isset($_GET['force']) && FORCE_PASSWORD == $_GET['force'] )
@@ -1391,7 +1396,6 @@ if(!defined('NO_DISPATCHER'))
 
 	if(!$podcast->isCached())
 	{
-		SettingsHandler::defaults();
 		
 		$getid3 = $podcast->addHelper(new getID3_Podcast_Helper());
 		$atom   = $podcast->addHelper(new Atom_Podcast_Helper());
