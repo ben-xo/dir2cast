@@ -1154,6 +1154,12 @@ class SettingsHandler
 			else
 				define('MP3_DIR', MP3_BASE);
 		}
+
+                if(!defined('OUTPUT_FILE'))
+		{
+			if(!empty($argv[2]))
+				define('OUTPUT_FILE', $argv[2]);
+		}
 		
 		if(!defined('MP3_URL'))
 		{
@@ -1162,11 +1168,9 @@ class SettingsHandler
 			# to set this manually.
 			
 			if(!empty($SERVER['HTTP_HOST']))
-			{
 				$path_part = substr(MP3_DIR, strlen($SERVER['DOCUMENT_ROOT']));	
 				define('MP3_URL', 
 					'http' . (!empty($SERVER['HTTPS']) ? 's' : '') . '://' . $SERVER['HTTP_HOST'] . '/' . ltrim( rtrim( $path_part, '/' ) . '/', '/' ));
-			}
 			else
 				define('MP3_URL', 'file://' . MP3_DIR );
 		}
@@ -1378,7 +1382,11 @@ if(!defined('NO_DISPATCHER'))
 	{
 		$podcast->uncache();	
 	}
-	
+	if (defined('OUTPUT_FILE'))
+	{
+		$podcast->uncache();
+	}
+
 	if(!$podcast->isCached())
 	{
 		SettingsHandler::defaults();
@@ -1411,9 +1419,20 @@ if(!defined('NO_DISPATCHER'))
 		$podcast->setGenerator(GENERATOR);
 	}
 	
-	$podcast->http_headers();
+	if(!defined('OUTPUT_FILE'))
+	{
+		$podcast->http_headers();
 	
-	echo $podcast->generate();
+		echo $podcast->generate();
+	}
+	else
+	{
+		echo OUTPUT_FILE;
+		echo "Writing RSS to: ". OUTPUT_FILE;
+		$fh = fopen(OUTPUT_FILE, "w");
+		fwrite($fh,$podcast->generate());
+                fclose($fh); 
+	}
 }
 
 /* THE END *********************************************/
