@@ -334,7 +334,7 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
 	
 	public function appendCategory($category, $subcats, DOMElement $e, DOMDocument $doc)
 	{
-		$e->appendChild( $doc->createElement('itunes:category') )
+                $e->appendChild( $element = $doc->createElement('itunes:category') )
 			->setAttribute('text', $category);
 			
 		if(is_array($subcats)) 
