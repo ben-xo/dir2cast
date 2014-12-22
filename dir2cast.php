@@ -424,8 +424,13 @@ class RSS_Item extends GetterSetter {
 			'pubDate' => $this->getPubDate()
 		);
 		
+		if(DESCRIPTION_SOURCE == 'file')
+			$description = $this->getSummary();
+		else
+			$description = $this->getDescription();
+
 		$cdata_item_elements = array(
-			'description' => $this->getDescription()
+			'description' => $description
 		);
 		
 		if(empty($item_elements['title']))
@@ -439,11 +444,14 @@ class RSS_Item extends GetterSetter {
 		
 		foreach($cdata_item_elements as $name => $val)
 		{
+			if($name == 'description')
+				if(!defined('DESCRIPTION_HTML'))
+					$val = htmlspecialchars($val);
+					
 			$item_element->appendChild( new DOMElement($name) )
 				->appendChild( $doc->createCDATASection(
-					// Encode the text but reintroduce newlines as <br />. 
-					// Helps with most RSS readers, as this is usually parsed as HTML
-					nl2br(htmlspecialchars($val))) 
+					// reintroduce newlines as <br />. 
+					nl2br($val)) 
 				  );
 		}
 
@@ -1322,6 +1330,9 @@ class SettingsHandler
 
 		if(!defined('ITUNES_SUBTITLE_SUFFIX'))
 			define('ITUNES_SUBTITLE_SUFFIX', '');
+
+		if(!defined('DESCRIPTION_SOURCE'))
+			define('DESCRIPTION_SOURCE', 'id3');
 	}
 	
 	public static function load_from_ini($file)
