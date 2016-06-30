@@ -223,7 +223,7 @@ class Atom_Podcast_Helper extends GetterSetter implements Podcast_Helper {
 			$linkNode = $channel->appendChild( $doc->createElement('atom:link') );
 			$linkNode->setAttribute('href', $this->self_link);
 			$linkNode->setAttribute('rel', 'self');
-			$linkNode->setAttribute('type', 'application/rss+xml');
+			$linkNode->setAttribute('type', ATOM_TYPE);
 		}		
 	}
 	
@@ -330,11 +330,19 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
 			if(!empty($val))
 				 $item_element->appendChild( $doc->createElement('itunes:' . $key) )
 					->appendChild( new DOMText($val) );
+
+		// Look to see if there is a item specific image and include it.
+		$item_image = $item->getImage();
+                if(!empty($item_image))
+                {
+                        $item_element->appendChild( $doc->createElement('itunes:image') )
+                                ->setAttribute('href', $item_image);
+                }
 	}
 	
 	public function appendCategory($category, $subcats, DOMElement $e, DOMDocument $doc)
 	{
-		$e->appendChild( $doc->createElement('itunes:category') )
+                $e->appendChild( $element = $doc->createElement('itunes:category') )
 			->setAttribute('text', $category);
 			
 		if(is_array($subcats)) 
@@ -416,8 +424,13 @@ class RSS_Item extends GetterSetter {
 			'pubDate' => $this->getPubDate()
 		);
 		
+		if(DESCRIPTION_SOURCE == 'file')
+			$description = $this->getSummary();
+		else
+			$description = $this->getDescription();
+
 		$cdata_item_elements = array(
-			'description' => $this->getDescription()
+			'description' => $description
 		);
 		
 		if(empty($item_elements['title']))
@@ -431,14 +444,25 @@ class RSS_Item extends GetterSetter {
 		
 		foreach($cdata_item_elements as $name => $val)
 		{
+			if($name == 'description')
+				if(!defined('DESCRIPTION_HTML'))
+					$val = htmlspecialchars($val);
+					
 			$item_element->appendChild( new DOMElement($name) )
 				->appendChild( $doc->createCDATASection(
-					// Encode the text but reintroduce newlines as <br />. 
-					// Helps with most RSS readers, as this is usually parsed as HTML
-					nl2br(htmlspecialchars($val))) 
+					// reintroduce newlines as <br />. 
+					nl2br($val)) 
 				  );
 		}
-		
+
+		// Look to see if there is a item specific image and include it.
+		$item_image = $this->getImage();
+                if(!empty($item_image))
+                {
+                        $item_element->appendChild( $doc->createElement('image') )
+                                ->appendChild(new DOMText($item_image));
+                }
+
 		$enclosure = $item_element->appendChild(new DOMElement('enclosure'));
 		$enclosure->setAttribute('url', $this->getLink());
 		$enclosure->setAttribute('length', $this->getLength());
@@ -515,7 +539,7 @@ class RSS_File_Item extends RSS_Item {
 	}
 
 	/**
-	 * Place a file with the same name but .txt instead of .<whatever> and the contents will be used
+	 * Place a file with the same name but _subtitle.txt instead of .<whatever> and the contents will be used
 	 * as the subtitle for the item in the podcast.
 	 * 
 	 * The subtitle appears inline with the podcast item in iTunes, and has a 'more info' icon next
@@ -528,6 +552,22 @@ class RSS_File_Item extends RSS_Item {
 		$summary_file_name = dirname($this->getFilename()) . '/' . basename($this->getFilename(), '.' . $this->getExtension()) . '_subtitle.txt';
 		if(file_exists( $summary_file_name ))
 			return file_get_contents($summary_file_name);
+	}
+
+	/**
+	 * Place a file with the same name but .jpg or .png instead of .<whatever> and the contents will be used
+	 * as the cover art for the item in the podcast.
+	 * 
+	 * @return String the filename of the cover art or null if there's no subtitle file
+	 */
+	public function getImage()
+	{
+		$image_file_name = dirname($this->getFilename()) . '/' . basename($this->getFilename(), '.' . $this->getExtension()) . '.jpg';
+		if(file_exists( $image_file_name ))
+			return $image_file_name;
+		$image_file_name = dirname($this->getFilename()) . '/' . basename($this->getFilename(), '.' . $this->getExtension()) . '.png';
+		if(file_exists( $image_file_name ))
+			return $image_file_name;
 	}
 }
 
@@ -589,6 +629,12 @@ class MP3_RSS_Item extends RSS_File_Item {
 			$subtitle = $this->getID3Artist();
 		}
 		return $subtitle;
+	}
+
+	public function getImage()
+	{
+		$image = parent::getImage();
+		return $image;
 	}
 }
 
@@ -945,6 +991,11 @@ class Locking_Cached_Dir_Podcast extends Cached_Dir_Podcast
 	 */
 	protected function acquireLock()
 	{
+		if (!file_exists($this->temp_dir))
+		{
+			mkdir($this->temp_dir, 0755, true);
+		}
+
 		$this->file_handle = fopen($this->temp_file, 'a');
 		if(!flock($this->file_handle, LOCK_EX))
 			throw new Exception('Locking cache file failed.');
@@ -1083,12 +1134,12 @@ class SettingsHandler
 	public static function bootstrap(array $SERVER, array $GET, array $argv)
 	{
 		// If an installation-wide config file exists, load it now.
-		// Installation-wide config can contain TMP_DIR, MP3_DIR, MP3_URL and MIN_CACHE_TIME.
+		// Installation-wide config can contain TMP_DIR, MP3_DIR and MIN_CACHE_TIME.
 		// Anything else it contains will be used as a fall-back if no dir-specific dir2cast.ini exists
 		if(file_exists( dirname(__FILE__) . '/dir2cast.ini' ))
 		{
 			self::load_from_ini(dirname(__FILE__) . '/dir2cast.ini' );
-			self::finalize(array('TMP_DIR', 'MP3_BASE', 'MP3_DIR', 'MP3_URL', 'MIN_CACHE_TIME', 'FORCE_PASSWORD'));
+			self::finalize(array('TMP_DIR', 'MP3_BASE', 'MP3_DIR', 'MIN_CACHE_TIME', 'FORCE_PASSWORD'));
 		}
 		
 		if(!defined('TMP_DIR'))
@@ -1111,21 +1162,13 @@ class SettingsHandler
 			else
 				define('MP3_DIR', MP3_BASE);
 		}
-		
-		if(!defined('MP3_URL'))
+
+                if(!defined('OUTPUT_FILE'))
 		{
-			# This works on the principle that MP3_DIR must be under DOCUMENT_ROOT (otherwise how will you serve the MP3s?)
-			# This may fail if MP3_DIR, or one of its parents under DOCUMENT_ROOT, is a symlink. In that case you will have
-			# to set this manually.
-			
-			$path_part = substr(MP3_DIR, strlen($SERVER['DOCUMENT_ROOT']));	
-			if(!empty($SERVER['HTTP_HOST']))
-				define('MP3_URL', 
-					'http' . (!empty($SERVER['HTTPS']) ? 's' : '') . '://' . $SERVER['HTTP_HOST'] . '/' . ltrim( rtrim( $path_part, '/' ) . '/', '/' ));
-			else
-				define('MP3_URL', 'file://' . MP3_DIR );
+			if(!empty($argv[2]))
+				define('OUTPUT_FILE', $argv[2]);
 		}
-		
+
 		if(!defined('MIN_CACHE_TIME'))
 			define('MIN_CACHE_TIME', 5);
 		
@@ -1148,6 +1191,23 @@ class SettingsHandler
 		
 		self::finalize();
 		
+		
+		if(!defined('MP3_URL'))
+		{
+			# This works on the principle that MP3_DIR must be under DOCUMENT_ROOT (otherwise how will you serve the MP3s?)
+			# This may fail if MP3_DIR, or one of its parents under DOCUMENT_ROOT, is a symlink. In that case you will have
+			# to set this manually.
+			
+			if(!empty($SERVER['HTTP_HOST']))
+			{
+				$path_part = substr(MP3_DIR, strlen($SERVER['DOCUMENT_ROOT']));	
+				define('MP3_URL', 
+					'http' . (!empty($SERVER['HTTPS']) ? 's' : '') . '://' . $SERVER['HTTP_HOST'] . '/' . ltrim( rtrim( $path_part, '/' ) . '/', '/' ));
+			}
+			else
+				define('MP3_URL', 'file://' . MP3_DIR );
+		}
+
 		if(!defined('TITLE'))
 		{
 			if(basename(MP3_DIR))
@@ -1182,6 +1242,9 @@ class SettingsHandler
 				define('DESCRIPTION', '');
 		}
 		
+		if(!defined('ATOM_TYPE'))
+			define('ATOM_TYPE','application/rss+xml');
+
 		if(!defined('LANGUAGE'))
 			define('LANGUAGE', 'en-us');
 		
@@ -1218,8 +1281,12 @@ class SettingsHandler
 		{
 			if(file_exists(rtrim(MP3_DIR, '/') . '/image.jpg'))
 				define('IMAGE', rtrim(MP3_URL, '/') . '/image.jpg');
+			elseif(file_exists(rtrim(MP3_DIR, '/') . '/image.png'))
+				define('IMAGE', rtrim(MP3_URL, '/') . '/image.png');
 			elseif(file_exists(dirname(__FILE__) . '/image.jpg'))
 				define('IMAGE', rtrim(MP3_URL, '/') . '/image.jpg');
+			elseif(file_exists(dirname(__FILE__) . '/image.png'))
+				define('IMAGE', rtrim(MP3_URL, '/') . '/image.png');
 			else
 				define('IMAGE', '');
 		}
@@ -1228,8 +1295,12 @@ class SettingsHandler
 		{
 			if(file_exists(rtrim(MP3_DIR, '/') . '/itunes_image.jpg'))
 				define('ITUNES_IMAGE', rtrim(MP3_URL, '/') . '/itunes_image.jpg');
+			elseif(file_exists(rtrim(MP3_DIR, '/') . '/itunes_image.png'))
+				define('ITUNES_IMAGE', rtrim(MP3_URL, '/') . '/itunes_image.png');
 			elseif(file_exists(dirname(__FILE__) . '/itunes_image.jpg'))
 				define('ITUNES_IMAGE', rtrim(MP3_URL, '/') . '/itunes_image.jpg');
+			elseif(file_exists(dirname(__FILE__) . '/itunes_image.png'))
+				define('ITUNES_IMAGE', rtrim(MP3_URL, '/') . '/itunes_image.png');
 			else
 				define('ITUNES_IMAGE', '');
 		}
@@ -1259,6 +1330,9 @@ class SettingsHandler
 
 		if(!defined('ITUNES_SUBTITLE_SUFFIX'))
 			define('ITUNES_SUBTITLE_SUFFIX', '');
+
+		if(!defined('DESCRIPTION_SOURCE'))
+			define('DESCRIPTION_SOURCE', 'id3');
 	}
 	
 	public static function load_from_ini($file)
@@ -1279,10 +1353,12 @@ class SettingsHandler
 					isset(self::$settings_cache[$s]) and
 						define($s, self::$settings_cache[$s]);
 		else
+		{
 			// define all
 			foreach(self::$settings_cache as $s => $s_val)
-				!defined($s) and 
+				if(!defined($s)) 
 					define($s, $s_val);
+		}
 	}
 }
 
@@ -1319,16 +1395,21 @@ if(!defined('NO_DISPATCHER'))
 		empty($_GET) ? array() : $_GET, 
 		empty($argv) ? array() : $argv 
 	);
+
+	SettingsHandler::defaults();
 	
 	$podcast = new Locking_Cached_Dir_Podcast(MP3_DIR, TMP_DIR);
 	if( strlen(FORCE_PASSWORD) && isset($_GET['force']) && FORCE_PASSWORD == $_GET['force'] )
 	{
 		$podcast->uncache();	
 	}
-	
+	if (defined('OUTPUT_FILE'))
+	{
+		$podcast->uncache();
+	}
+
 	if(!$podcast->isCached())
 	{
-		SettingsHandler::defaults();
 		
 		$getid3 = $podcast->addHelper(new getID3_Podcast_Helper());
 		$atom   = $podcast->addHelper(new Atom_Podcast_Helper());
@@ -1358,9 +1439,19 @@ if(!defined('NO_DISPATCHER'))
 		$podcast->setGenerator(GENERATOR);
 	}
 	
-	$podcast->http_headers();
+	if(!defined('OUTPUT_FILE'))
+	{
+		$podcast->http_headers();
 	
-	echo $podcast->generate();
+		echo $podcast->generate();
+	}
+	else
+	{
+		echo "Writing RSS to: ". OUTPUT_FILE ."\n";
+		$fh = fopen(OUTPUT_FILE, "w");
+		fwrite($fh,$podcast->generate());
+                fclose($fh); 
+	}
 }
 
 /* THE END *********************************************/
