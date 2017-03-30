@@ -1,7 +1,7 @@
 <?php
 
 /******************************************************************************
- * Copyright (c) 2008-2010, Ben XO (me@ben-xo.com).
+ * Copyright (c) 2008-2017, Ben XO (me@ben-xo.com).
  *
  * All rights reserved.
  * 
@@ -56,8 +56,8 @@
 /* DEFAULTS *********************************************/
 
 // error handler needs these, so let's set them now.
-define('VERSION', '1.7.1');
-define('DIR2CAST_HOMEPAGE', 'http://www.ben-xo.com/dir2cast/');
+define('VERSION', '1.7.3');
+define('DIR2CAST_HOMEPAGE', 'https://github.com/ben-xo/dir2cast/');
 define('GENERATOR', 'dir2cast ' . VERSION . ' by Ben XO (' . DIR2CAST_HOMEPAGE . ')');
 
 error_reporting(E_ALL);
@@ -1286,6 +1286,91 @@ class SettingsHandler
 	}
 }
 
+class Dispatcher
+{
+	/**
+	 * This is the main entrypoint into the podcast generator
+	 * 
+	 * @param array $argv
+	 */
+	public function run(array $argv)
+	{
+		$this->primeSettings($argv);
+		$podcast = $this->getPodcast();
+		$podcast->http_headers();
+		echo $podcast->generate();
+	}
+	
+	protected function primeSettings(array $argv)
+	{
+		SettingsHandler::bootstrap(
+			empty($_SERVER) ? array() : $_SERVER,
+			empty($_GET) ? array() : $_GET,
+			empty($argv) ? array() : $argv
+		);
+	}
+	
+	protected function getPodcast()
+	{
+		return $this->getDefaultPodcast();
+	}
+	
+	/**
+	 * The default podcast generator is the Locking Cached Dir Podcast.
+	 * This is one which reads from a directory of files, and generates
+	 * the podcast from the files within.
+	 * 
+	 * The results are cached in a temp file, for performance reasons.
+	 * 
+	 * A lock is aquired when caching so that two instances don't interfere
+	 * with each other.
+	 * 
+	 * @return Locking_Cached_Dir_Podcast
+	 */
+	protected function getDefaultPodcast()
+	{
+		$podcast = new Locking_Cached_Dir_Podcast(MP3_DIR, TMP_DIR);
+		if( strlen(FORCE_PASSWORD) && isset($_GET['force']) && FORCE_PASSWORD == $_GET['force'] )
+		{
+			$podcast->uncache();
+		}
+
+		if(!$podcast->isCached())
+		{
+			SettingsHandler::defaults();
+			
+			$getid3 = $podcast->addHelper(new getID3_Podcast_Helper());
+			$atom   = $podcast->addHelper(new Atom_Podcast_Helper());
+			$itunes = $podcast->addHelper(new iTunes_Podcast_Helper());
+			
+			$podcast->setTitle(TITLE);
+			$podcast->setLink(LINK);
+			$podcast->setDescription(DESCRIPTION);
+			$podcast->setLanguage(LANGUAGE);
+			$podcast->setCopyright(COPYRIGHT);
+			$podcast->setWebMaster(WEBMASTER);
+			$podcast->setTtl(TTL);
+			$podcast->setImage(IMAGE);
+			
+			$atom->setSelfLink(RSS_LINK);
+			
+			$itunes->setSubtitle(ITUNES_SUBTITLE);
+			$itunes->setAuthor(ITUNES_AUTHOR);
+			$itunes->setSummary(ITUNES_SUMMARY);
+			$itunes->setImage(ITUNES_IMAGE);
+			
+			$itunes->setOwnerName(ITUNES_OWNER_NAME);
+			$itunes->setOwnerEmail(ITUNES_OWNER_EMAIL);
+			
+			$itunes->addCategories(ITUNES_CATEGORIES);
+			
+			$podcast->setGenerator(GENERATOR);
+		}
+		
+		return $podcast;
+	}
+}
+
 /* FUNCTIONS **********************************************/
 
 /**
@@ -1314,53 +1399,8 @@ function safe_path($p)
 // define NO_DISPATCHER in, say, your test harness
 if(!defined('NO_DISPATCHER'))
 {
-	SettingsHandler::bootstrap(
-		empty($_SERVER) ? array() : $_SERVER, 
-		empty($_GET) ? array() : $_GET, 
-		empty($argv) ? array() : $argv 
-	);
-	
-	$podcast = new Locking_Cached_Dir_Podcast(MP3_DIR, TMP_DIR);
-	if( strlen(FORCE_PASSWORD) && isset($_GET['force']) && FORCE_PASSWORD == $_GET['force'] )
-	{
-		$podcast->uncache();	
-	}
-	
-	if(!$podcast->isCached())
-	{
-		SettingsHandler::defaults();
-		
-		$getid3 = $podcast->addHelper(new getID3_Podcast_Helper());
-		$atom   = $podcast->addHelper(new Atom_Podcast_Helper());
-		$itunes = $podcast->addHelper(new iTunes_Podcast_Helper());
-		
-		$podcast->setTitle(TITLE);
-		$podcast->setLink(LINK);
-		$podcast->setDescription(DESCRIPTION);
-		$podcast->setLanguage(LANGUAGE);
-		$podcast->setCopyright(COPYRIGHT);
-		$podcast->setWebMaster(WEBMASTER);
-		$podcast->setTtl(TTL);
-		$podcast->setImage(IMAGE);
-		
-		$atom->setSelfLink(RSS_LINK);
-		
-		$itunes->setSubtitle(ITUNES_SUBTITLE);
-		$itunes->setAuthor(ITUNES_AUTHOR);
-		$itunes->setSummary(ITUNES_SUMMARY);
-		$itunes->setImage(ITUNES_IMAGE);
-		
-		$itunes->setOwnerName(ITUNES_OWNER_NAME);
-		$itunes->setOwnerEmail(ITUNES_OWNER_EMAIL);
-		
-		$itunes->addCategories(ITUNES_CATEGORIES);
-		
-		$podcast->setGenerator(GENERATOR);
-	}
-	
-	$podcast->http_headers();
-	
-	echo $podcast->generate();
+	$dispatcher = new Dispatcher();
+	$dispatcher->run($argv);
 }
 
 /* THE END *********************************************/

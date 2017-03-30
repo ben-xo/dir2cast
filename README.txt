@@ -1,4 +1,4 @@
-dir2cast by Ben XO v1.7.1 (2011-02-17)
+dir2cast by Ben XO v1.7.3 (2017-03-30)
 ================================================================================
 
 http://www.ben-xo.com/dir2cast
@@ -45,8 +45,8 @@ dir2cast requires PHP 5.1.
 
 dir2cast makes use of getID3 by James Heinrich & Allan Hansen, although it does
 not require the whole thing. A cut down version of getID3 is supplied at
-http://www.ben-xo.com/dir2cast. You will need to download this and install it
-with dir2cast.php. The full version of getID3 is available at 
+http://https://github.com/ben-xo/dir2cast/. You will need to download this and 
+install it with dir2cast.php. The full version of getID3 is available at 
 http://getid3.sourceforge.net/ .
 
 
@@ -151,6 +151,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 HISTORY
 ================================================================================
 
+1.7.3 17-03-30 Refactor dispatcher a little bit.
+1.7.2 14-03-06 Update homepage information in file to the GitHub.
 1.7.1 11-02-17 Remove unused mpc_old code from getID3, which false-positived
                on one of my MP3s.
 1.7 2010-12-10 <itunes:summary> is now excluded if it's not explicitly set, as
