@@ -572,15 +572,15 @@ class RSS_File_Item extends RSS_Item {
 	}
 }
 
-class MP3_RSS_Item extends RSS_File_Item {
+class Media_RSS_Item extends RSS_File_Item {
 	
 	public function __construct($filename)
 	{
-		$this->setFromMP3File($filename);
+		$this->setFromMediaFile($filename);
 		parent::__construct($filename);
 	}
 
-	public function setFromMP3File($file)
+	public function setFromMediaFile($file)
 	{ 
 		// don't do any heavy-lifting here as this is called by the constructor, which 
 		// is called once for every file in the dir (not just the ITEM_COUNT in the cast) 
@@ -636,6 +636,23 @@ class MP3_RSS_Item extends RSS_File_Item {
 	{
 		$image = parent::getImage();
 		return $image;
+	}
+}
+
+
+class MP3_RSS_Item extends Media_RSS_Item 
+{
+	public function getType()
+	{
+		return 'audio/mpeg';
+	}
+}
+
+class M4A_RSS_Item extends Media_RSS_Item
+{
+	public function getType()
+	{
+		return 'audio/mp4';
 	}
 }
 
@@ -827,7 +844,10 @@ class Dir_Podcast extends Podcast
 				{
 					// one array per mtime, just in case several MP3s share the same mtime.
 					$filemtime = filemtime($filename);
-					$the_item = new MP3_RSS_Item($filename);
+					if(strtolower($file_ext) == 'm4a')
+						$the_item = new M4A_RSS_Item($filename);
+					else
+						$the_item = new MP3_RSS_Item($filename);
 					$this->unsorted_items[$filemtime][] = $the_item;
 					if($filemtime > $this->max_mtime)
 						$this->max_mtime = $filemtime;
