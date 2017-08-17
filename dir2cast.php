@@ -153,7 +153,7 @@ class getID3_Podcast_Helper implements Podcast_Helper {
 		{
 			if(!isset($this->getid3))
 			{
-				$this->getid3 = new getid3();
+				$this->getid3 = new getID3();
 				$this->getid3->option_tag_lyrics3 = false;
 				$this->getid3->option_tag_apetag = false;
 				$this->getid3->encoding = 'UTF-8';
@@ -161,7 +161,8 @@ class getID3_Podcast_Helper implements Podcast_Helper {
 			
 			try
 			{
-				$info = $this->getid3->Analyze($item->getFilename());
+				$info = $this->getid3->analyze($item->getFilename());
+                                getid3_lib::CopyTagsToComments($info);
 			}
 			catch(getid3_exception $e)
 			{
@@ -820,6 +821,7 @@ class Dir_Podcast extends Podcast
 		switch(strtolower($file_ext))
 		{
 			case 'mp3':
+			case 'm4a':
 				// skip 0-length mp3 files. getID3 chokes on them.
 				if(filesize($filename))
 				{
@@ -831,7 +833,6 @@ class Dir_Podcast extends Podcast
 						$this->max_mtime = $filemtime;
 				}
 				break;
-				
 			default:
 		}
 		
