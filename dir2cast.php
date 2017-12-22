@@ -149,7 +149,7 @@ class getID3_Podcast_Helper implements Podcast_Helper {
 	 */
 	public function appendToItem(DOMElement $d, DOMDocument $doc, RSS_Item $item)
 	{
-		if($item instanceof MP3_RSS_Item && !$item->getAnalyzed())
+		if($item instanceof Media_RSS_Item && !$item->getAnalyzed())
 		{
 			if(!isset($this->getid3))
 			{
