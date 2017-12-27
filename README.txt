@@ -1,4 +1,4 @@
-dir2cast by Ben XO v1.8 (2016-07-04)
+dir2cast by Ben XO v1.9 (2017-12-27)
 ================================================================================
 
 https://github.com/ben-xo/dir2cast/
@@ -151,6 +151,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 HISTORY
 ================================================================================
 
+1.9 2017-12-27 Merged changes from cbz:
+               * Upgraded getID3
+               * Added support for M4A files
 1.8 2016-07-04 Merged changes from Jeff Bearer:
                * Added support for PNG podcast cover art
                * create tempdir if it does not already exist
