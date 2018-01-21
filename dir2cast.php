@@ -1086,7 +1086,10 @@ class ErrorHandler
 		}
 	}
 	
-	public static function handle_exception( Exception $e )
+	/**
+	 * In PHP5, this will be an Exception, but in PHP7 is can be a Throwable
+	 */
+	public static function handle_exception( $e )
 	{
 		ErrorHandler::display($e->getMessage(), $e->getFile(), $e->getLine());
 	}
