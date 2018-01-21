@@ -1,7 +1,7 @@
 <?php
 
 /******************************************************************************
- * Copyright (c) 2008-2017, Ben XO (me@ben-xo.com).
+ * Copyright (c) 2008-2018, Ben XO (me@ben-xo.com).
  *
  * All rights reserved.
  * 
@@ -162,7 +162,7 @@ class getID3_Podcast_Helper implements Podcast_Helper {
 			try
 			{
 				$info = $this->getid3->analyze($item->getFilename());
-                                getid3_lib::CopyTagsToComments($info);
+								getid3_lib::CopyTagsToComments($info);
 			}
 			catch(getid3_exception $e)
 			{
@@ -334,16 +334,16 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
 
 		// Look to see if there is a item specific image and include it.
 		$item_image = $item->getImage();
-                if(!empty($item_image))
-                {
-                        $item_element->appendChild( $doc->createElement('itunes:image') )
-                                ->setAttribute('href', $item_image);
-                }
+		if(!empty($item_image))
+		{
+			$item_element->appendChild( $doc->createElement('itunes:image') )
+					->setAttribute('href', $item_image);
+		}
 	}
 	
 	public function appendCategory($category, $subcats, DOMElement $e, DOMDocument $doc)
 	{
-                $e->appendChild( $element = $doc->createElement('itunes:category') )
+		$e->appendChild( $element = $doc->createElement('itunes:category') )
 			->setAttribute('text', $category);
 			
 		if(is_array($subcats)) 
@@ -458,11 +458,11 @@ class RSS_Item extends GetterSetter {
 
 		// Look to see if there is a item specific image and include it.
 		$item_image = $this->getImage();
-                if(!empty($item_image))
-                {
-                        $item_element->appendChild( $doc->createElement('image') )
-                                ->appendChild(new DOMText($item_image));
-                }
+				if(!empty($item_image))
+				{
+						$item_element->appendChild( $doc->createElement('image') )
+								->appendChild(new DOMText($item_image));
+				}
 
 		$enclosure = $item_element->appendChild(new DOMElement('enclosure'));
 		$enclosure->setAttribute('url', $this->getLink());
@@ -639,7 +639,6 @@ class Media_RSS_Item extends RSS_File_Item {
 	}
 }
 
-
 class MP3_RSS_Item extends Media_RSS_Item 
 {
 	public function getType()
@@ -777,8 +776,8 @@ abstract class Podcast extends GetterSetter
 			$image->appendChild( new DOMElement('link') )
 				->appendChild(new DOMText($this->getLink()));
 			$image->appendChild( new DOMElement('title') )
-			    ->appendChild(new DOMText($this->getTitle()));
-		    $channel->appendChild($image);
+				->appendChild(new DOMText($this->getTitle()));
+			$channel->appendChild($image);
 		}
 	}
 	
@@ -833,30 +832,48 @@ class Dir_Podcast extends Podcast
 		if(false === $pos)
 			$file_ext = '';
 		else
-			$file_ext = substr($filename, $pos + 1);
+			$file_ext = strtolower(substr($filename, $pos + 1));
 
-		switch(strtolower($file_ext))
+		switch($file_ext)
 		{
 			case 'mp3':
-			case 'm4a':
-				// skip 0-length mp3 files. getID3 chokes on them.
-				if(filesize($filename))
-				{
-					// one array per mtime, just in case several MP3s share the same mtime.
-					$filemtime = filemtime($filename);
-					if(strtolower($file_ext) == 'm4a')
-						$the_item = new M4A_RSS_Item($filename);
-					else
-						$the_item = new MP3_RSS_Item($filename);
-					$this->unsorted_items[$filemtime][] = $the_item;
-					if($filemtime > $this->max_mtime)
-						$this->max_mtime = $filemtime;
-				}
+				$this->addFileRssItem(new MP3_RSS_Item($filename));
 				break;
+
+			case 'm4a':
+				$this->addFileRssItem(new M4A_RSS_Item($filename));
+				break;
+
 			default:
+				// no other file types are considered for the podcast
 		}
 		
 		return count($this->unsorted_items);
+	}
+
+	protected function addFileRssItem(File_RSS_Item $the_item)
+	{
+		$filename = $the_item->getFilename();
+
+		// skip 0-length mp3 files. getID3 chokes on them.
+		if(filesize($filename))
+		{
+			$filemtime = filemtime($filename);
+
+			// one array per mtime, just in case several MP3s share the same mtime.
+			$this->unsorted_items[$filemtime][] = $the_item;
+			if($filemtime > $this->max_mtime)
+				$this->max_mtime = $filemtime;
+		}
+	}
+
+	protected function newRssItemByType($filename, $file_ext)
+	{
+		if($file_ext == 'm4a')
+			return new M4A_RSS_Item($filename);
+
+		// default: MP3
+		return new MP3_RSS_Item($filename);
 	}
 	
 	protected function pre_generate()
@@ -1184,7 +1201,7 @@ class SettingsHandler
 				define('MP3_DIR', MP3_BASE);
 		}
 
-                if(!defined('OUTPUT_FILE'))
+		if(!defined('OUTPUT_FILE'))
 		{
 			if(!empty($argv[2]))
 				define('OUTPUT_FILE', $argv[2]);
@@ -1471,7 +1488,7 @@ if(!defined('NO_DISPATCHER'))
 		echo "Writing RSS to: ". OUTPUT_FILE ."\n";
 		$fh = fopen(OUTPUT_FILE, "w");
 		fwrite($fh,$podcast->generate());
-                fclose($fh); 
+		fclose($fh);
 	}
 }
 
