@@ -151,6 +151,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 HISTORY
 ================================================================================
 
+1.9.1 18-01-21 Small PHP7 fix.
 1.9 2017-12-27 Merged changes from cbz:
                * Upgraded getID3
                * Added support for M4A files
