@@ -855,7 +855,7 @@ class Dir_Podcast extends Podcast
 	{
 		$filename = $the_item->getFilename();
 
-		// skip 0-length mp3 files. getID3 chokes on them.
+		// skip 0-length files. getID3 chokes on them and listeners dislike them
 		if(filesize($filename))
 		{
 			$filemtime = filemtime($filename);
