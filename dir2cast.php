@@ -837,11 +837,11 @@ class Dir_Podcast extends Podcast
 		switch($file_ext)
 		{
 			case 'mp3':
-				$this->addFileRssItem(new MP3_RSS_Item($filename));
+				$this->addRssFileItem(new MP3_RSS_Item($filename));
 				break;
 
 			case 'm4a':
-				$this->addFileRssItem(new M4A_RSS_Item($filename));
+				$this->addRssFileItem(new M4A_RSS_Item($filename));
 				break;
 
 			default:
@@ -851,7 +851,7 @@ class Dir_Podcast extends Podcast
 		return count($this->unsorted_items);
 	}
 
-	protected function addFileRssItem(File_RSS_Item $the_item)
+	protected function addRssFileItem(RSS_File_Item $the_item)
 	{
 		$filename = $the_item->getFilename();
 
