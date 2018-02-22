@@ -56,7 +56,7 @@
 /* DEFAULTS *********************************************/
 
 // error handler needs these, so let's set them now.
-define('VERSION', '1.9.1');
+define('VERSION', '1.10');
 define('DIR2CAST_HOMEPAGE', 'https://github.com/ben-xo/dir2cast/');
 define('GENERATOR', 'dir2cast ' . VERSION . ' by Ben XO (' . DIR2CAST_HOMEPAGE . ')');
 
@@ -485,15 +485,19 @@ class RSS_File_Item extends RSS_Item {
 	public function __construct($filename)
 	{
 		$this->filename = $filename;
-		$this->extension = 
 		$this->setLinkFromFilename($filename);
 		parent::__construct();
 	}
 	
 	public function setLinkFromFilename($filename)
 	{
-		$url = rtrim(MP3_URL, '/') . '/' . rawurlencode(basename($filename));
+		$url = rtrim(MP3_URL, '/') . '/' . str_replace('%2F', '/', rawurlencode($this->stripBasePath($filename)));
 		$this->setLink($url);
+	}
+
+	protected function stripBasePath($filename)
+	{
+		return ltrim(substr($filename, strlen(MP3_DIR)), '/');
 	}
 	
 	public function getType()
@@ -810,7 +814,17 @@ class Dir_Podcast extends Podcast
 			
 			// scan the dir
 
-			$di = new DirectoryIterator($this->source_dir);
+			if(RECURSIVE_DIRECTORY_ITERATOR)
+			{
+				$di = new RecursiveIteratorIterator(
+					new RecursiveDirectoryIterator($this->source_dir),
+					RecursiveIteratorIterator::SELF_FIRST
+				);
+			}
+			else
+			{
+				$di = new DirectoryIterator($this->source_dir);
+			}
 			
 			$item_count = 0;
 			foreach($di as $file)
@@ -1374,6 +1388,9 @@ class SettingsHandler
 
 		if(!defined('DESCRIPTION_SOURCE'))
 			define('DESCRIPTION_SOURCE', 'id3');
+
+		if(!defined('RECURSIVE_DIRECTORY_ITERATOR'))
+			define('RECURSIVE_DIRECTORY_ITERATOR', false);
 	}
 	
 	public static function load_from_ini($file)
