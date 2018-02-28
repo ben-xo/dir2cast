@@ -1,4 +1,4 @@
-dir2cast by Ben XO v1.9 (2017-12-27)
+dir2cast by Ben XO v1.10 (2018-02-22)
 ================================================================================
 
 https://github.com/ben-xo/dir2cast/
@@ -151,6 +151,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 HISTORY
 ================================================================================
 
+1.10 2018-01-21 Added RECURSIVE_DIRECTORY_ITERATOR option for scanning nested
+                folders. Suggested by ognjiscar
 1.9.1 18-01-21 Small PHP7 fix.
 1.9 2017-12-27 Merged changes from cbz:
                * Upgraded getID3
