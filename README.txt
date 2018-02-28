@@ -1,4 +1,4 @@
-dir2cast by Ben XO v1.10 (2018-02-22)
+dir2cast by Ben XO v1.11 (2018-02-28)
 ================================================================================
 
 https://github.com/ben-xo/dir2cast/
@@ -151,6 +151,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 HISTORY
 ================================================================================
 
+1.11 2018-02-28 Added charset=utf-8 to the Content-type header.
+                Suggested by RobertBozic
 1.10 2018-01-21 Added RECURSIVE_DIRECTORY_ITERATOR option for scanning nested
                 folders. Suggested by ognjiscar
 1.9.1 18-01-21 Small PHP7 fix.

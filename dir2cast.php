@@ -56,7 +56,7 @@
 /* DEFAULTS *********************************************/
 
 // error handler needs these, so let's set them now.
-define('VERSION', '1.10');
+define('VERSION', '1.11');
 define('DIR2CAST_HOMEPAGE', 'https://github.com/ben-xo/dir2cast/');
 define('GENERATOR', 'dir2cast ' . VERSION . ' by Ben XO (' . DIR2CAST_HOMEPAGE . ')');
 
@@ -684,7 +684,7 @@ abstract class Podcast extends GetterSetter
 	
 	public function http_headers()
 	{
-		header('Content-type: application/rss+xml');
+		header('Content-type: application/rss+xml; charset=utf-8');
 		header('Last-modified: ' . $this->getLastBuildDate());
 	}
 	
