@@ -56,7 +56,7 @@
 /* DEFAULTS *********************************************/
 
 // error handler needs these, so let's set them now.
-define('VERSION', '1.11');
+define('VERSION', '1.12');
 define('DIR2CAST_HOMEPAGE', 'https://github.com/ben-xo/dir2cast/');
 define('GENERATOR', 'dir2cast ' . VERSION . ' by Ben XO (' . DIR2CAST_HOMEPAGE . ')');
 
@@ -684,7 +684,9 @@ abstract class Podcast extends GetterSetter
 	
 	public function http_headers()
 	{
-		header('Content-type: application/rss+xml; charset=utf-8');
+		// The correct content type is application/rss+xml; however, the de-facto
+		// standard is now text/xml. See https://stackoverflow.com/questions/595616/what-is-the-correct-mime-type-to-use-for-an-rss-feed
+		header('Content-type: text/xml; charset=UTF-8');
 		header('Last-modified: ' . $this->getLastBuildDate());
 	}
 	

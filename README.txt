@@ -151,6 +151,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 HISTORY
 ================================================================================
 
+1.12 2018-03-22 Switched to de-facto text/xml content-type
+                Suggested by RobertBozic
 1.11 2018-02-28 Added charset=utf-8 to the Content-type header.
                 Suggested by RobertBozic
 1.10 2018-01-21 Added RECURSIVE_DIRECTORY_ITERATOR option for scanning nested
