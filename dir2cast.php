@@ -1381,6 +1381,9 @@ class SettingsHandler
 		
 		if(!defined('ITUNES_CATEGORIES'))
 			define('ITUNES_CATEGORIES', '');
+		
+		if(!defined('ITUNES_EXPLICIT'))
+			define('ITUNES_EXPLICIT', 'no');
 			
 		if(!defined('LONG_TITLES'))
 			define('LONG_TITLES', false);
@@ -1490,6 +1493,7 @@ if(!defined('NO_DISPATCHER'))
 		$itunes->setAuthor(ITUNES_AUTHOR);
 		$itunes->setSummary(ITUNES_SUMMARY);
 		$itunes->setImage(ITUNES_IMAGE);
+		$itunes->setExplicit(ITUNES_EXPLICIT);
 		
 		$itunes->setOwnerName(ITUNES_OWNER_NAME);
 		$itunes->setOwnerEmail(ITUNES_OWNER_EMAIL);
