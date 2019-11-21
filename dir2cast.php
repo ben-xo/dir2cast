@@ -183,6 +183,8 @@ class getID3_Podcast_Helper implements Podcast_Helper {
 					$item->setID3Album( $info['comments']['album'][0] );
 				if(!empty($info['comments']['comment'][0]))
 					$item->setID3Comment( $info['comments']['comment'][0] );
+				if(!empty($info['comments']['year'][0]))
+					$item->setID3Year( $info['comments']['year'][0] );
 			}
 
 			if(!empty($info['playtime_string']))
@@ -422,7 +424,7 @@ class RSS_Item extends GetterSetter {
 		$item_elements = array(
 			'title' => $this->getTitle(),
 			'link' => $this->getLink(),
-			'pubDate' => $this->getPubDate()
+			'pubDate' => $this->getID3Year() && strlen($this->getID3Year()) >= 8 ? date('r', strtotime($this->getID3Year())) : $this->getPubDate()
 		);
 
 		if(DESCRIPTION_SOURCE == 'file')
