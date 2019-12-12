@@ -1,4 +1,4 @@
-dir2cast by Ben XO v1.13 (2019-12-11)
+dir2cast by Ben XO v1.14 (2019-12-12)
 ================================================================================
 
 https://github.com/ben-xo/dir2cast/
@@ -151,6 +151,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 HISTORY
 ================================================================================
 
+1.14 2019-12-12 Support for mp4 videos
 1.13 2019-12-11 Suppress deprecation warnings, as both dir2cast and getID3
                 trigger the error handler on newer PHPs
 1.12 2018-03-22 Switched to de-facto text/xml content-type

@@ -56,7 +56,7 @@
 /* DEFAULTS *********************************************/
 
 // error handler needs these, so let's set them now.
-define('VERSION', '1.13');
+define('VERSION', '1.14');
 define('DIR2CAST_HOMEPAGE', 'https://github.com/ben-xo/dir2cast/');
 define('GENERATOR', 'dir2cast ' . VERSION . ' by Ben XO (' . DIR2CAST_HOMEPAGE . ')');
 
@@ -659,6 +659,15 @@ class M4A_RSS_Item extends Media_RSS_Item
 	}
 }
 
+class MP4_RSS_Item extends Media_RSS_Item
+{
+	public function getType()
+	{
+		return 'video/mp4';
+	}
+}
+
+
 abstract class Podcast extends GetterSetter
 {
 	protected $max_mtime = 0;
@@ -860,6 +869,10 @@ class Dir_Podcast extends Podcast
 				$this->addRssFileItem(new M4A_RSS_Item($filename));
 				break;
 
+			case 'mp4':
+				$this->addRssFileItem(new MP4_RSS_Item($filename));
+				break;
+
 			default:
 				// no other file types are considered for the podcast
 		}
@@ -883,15 +896,6 @@ class Dir_Podcast extends Podcast
 		}
 	}
 
-	protected function newRssItemByType($filename, $file_ext)
-	{
-		if($file_ext == 'm4a')
-			return new M4A_RSS_Item($filename);
-
-		// default: MP3
-		return new MP3_RSS_Item($filename);
-	}
-	
 	protected function pre_generate()
 	{
 		$this->scan();
