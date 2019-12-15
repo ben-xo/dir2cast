@@ -56,7 +56,7 @@
 /* DEFAULTS *********************************************/
 
 // error handler needs these, so let's set them now.
-define('VERSION', '1.15');
+define('VERSION', '1.16');
 define('DIR2CAST_HOMEPAGE', 'https://github.com/ben-xo/dir2cast/');
 define('GENERATOR', 'dir2cast ' . VERSION . ' by Ben XO (' . DIR2CAST_HOMEPAGE . ')');
 
@@ -69,7 +69,7 @@ date_default_timezone_set( 'UTC' );
 
 /* EXTERNALS ********************************************/
 
-function __autoload($class_name) 
+function __autoloader($class_name)
 {
 	switch(strtolower($class_name))
 	{
@@ -87,6 +87,7 @@ function __autoload($class_name)
 			require_once $class_name . '.php';
 	}
 }
+spl_autoload_register('__autoloader');
 
 /* CLASSES **********************************************/
 
@@ -104,7 +105,7 @@ abstract class GetterSetter {
 	public function __call($method, $params)
 	{
 		$var_name = substr($method, 3);
-		$var_name{0} = strtolower($var_name{0});
+		$var_name[0] = strtolower($var_name[0]);
 		switch(strtolower(substr($method, 0, 3)))
 		{
 			case 'get':
