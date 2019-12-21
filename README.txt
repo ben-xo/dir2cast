@@ -1,4 +1,4 @@
-dir2cast by Ben XO v1.18 (2019-12-21)
+dir2cast by Ben XO v1.19 (2019-12-21)
 ================================================================================
 
 https://github.com/ben-xo/dir2cast/
@@ -155,6 +155,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 HISTORY
 ================================================================================
 
+1.19 2019-12-21 Extract cover art from MP4 and M4A files.
 1.18 2019-12-21 Bugfix for image URLs. Better CLI options.
 1.17 2019-12-21 Automatically extract cover art from the files
 1.16 2019-12-16 Other fixes for PHP7.x
