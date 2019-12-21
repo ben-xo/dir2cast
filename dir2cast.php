@@ -495,8 +495,12 @@ class RSS_File_Item extends RSS_Item {
 	
 	public function setLinkFromFilename($filename)
 	{
-		$url = rtrim(MP3_URL, '/') . '/' . str_replace('%2F', '/', rawurlencode($this->stripBasePath($filename)));
-		$this->setLink($url);
+		$this->setLink($this->filenameToUrl($filename));
+	}
+
+	protected function filenameToUrl($filename)
+	{
+	    return rtrim(MP3_URL, '/') . '/' . str_replace('%2F', '/', rawurlencode($this->stripBasePath($filename)));
 	}
 
 	protected function stripBasePath($filename)
@@ -576,16 +580,16 @@ class RSS_File_Item extends RSS_Item {
 	 * Place a file with the same name but .jpg or .png instead of .<whatever> and the contents will be used
 	 * as the cover art for the item in the podcast.
 	 * 
-	 * @return String the filename of the cover art or null if there's no subtitle file
+	 * @return String the filename of the cover art or null if there's no cover art file
 	 */
 	public function getImage()
 	{
 		$image_file_name = $this->getImageFilename('png');
 		if(file_exists( $image_file_name ))
-			return $image_file_name;
+			return $this->filenameToUrl($image_file_name);
 		$image_file_name = $this->getImageFilename('jpg');
 		if(file_exists( $image_file_name ))
-			return $image_file_name;
+		    return $this->filenameToUrl($image_file_name);
 	}
 }
 
