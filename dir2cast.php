@@ -215,7 +215,9 @@ class getID3_Podcast_Helper implements Podcast_Helper {
                 if(AUTO_SAVE_COVER_ART && !empty($info['quicktime'])) {
                     $qt_helper = new QuicktimeImageHelper();
                     $image_atom = $qt_helper->findCover($info['quicktime']['moov']);
-                    $item->saveImage($image_atom['image_mime'], $image_atom['data']);
+                    if($image_atom && isset($image_atom['image_mime']) && isset($image_atom['data'])) {
+                        $item->saveImage($image_atom['image_mime'], $image_atom['data']);
+                    }
                 }
             }
             
