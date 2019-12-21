@@ -1,4 +1,4 @@
-dir2cast by Ben XO v1.16 (2019-12-15)
+dir2cast by Ben XO v1.17 (2019-12-15)
 ================================================================================
 
 https://github.com/ben-xo/dir2cast/
@@ -17,8 +17,12 @@ Features:
 
 * For 99% of things, NO CONFIGURATION IS NECESSARY.
 
-* dir2cast will automatically use the ID3 fields from your MP3s for the Author, 
+* supports MP3, MP4, and M4A files
+
+* dir2cast will automatically use the ID3 fields from your files for the Author, 
   Title, etc. ID3v2 is supported. (Uses bundled getID3 lib).
+
+* dir2cast will automatically use the cover art embedded in your file as well. 
 
 * The generated feed is cached (in the supplied 'temp' folder, or anywhere else
   that you want) and only updated if something in the directory changes.
@@ -27,7 +31,7 @@ Features:
   new-feed-url, per-item keywords).
 
 * iTunes 'image' supported: just drop a file called itunes_image.jpg in the same
-  folder as your MP3s.
+  folder as your media files.
 
 * RSS Description, iTunes Subtitle and iTunes Summary can be set by dropping
   files named description.txt, itunes_subtitle.txt and itunes_summary.txt 
@@ -35,7 +39,7 @@ Features:
   also set these in the config).
 
 * You can set a per-file iTunes Summary by creating a text file with the same
-  name as the MP3 (e.g. for file.mp3, create file.txt).
+  name as the media file (e.g. for file.mp3, create file.txt).
 
 
 REQUIREMENTS
@@ -151,6 +155,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 HISTORY
 ================================================================================
 
+1.17 2019-12-21 Automatically extract cover art from the files
+1.16 2019-12-16 Other fixes for PHP7.x
 1.15 2019-12-16 Other fixes for PHP7.x
 1.15 2019-12-15 Upgrade getID3 to 1.9.18-201911300717 - fixes PHP7.4 support
 1.14 2019-12-12 Support for mp4 videos
