@@ -664,12 +664,12 @@ class Media_RSS_Item extends RSS_File_Item {
         switch($mime_type) {
             case 'image/jpeg':
                 $filename = $this->getImageFilename('jpg');
-                if(!file_exists($filename))
+                if(!file_exists($filename) && is_writable(dirname($filename)))
                     file_put_contents($filename, $data);
                 break;
             case 'image/png':
                 $filename = $this->getImageFilename('png');
-                if(!file_exists($filename))
+                if(!file_exists($filename) && is_writable(dirname($filename)))
                     file_put_contents($filename, $data);
                 break;
         }
