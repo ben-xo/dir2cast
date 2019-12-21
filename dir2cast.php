@@ -767,7 +767,7 @@ abstract class Podcast extends GetterSetter
             'description' => $this->getDescription(),
             'lastBuildDate' => $this->getLastBuildDate(),
             'language' => $this->getLanguage(),
-            'copyright' => $this->getCopyright(),
+            'copyright' => str_replace('%YEAR%', date('Y'), $this->getCopyright()),
             'generator' => $this->getGenerator(),
             'webMaster' => $this->getWebMaster(),
             'ttl' => $this->getTtl()
