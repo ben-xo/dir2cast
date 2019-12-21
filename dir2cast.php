@@ -184,7 +184,7 @@ class getID3_Podcast_Helper implements Podcast_Helper {
 					$item->setID3Album( $info['comments']['album'][0] );
 				if(!empty($info['comments']['comment'][0]))
 					$item->setID3Comment( $info['comments']['comment'][0] );
-				if(!empty($info['comments']['picture'][0])) {
+				if(AUTO_SAVE_COVER_ART && !empty($info['comments']['picture'][0])) {
 				    $item->saveImage($info['comments']['picture'][0]['image_mime'], $info['comments']['picture'][0]['data']);
 				}
 			}
@@ -1426,6 +1426,10 @@ class SettingsHandler
 
 		if(!defined('RECURSIVE_DIRECTORY_ITERATOR'))
 			define('RECURSIVE_DIRECTORY_ITERATOR', false);
+
+		if(!defined('AUTO_SAVE_COVER_ART'))
+		    define('AUTO_SAVE_COVER_ART', true);
+
 	}
 	
 	public static function load_from_ini($file)
