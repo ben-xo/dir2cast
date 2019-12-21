@@ -1268,8 +1268,12 @@ class SettingsHandler
             self::finalize(array('TMP_DIR', 'MP3_BASE', 'MP3_DIR', 'MIN_CACHE_TIME', 'FORCE_PASSWORD'));
         }
         
-        $cli_options = getopt('', array('media-dir::', 'media-url::', 'output::'));
+        $cli_options = getopt('', array('help', 'media-dir::', 'media-url::', 'output::'));
         if($cli_options) {
+            if(isset($cli_options['help'])) {
+                print "Usage: php dir2cast.php [--help] [--media-dir=MP3_DIR] [--media-url=MP3_URL] [--output=OUTPUT_FILE]\n";
+                exit;
+            }
             if(!defined('MP3_DIR') && !empty($cli_options['media-dir']))
             {
                 define('MP3_DIR', realpath($cli_options['media-dir']));
