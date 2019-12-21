@@ -1236,6 +1236,22 @@ class SettingsHandler
 			self::finalize(array('TMP_DIR', 'MP3_BASE', 'MP3_DIR', 'MIN_CACHE_TIME', 'FORCE_PASSWORD'));
 		}
 		
+		$cli_options = getopt('', array('media-dir::', 'media-url::', 'output::'));
+		if($cli_options) {
+		    if(!defined('MP3_DIR') && !empty($cli_options['media-dir']))
+		    {
+		        define('MP3_DIR', realpath($cli_options['media-dir']));
+		    }
+		    if(!defined('MP3_URL') && !empty($cli_options['media-url']))
+		    {
+		        define('MP3_URL', $cli_options['media-url']);
+		    }
+		    if(!defined('OUTPUT_FILE') && !empty($cli_options['output']))
+		    {
+		        define('OUTPUT_FILE', $cli_options['output']);
+		    }
+		}
+
 		if(!defined('TMP_DIR'))
 			define('TMP_DIR', dirname(__FILE__) . '/temp');
 		
@@ -1251,16 +1267,8 @@ class SettingsHandler
 		{
 			if(!empty($GET['dir']))
 				define('MP3_DIR', MP3_BASE . '/' . safe_path(magic_stripslashes($GET['dir'])));
-			elseif(!empty($argv[1]) && realpath($argv[1]))
-				define('MP3_DIR', realpath($argv[1]));
 			else
 				define('MP3_DIR', MP3_BASE);
-		}
-
-		if(!defined('OUTPUT_FILE'))
-		{
-			if(!empty($argv[2]))
-				define('OUTPUT_FILE', $argv[2]);
 		}
 
 		if(!defined('MIN_CACHE_TIME'))
