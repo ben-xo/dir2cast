@@ -56,7 +56,7 @@
 /* DEFAULTS *********************************************/
 
 // error handler needs these, so let's set them now.
-define('VERSION', '1.18');
+define('VERSION', '1.19');
 define('DIR2CAST_HOMEPAGE', 'https://github.com/ben-xo/dir2cast/');
 define('GENERATOR', 'dir2cast ' . VERSION . ' by Ben XO (' . DIR2CAST_HOMEPAGE . ')');
 
@@ -129,6 +129,27 @@ interface Podcast_Helper {
     public function addNamespaceTo(DOMElement $d, DOMDocument $doc);
 }
 
+class QuicktimeImageHelper {
+    public function findCover($info) {
+
+        if(!is_array($info)) return false;
+
+        // search for covr atom
+        if($info['name'] == 'covr') return $info;
+
+        if(isset($info['subatoms']) && is_array($info['subatoms'])) {
+            foreach($info['subatoms'] as $subatom) {
+                $cover = $this->findCover($subatom);
+                if($cover !== false) {
+                    return $cover;
+                }
+            }
+        }
+
+        return false;
+    }
+}
+
 /**
  * Uses external getID3 lib to analyze MP3 files.
  *
@@ -184,8 +205,17 @@ class getID3_Podcast_Helper implements Podcast_Helper {
                     $item->setID3Album( $info['comments']['album'][0] );
                 if(!empty($info['comments']['comment'][0]))
                     $item->setID3Comment( $info['comments']['comment'][0] );
+
+                // this works for MP3s
                 if(AUTO_SAVE_COVER_ART && !empty($info['comments']['picture'][0])) {
                     $item->saveImage($info['comments']['picture'][0]['image_mime'], $info['comments']['picture'][0]['data']);
+                }
+
+                // this works for m4a and mp4
+                if(AUTO_SAVE_COVER_ART && !empty($info['quicktime'])) {
+                    $qt_helper = new QuicktimeImageHelper();
+                    $image_atom = $qt_helper->findCover($info['quicktime']['moov']);
+                    $item->saveImage($image_atom['image_mime'], $image_atom['data']);
                 }
             }
             
