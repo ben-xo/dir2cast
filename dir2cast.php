@@ -184,6 +184,9 @@ class getID3_Podcast_Helper implements Podcast_Helper {
 					$item->setID3Album( $info['comments']['album'][0] );
 				if(!empty($info['comments']['comment'][0]))
 					$item->setID3Comment( $info['comments']['comment'][0] );
+				if(!empty($info['comments']['picture'][0])) {
+				    $item->saveImage($info['comments']['picture'][0]['image_mime'], $info['comments']['picture'][0]['data']);
+				}
 			}
 			
 			if(!empty($info['playtime_string']))
@@ -560,6 +563,15 @@ class RSS_File_Item extends RSS_Item {
 			return file_get_contents($summary_file_name);
 	}
 
+	protected function getImageFilename($type) {
+	    switch($type) {
+	        case 'jpg':
+	            return dirname($this->getFilename()) . '/' . basename($this->getFilename(), '.' . $this->getExtension()) . '.jpg';
+	        case 'png':
+	            return dirname($this->getFilename()) . '/' . basename($this->getFilename(), '.' . $this->getExtension()) . '.png';
+	    }
+	}
+
 	/**
 	 * Place a file with the same name but .jpg or .png instead of .<whatever> and the contents will be used
 	 * as the cover art for the item in the podcast.
@@ -568,10 +580,10 @@ class RSS_File_Item extends RSS_Item {
 	 */
 	public function getImage()
 	{
-		$image_file_name = dirname($this->getFilename()) . '/' . basename($this->getFilename(), '.' . $this->getExtension()) . '.jpg';
+		$image_file_name = $this->getImageFilename('png');
 		if(file_exists( $image_file_name ))
 			return $image_file_name;
-		$image_file_name = dirname($this->getFilename()) . '/' . basename($this->getFilename(), '.' . $this->getExtension()) . '.png';
+		$image_file_name = $this->getImageFilename('jpg');
 		if(file_exists( $image_file_name ))
 			return $image_file_name;
 	}
@@ -641,6 +653,22 @@ class Media_RSS_Item extends RSS_File_Item {
 	{
 		$image = parent::getImage();
 		return $image;
+	}
+
+	public function saveImage($mime_type, $data)
+	{
+	    switch($mime_type) {
+	        case 'image/jpeg':
+	            $filename = $this->getImageFilename('jpg');
+	            if(!file_exists($filename))
+                    file_put_contents($filename, $data);
+	            break;
+	        case 'image/png':
+	            $filename = $this->getImageFilename('png');
+	            if(!file_exists($filename))
+	                file_put_contents($filename, $data);
+                break;
+	    }
 	}
 }
 
