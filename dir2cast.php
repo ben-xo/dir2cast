@@ -211,7 +211,10 @@ class getID3_Podcast_Helper implements Podcast_Helper {
                     // this works for MP3s
                     if(!empty($info['comments']['picture'][0]))
                     {
-                        $item->saveImage($info['comments']['picture'][0]['image_mime'], $info['comments']['picture'][0]['data']);
+                        $item->saveImage(
+                            $info['comments']['picture'][0]['image_mime'],
+                            $info['comments']['picture'][0]['data']
+                        );
                     }
 
                     // this works for m4a and mp4
