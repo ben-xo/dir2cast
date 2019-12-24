@@ -784,7 +784,6 @@ abstract class Podcast extends GetterSetter
         
         $doc = new DOMDocument('1.0', 'UTF-8');
         $doc->formatOutput = true;
-
                     
         $rss = $doc->createElement('rss');
         $doc->appendChild($rss);
@@ -1555,6 +1554,7 @@ if(!defined('NO_DISPATCHER'))
     {
         $podcast->uncache();    
     }
+
     if (defined('OUTPUT_FILE'))
     {
         $podcast->uncache();
@@ -1562,7 +1562,6 @@ if(!defined('NO_DISPATCHER'))
 
     if(!$podcast->isCached())
     {
-        
         $getid3 = $podcast->addHelper(new getID3_Podcast_Helper());
         $atom   = $podcast->addHelper(new Atom_Podcast_Helper());
         $itunes = $podcast->addHelper(new iTunes_Podcast_Helper());
@@ -1594,7 +1593,6 @@ if(!defined('NO_DISPATCHER'))
     if(!defined('OUTPUT_FILE'))
     {
         $podcast->http_headers();
-    
         echo $podcast->generate();
     }
     else
