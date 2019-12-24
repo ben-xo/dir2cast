@@ -192,9 +192,6 @@ class getID3_Podcast_Helper implements Podcast_Helper {
                 return;
             }
             
-            if(!empty($info['bitrate']))
-                $item->setBitrate($info['bitrate']);
-
             if(!empty($info['comments']))
             {
                 if(!empty($info['comments']['title'][0]))
