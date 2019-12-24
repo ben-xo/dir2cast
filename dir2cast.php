@@ -184,7 +184,7 @@ class getID3_Podcast_Helper implements Podcast_Helper {
             try
             {
                 $info = $this->getid3->analyze($item->getFilename());
-                                getid3_lib::CopyTagsToComments($info);
+                getid3_lib::CopyTagsToComments($info);
             }
             catch(getid3_exception $e)
             {
