@@ -250,7 +250,7 @@ class getID3
 	 */
 	protected $startup_warning = '';
 
-	const VERSION           = '1.9.18-201911300717';
+	const VERSION           = '1.9.19-201912221044';
 	const FREAD_BUFFER_SIZE = 32768;
 
 	const ATTACHMENTS_NONE   = false;
@@ -1523,6 +1523,17 @@ class getID3
 			}
 		}
 		return true;
+	}
+
+	/**
+	 * Calls getid3_lib::CopyTagsToComments() but passes in the option_tags_html setting from this instance of getID3
+	 *
+	 * @param array $ThisFileInfo
+	 *
+	 * @return bool
+	 */
+	public function CopyTagsToComments(&$ThisFileInfo) {
+	    return getid3_lib::CopyTagsToComments($ThisFileInfo, $this->option_tags_html);
 	}
 
 	/**
