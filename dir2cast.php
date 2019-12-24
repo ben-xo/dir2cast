@@ -203,17 +203,22 @@ class getID3_Podcast_Helper implements Podcast_Helper {
                 if(!empty($info['comments']['comment'][0]))
                     $item->setID3Comment( $info['comments']['comment'][0] );
 
-                // this works for MP3s
-                if(AUTO_SAVE_COVER_ART && !empty($info['comments']['picture'][0])) {
-                    $item->saveImage($info['comments']['picture'][0]['image_mime'], $info['comments']['picture'][0]['data']);
-                }
+                if(AUTO_SAVE_COVER_ART)
+                {
+                    // this works for MP3s
+                    if(!empty($info['comments']['picture'][0]))
+                    {
+                        $item->saveImage($info['comments']['picture'][0]['image_mime'], $info['comments']['picture'][0]['data']);
+                    }
 
-                // this works for m4a and mp4
-                if(AUTO_SAVE_COVER_ART && !empty($info['quicktime'])) {
-                    $qt_helper = new QuicktimeImageHelper();
-                    $image_atom = $qt_helper->findCover($info['quicktime']['moov']);
-                    if($image_atom && isset($image_atom['image_mime']) && isset($image_atom['data'])) {
-                        $item->saveImage($image_atom['image_mime'], $image_atom['data']);
+                    // this works for m4a and mp4
+                    elseif(!empty($info['quicktime']))
+                    {
+                        $qt_helper = new QuicktimeImageHelper();
+                        $image_atom = $qt_helper->findCover($info['quicktime']['moov']);
+                        if($image_atom && isset($image_atom['image_mime']) && isset($image_atom['data'])) {
+                            $item->saveImage($image_atom['image_mime'], $image_atom['data']);
+                        }
                     }
                 }
             }
