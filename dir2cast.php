@@ -179,7 +179,6 @@ class getID3_Podcast_Helper implements Podcast_Helper {
                 $this->getid3->option_tag_lyrics3 = false;
                 $this->getid3->option_tag_apetag = false;
                 $this->getid3->option_tags_html = false;
-                $this->getid3->option_extra_info = false;
                 // $this->getid3->option_save_attachments = true; // TODO: set this to a path
                 $this->getid3->encoding = 'UTF-8';
             }
@@ -340,7 +339,7 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
     public function appendToItem(DOMElement $item_element, DOMDocument $doc, RSS_Item $item)
     {
         /*
-         *     <itunes:author>John Doe</itunes:author>
+         *    <itunes:author>John Doe</itunes:author>
          *    <itunes:duration>7:04</itunes:duration>
          *    <itunes:subtitle>A short primer on table spices</itunes:subtitle>
          *    <itunes:summary>This week we talk about salt and pepper shakers, 
