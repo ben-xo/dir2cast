@@ -495,16 +495,16 @@ class RSS_Item extends GetterSetter {
             $item_element->appendChild( new DOMElement($name) )
                 ->appendChild( $doc->createCDATASection(
                     // reintroduce newlines as <br />. 
-                    nl2br($val)) 
-                  );
+                    nl2br($val)
+                  ) );
         }
 
-        // Look to see if there is a item specific image and include it.
+        // Look to see if there is an item specific image and include it.
         $item_image = $this->getImage();
         if(!empty($item_image))
         {
-                $item_element->appendChild( $doc->createElement('image') )
-                        ->appendChild(new DOMText($item_image));
+            $item_element->appendChild( $doc->createElement('image') )
+                ->appendChild(new DOMText($item_image));
         }
 
         $enclosure = $item_element->appendChild(new DOMElement('enclosure'));
@@ -607,12 +607,7 @@ class RSS_File_Item extends RSS_Item {
     }
 
     protected function getImageFilename($type) {
-        switch($type) {
-            case 'jpg':
-                return dirname($this->getFilename()) . '/' . basename($this->getFilename(), '.' . $this->getExtension()) . '.jpg';
-            case 'png':
-                return dirname($this->getFilename()) . '/' . basename($this->getFilename(), '.' . $this->getExtension()) . '.png';
-        }
+        return dirname($this->getFilename()) . '/' . basename($this->getFilename(), '.' . $this->getExtension()) . '.' . $type;
     }
 
     /**
@@ -626,6 +621,7 @@ class RSS_File_Item extends RSS_Item {
         $image_file_name = $this->getImageFilename('png');
         if(file_exists( $image_file_name ))
             return $this->filenameToUrl($image_file_name);
+
         $image_file_name = $this->getImageFilename('jpg');
         if(file_exists( $image_file_name ))
             return $this->filenameToUrl($image_file_name);
