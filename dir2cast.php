@@ -155,14 +155,7 @@ class QuicktimeImageHelper {
  *
  */
 class getID3_Podcast_Helper implements Podcast_Helper {
-    
-    /**
-     * getID3 analyzer
-     *
-     * @var getid3
-     */
-    protected $getid3;
-    
+        
     public function appendToChannel(DOMElement $d, DOMDocument $doc) { /* nothing */ }
     public function addNamespaceTo(DOMElement $d, DOMDocument $doc) { /* nothing */ }
 
@@ -173,26 +166,25 @@ class getID3_Podcast_Helper implements Podcast_Helper {
     {
         if($item instanceof Media_RSS_Item && !$item->getAnalyzed())
         {
-            if(!isset($this->getid3))
-            {
-                $this->getid3 = new getID3();
-                $this->getid3->option_tag_lyrics3 = false;
-                $this->getid3->option_tag_apetag = false;
-                $this->getid3->option_tags_html = false;
-                // $this->getid3->option_save_attachments = true; // TODO: set this to a path
-                $this->getid3->encoding = 'UTF-8';
-            }
+            $getid3 = new getID3();
+            $getid3->option_tag_lyrics3 = false;
+            $getid3->option_tag_apetag = false;
+            $getid3->option_tags_html = false;
+            // $getid3->option_save_attachments = true; // TODO: set this to a path
+            $getid3->encoding = 'UTF-8';
             
             try
             {
-                $info = $this->getid3->analyze($item->getFilename());
-                $this->getid3->CopyTagsToComments($info);
+                $info = $getid3->analyze($item->getFilename());
+                $getid3->CopyTagsToComments($info);
             }
             catch(getid3_exception $e)
             {
                 // MP3 couldn't be analyzed.
                 return;
             }
+            
+            unset($this->getid3);
             
             if(!empty($info['comments']))
             {
@@ -232,7 +224,6 @@ class getID3_Podcast_Helper implements Podcast_Helper {
                 $item->setDuration( $info['playtime_string'] );
             
             $item->setAnalyzed(true);
-            unset($this->getid3);
         }
     }
 }
