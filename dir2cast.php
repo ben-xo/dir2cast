@@ -468,6 +468,8 @@ class RSS_Item extends GetterSetter {
             'pubDate' => $this->getPubDate()
         );
         
+        // TODO: this is in the wrong place. It should be at the RSS_File_Item level.
+        //       will have to fix this.
         if(DESCRIPTION_SOURCE == 'file')
             $description = $this->getSummary();
         else
