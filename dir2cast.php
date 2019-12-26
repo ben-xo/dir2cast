@@ -515,9 +515,6 @@ class RSS_Item extends GetterSetter {
 
 class RSS_File_Item extends RSS_Item {
     
-    protected $filename;
-    protected $extension;
-    
     public function __construct($filename)
     {
         $this->setFilename($filename);
