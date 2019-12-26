@@ -1236,9 +1236,9 @@ class SettingsHandler
     /**
      * This method sets up all app-wide settings that are required at initialization time.
      * 
-     * @param $SERVER HTTP Server array containing HTTP_HOST, SCRIPT_FILENAME, DOCUMENT_ROOT, HTTPS
-     * @param $GET HTTP GET array
-     * @param $argv command line options array
+     * @param $SERVER Array HTTP Server array containing HTTP_HOST, SCRIPT_FILENAME, DOCUMENT_ROOT, HTTPS
+     * @param $GET Array HTTP GET
+     * @param $argv Array command line options
      */
     public static function bootstrap(array $SERVER, array $GET, array $argv)
     {
@@ -1532,7 +1532,7 @@ if(!defined('NO_DISPATCHER'))
         $podcast->uncache();    
     }
 
-    if (defined('OUTPUT_FILE'))
+    if(defined('OUTPUT_FILE'))
     {
         $podcast->uncache();
     }
