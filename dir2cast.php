@@ -529,6 +529,7 @@ class RSS_File_Item extends RSS_Item {
     
     public function setFilename($filename)
     {
+        parent::setFilename($filename);
         $pos = strrpos($this->getFilename(), '.');
         if($pos !== false)
         {
