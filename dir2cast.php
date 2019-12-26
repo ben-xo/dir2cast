@@ -520,7 +520,7 @@ class RSS_File_Item extends RSS_Item {
     
     public function __construct($filename)
     {
-        $this->filename = $filename;
+        $this->setFilename($filename);
         $this->setLinkFromFilename($filename);
         parent::__construct();
     }
@@ -528,6 +528,19 @@ class RSS_File_Item extends RSS_Item {
     public function setLinkFromFilename($filename)
     {
         $this->setLink($this->filenameToUrl($filename));
+    }
+    
+    public function setFilename($filename)
+    {
+        $pos = strrpos($this->getFilename(), '.');
+        if($pos !== false)
+        {
+            $this->setExtension(substr($filename, $pos + 1));
+        }
+        else
+        {
+            $this->setExtension('');
+        }
     }
 
     protected function filenameToUrl($filename)
@@ -543,28 +556,6 @@ class RSS_File_Item extends RSS_Item {
     public function getType()
     {
         return 'application/octet-stream';
-    }
-    
-    public function getFilename()
-    {
-        return $this->filename;
-    }
-    
-    public function getExtension()
-    {
-        if(!isset($this->extension))
-        {
-            $pos = strrpos($this->getFilename(), '.');
-            if($pos !== false)
-            {
-                $this->extension = substr($this->getFilename(), $pos + 1);
-            }
-            else
-            {
-                $this->extension = '';
-            }
-        }
-        return $this->extension;
     }
         
     /**
