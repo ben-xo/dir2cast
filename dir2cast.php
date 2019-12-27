@@ -749,6 +749,7 @@ class Media_RSS_Item extends RSS_File_Item implements Serializable {
                 if(!file_exists($filename) && is_writable(dirname($filename)))
                     file_put_contents($filename, $data);
                 break;
+
             case 'image/png':
                 $filename = $this->getImageFilename('png');
                 if(!file_exists($filename) && is_writable(dirname($filename)))
@@ -757,6 +758,10 @@ class Media_RSS_Item extends RSS_File_Item implements Serializable {
         }
     }
 
+    /**
+     * Version number used in the saved cache files. If the used fields change, increment this number.
+     * @var integer
+     */
     const SERIAL_VERSION = 1;
 
     public function serialize()
@@ -764,7 +769,7 @@ class Media_RSS_Item extends RSS_File_Item implements Serializable {
         $this->setSerialVersion(self::SERIAL_VERSION);
         $serialized_parameters = $this->parameters;
 
-        // these are all set from the filesystem metadata, not the file     content.
+        // these are all set from the filesystem metadata, not the file content.
         unset($serialized_parameters['length']);
         unset($serialized_parameters['pubDate']);
         unset($serialized_parameters['filename']);
