@@ -524,15 +524,8 @@ class RSS_Item extends GetterSetter {
             'pubDate' => $this->getPubDate()
         );
         
-        // TODO: this is in the wrong place. It should be at the RSS_File_Item level.
-        //       will have to fix this.
-        if(DESCRIPTION_SOURCE == 'file')
-            $description = $this->getSummary();
-        else
-            $description = $this->getDescription();
-
         $cdata_item_elements = array(
-            'description' => $description
+            'description' => $this->getDescription()
         );
         
         if(empty($item_elements['title']))
@@ -710,6 +703,11 @@ class Media_RSS_Item extends RSS_File_Item implements Serializable {
 
     public function getDescription()
     {
+        // The default value is "comment". dir2cast prior to v1.19
+        // used value "file" it's here fore backward compatibility
+        if(DESCRIPTION_SOURCE == 'summary' || DESCRIPTION_SOURCE == 'file')
+            return $this->getSummary();
+
         return $this->getID3Comment();
     }
 
@@ -733,12 +731,6 @@ class Media_RSS_Item extends RSS_File_Item implements Serializable {
             $subtitle = $this->getID3Artist();
         }
         return $subtitle;
-    }
-
-    public function getImage()
-    {
-        $image = parent::getImage();
-        return $image;
     }
 
     public function saveImage($mime_type, $data)
