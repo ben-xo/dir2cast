@@ -228,6 +228,71 @@ class getID3_Podcast_Helper implements Podcast_Helper {
     }
 }
 
+/**
+ * Loads metadata from a cache file, if possible.
+ *
+ */
+class Caching_getID3_Podcast_Helper implements Podcast_Helper {
+
+    protected $wrapped_helper;
+    protected $cache_dir;
+
+    public function __construct($cache_dir, getID3_Podcast_Helper $getID3_podcast_helper) {
+        $this->cache_dir = $cache_dir;
+        $this->wrapped_helper = $getID3_podcast_helper;
+    }
+
+    public function appendToChannel(DOMElement $d, DOMDocument $doc) { 
+        return $this->wrapped_helper->appendToChannel($d, $doc);
+    }
+
+    public function addNamespaceTo(DOMElement $d, DOMDocument $doc) {
+        return $this->wrapped_helper->appendToChannel($d, $doc);
+    }
+
+    public function appendToItem(DOMElement $d, DOMDocument $doc, RSS_Item $item)
+    {
+        if($item instanceof Media_RSS_Item && $item instanceof Serializable && !$item->getAnalyzed())
+        {
+            $cache_filename = $this->getCacheFileName($this->cache_dir, $item);
+            if($this->loadFromCache($cache_filename, $item)) {
+                return;
+            }
+
+            $this->wrapped_helper->appendToItem($d, $doc, $item);
+            $this->saveToCache($cache_filename, $item);
+        }
+    }
+
+    protected function getCacheFileName($cache_dir, Media_RSS_Item $item) {
+        return $cache_dir . '/' . md5($item->getFilename()) . '__' . basename($item->getFilename()) . '__data';
+    }
+
+    protected function loadFromCache($filename, Serializable $item) {
+        if(!file_exists($filename) || !is_readable($filename))
+            return false; // no or unreadable cache file
+
+        if(filemtime($filename) < filemtime($item->getFilename()))
+            return false; // cache file is older than file, so probably stale
+
+        try
+        {
+            $item->unserialize(file_get_contents($filename));
+            return true;
+        }
+        catch(SerializationException $e)
+        {
+            // wrong serialization version. Should re-generate.
+            return false;
+        }
+    }
+
+    protected function saveToCache($filename, Serializable $item) {
+        if(is_writable(dirname($filename)))
+            file_put_contents($filename, $item->serialize());
+    }
+}
+
 class Atom_Podcast_Helper extends GetterSetter implements Podcast_Helper {
     
     protected $self_link;
@@ -610,8 +675,8 @@ class RSS_File_Item extends RSS_Item {
     }
 }
 
-class Media_RSS_Item extends RSS_File_Item {
-    
+class Media_RSS_Item extends RSS_File_Item implements Serializable {
+
     public function __construct($filename)
     {
         $this->setFromMediaFile($filename);
@@ -625,7 +690,7 @@ class Media_RSS_Item extends RSS_File_Item {
         $this->setLength(filesize($file));
         $this->setPubDate(date('r', filemtime($file)));
     }
-    
+
     public function getTitle()
     {
         $title_parts = array();
@@ -637,17 +702,17 @@ class Media_RSS_Item extends RSS_File_Item {
         if($this->getID3Title()) $title_parts[] = $this->getID3Title();
         return implode(' - ', $title_parts);
     }
-    
+
     public function getType()
     {
         return 'audio/mpeg';
     }
-    
+
     public function getDescription()
     {
         return $this->getID3Comment();
     }
-    
+
     public function getSummary()
     {
         $summary = parent::getSummary();
@@ -691,6 +756,31 @@ class Media_RSS_Item extends RSS_File_Item {
                 break;
         }
     }
+
+    const SERIAL_VERSION = 1;
+
+    public function serialize()
+    {
+        $this->setSerialVersion(self::SERIAL_VERSION);
+        $serialized_parameters = $this->parameters;
+        unset($serialized_parameters['length']);
+        unset($serialized_parameters['pubDate']);
+        unset($serialized_parameters['filename']);
+        unset($serialized_parameters['extension']);
+        unset($serialized_parameters['link']);
+        return serialize($serialized_parameters);
+    }
+
+    public function unserialize($serialized)
+    {
+        $serialized_parameters = unserialize($serialized);
+        if($serialized_parameters['serialVersion'] != self::SERIAL_VERSION)
+            throw new SerializationException("Wrong serialized version");
+        
+        // keep properties we've already set. This should make cache files transferable 
+        // whilst still gaining a speed-up over ID3-reading.
+        $this->parameters = array_merge($serialized_parameters, $this->parameters);
+    }
 }
 
 class MP3_RSS_Item extends Media_RSS_Item 
@@ -729,7 +819,7 @@ abstract class Podcast extends GetterSetter
         $this->helpers[] = $helper;
         
         // attach helper to items already added.
-        // new items will have the helper attacged when they are added.
+        // new items will have the helper attached when they are added.
         foreach($this->items as $item)
             $item->addHelper($helper);
             
@@ -1491,6 +1581,8 @@ class SettingsHandler
     }
 }
 
+class SerializationException extends Exception {}
+
 /* FUNCTIONS **********************************************/
 
 /**
@@ -1540,7 +1632,7 @@ if(!defined('NO_DISPATCHER'))
 
     if(!$podcast->isCached())
     {
-        $getid3 = $podcast->addHelper(new getID3_Podcast_Helper());
+        $getid3 = $podcast->addHelper(new Caching_getID3_Podcast_Helper(TMP_DIR, new getID3_Podcast_Helper()));
         $atom   = $podcast->addHelper(new Atom_Podcast_Helper());
         $itunes = $podcast->addHelper(new iTunes_Podcast_Helper());
         
