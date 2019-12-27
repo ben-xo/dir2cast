@@ -763,11 +763,14 @@ class Media_RSS_Item extends RSS_File_Item implements Serializable {
     {
         $this->setSerialVersion(self::SERIAL_VERSION);
         $serialized_parameters = $this->parameters;
+
+        // these are all set from the filesystem metadata, not the file     content.
         unset($serialized_parameters['length']);
         unset($serialized_parameters['pubDate']);
         unset($serialized_parameters['filename']);
         unset($serialized_parameters['extension']);
         unset($serialized_parameters['link']);
+
         return serialize($serialized_parameters);
     }
 
