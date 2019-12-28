@@ -60,14 +60,29 @@ INSTALLATION
 Please note: the config file will make more sense if you read all of this README
 before trying the installation instructions.
 
+dir2cast is quite flexible but the general idea is that you add cover art and
+tags to your media files - mp3, mp4 or m4a currently supported - and then the
+podcast that it generates uses the tags from your files.
+
 Step 1. Edit dir2cast.ini to your taste.
 Step 2. Upload dir2cast.php and dir2cast.ini to the web server.
 Step 3. Upload getID3 to a folder called 'getID3'. (You can download getID3 from
         the same place as dir2cast.)
+Step 4. Upload a media file to the same folder as dir2cast.php
+Step 5. Go to the URL for dir2cast.php - e.g. http://example.com/dir2cast.php
+Step 6. This is your podcast! Check it's valid at https://podba.se/validate/
+        You may need to edit dir2cast.ini some more to get the text you want.
+        The generated feed is cached. It will regenerate if you add a new media
+        file, but if you want to force a regeneration delete the files from 
+        the "temp" folder that is created.
+
+
+TIPS
+================================================================================
 
 
 CASTING SEVERAL FOLDERS FROM ONE DIR2CAST.PHP
-================================================================================
+--------------------------------------------------------------------------------
 
 If you have more than one folder of MP3s that you are casting, you can serve 
 them all from a single install of dir2cast.php, and customise dir2cast.ini for 
@@ -92,7 +107,7 @@ http://www.mysite.com/dir2cast/dir2cast.php?dir=cast2 .
 
 
 "PRETTY" URLS FOR YOUR PODCASTS
-================================================================================
+--------------------------------------------------------------------------------
 
 This hint requires your web server to be Apache with 'mod_rewrite' enabled.
 
