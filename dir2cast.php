@@ -1110,10 +1110,11 @@ class Cached_Dir_Podcast extends Dir_Podcast
         {
             $cache_date = filemtime($this->temp_file);
 
+            // if the cache file is quite new, don't both regenerating.
             if( $cache_date < time() - MIN_CACHE_TIME ) 
             {
                 $this->scan();
-                if( $cache_date < $this->max_mtime || $cache_date < filemtime($this->source_dir))
+                if( $this->cache_is_stale($cache_date) )
                 {
                     $this->uncache();
                 }
@@ -1125,6 +1126,32 @@ class Cached_Dir_Podcast extends Dir_Podcast
         }
     }
     
+    /**
+     * Cache is considered stale (i.e. not a good representation of the source folder) if:
+     * * the date of the cache is < the date of the most recent modified file OR
+     *   the date of the cache is < the date of the most recent modification to the folder of media
+     * * AND the most recent change is more than MIN_CACHE_TIME in the past (to avoid incomplete files)
+     *
+     * @param int $cache_date
+     * @return boolean
+     */
+    public function cache_is_stale($cache_date)
+    {
+        $most_recent_modification = $this->max_mtime;
+        if($most_recent_modification == 0)
+        {
+            // there may be no media yet, but let's check using the time of the folder anyway
+            $most_recent_modification = filemtime($this->source_dir);
+        }
+
+        // disregard changes that are so new that the file may still be being uploaded.
+        // Nobody wants an incomplete feed!
+        return $cache_date < $most_recent_modification - MIN_CACHE_TIME;
+    }
+
+    /**
+     * Update the date on the cache file so that it's still considered fresh.
+     */
     public function renew()
     {
         touch($this->temp_file); // renew cache file life expectancy        
