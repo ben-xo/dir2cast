@@ -275,7 +275,7 @@ class Atom_Podcast_Helper extends GetterSetter implements Podcast_Helper {
 
 class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
     
-    protected $owner_name, $owner_email, $image_href;
+    protected $owner_name, $owner_email, $image_href, $explicit;
     
     public function __construct() { }
     
@@ -319,6 +319,13 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
                     ->appendChild( new DOMText( $this->owner_email ) );
             }
         }
+        
+        if(!empty($this->explicit))
+        {
+            $channel->appendChild( $doc->createElement('itunes:explicit') )
+                ->appendChild( new DOMText($this->explicit));
+        }
+        
         
         if(!empty($this->image_href))
         {
@@ -434,6 +441,11 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
     public function setImage($href)
     {
         $this->image_href = $href;
+    }
+    
+    public function setExplicit($explicit)
+    {
+        $this->explicit = $explicit;
     }
 }
 
@@ -1446,6 +1458,9 @@ class SettingsHandler
         
         if(!defined('ITUNES_CATEGORIES'))
             define('ITUNES_CATEGORIES', '');
+        
+        if(!defined('ITUNES_EXPLICIT'))
+            define('ITUNES_EXPLICIT', 'false');
             
         if(!defined('LONG_TITLES'))
             define('LONG_TITLES', false);
@@ -1559,6 +1574,7 @@ if(!defined('NO_DISPATCHER'))
         $itunes->setAuthor(ITUNES_AUTHOR);
         $itunes->setSummary(ITUNES_SUMMARY);
         $itunes->setImage(ITUNES_IMAGE);
+        $itunes->setExplicit(ITUNES_EXPLICIT);
         
         $itunes->setOwnerName(ITUNES_OWNER_NAME);
         $itunes->setOwnerEmail(ITUNES_OWNER_EMAIL);
