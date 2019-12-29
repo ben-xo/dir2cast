@@ -323,7 +323,7 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
         if(!empty($this->explicit))
         {
             $channel->appendChild( $doc->createElement('itunes:explicit') )
-                ->appendChild( new DOMText($this->explicit));
+                ->appendChild( new DOMText( $this->explicit ) );
         }
         
         
