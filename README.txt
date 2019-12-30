@@ -15,20 +15,25 @@ as your PodCast URL.
 
 Features:
 
-* For 99% of things, NO CONFIGURATION IS NECESSARY.
+* For 99% of things, NO CONFIGURATION IS NECESSARY. All you have to do is upload
+  dir2cast to your web server, then start uploading media files, and it will
+  pick up most of the podcast text straight from the tags in the file (such as
+  the artist, title and comment tags.)
 
 * supports MP3, MP4, and M4A files
 
 * dir2cast will automatically use the ID3 fields from your files for the Author, 
-  Title, etc. ID3v2 is supported. (Uses bundled getID3 lib).
+  Title, etc. ID3v2 is supported, as are the regular tags found in MP4 and M4A
+  files. (Uses getID3, which is bundled with dir2cast.)
 
 * dir2cast will automatically use the cover art embedded in your file as well. 
 
 * The generated feed is cached (in the supplied 'temp' folder, or anywhere else
-  that you want) and only updated if something in the directory changes.
+  that you want) and only updated if something in the directory changes - so
+  the feed will load fast and put minimal strain on your web server. It only
+  regenerates the feed when a new episode is uploaded.
 
-* Almost-full support for iTunes podcast tags. (Not supported: block, explicit,
-  new-feed-url, per-item keywords).
+* Comprehensive support for iTunes podcast tags.
 
 * iTunes 'image' supported: just drop a file called itunes_image.jpg in the same
   folder as your media files.
@@ -40,6 +45,16 @@ Features:
 
 * You can set a per-file iTunes Summary by creating a text file with the same
   name as the media file (e.g. for file.mp3, create file.txt).
+
+
+QUICK HOW TO GUIDES
+================================================================================
+
+Here are links to a couple of guides on how to set up a podcast, using dir2cast.
+Thanks to the people who wrote these guides!
+
+* https://sys.re/files/itunes/ (by nilicule)
+* https://www.reddit.com/r/selfhosted/comments/ae37kf/ (by u/wagesj45)
 
 
 REQUIREMENTS
