@@ -45,7 +45,7 @@ Features:
 REQUIREMENTS
 ================================================================================
 
-dir2cast requires PHP 5.1. It requires the XML extension to be enabled.
+dir2cast requires PHP 5.3. It requires the XML extension to be enabled.
 
 dir2cast makes use of getID3 by James Heinrich & Allan Hansen, although it does
 not require the whole thing. A cut down version of getID3 is supplied at
