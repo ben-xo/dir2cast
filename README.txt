@@ -1,4 +1,4 @@
-dir2cast by Ben XO v1.19 (2019-12-21)
+dir2cast by Ben XO v1.20 (2019-12-30)
 ================================================================================
 
 https://github.com/ben-xo/dir2cast/
@@ -170,6 +170,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 HISTORY
 ================================================================================
 
+1.20 2019-12-30 Cache files per media-file, which speeds up large podcasts
+                Upgrade bundled getID3 with better MP4 support
+                Support for <itunes:explicit> tag
+                General speed improvements
 1.19 2019-12-21 Extract cover art from MP4 and M4A files.
 1.18 2019-12-21 Bugfix for image URLs. Better CLI options.
 1.17 2019-12-21 Automatically extract cover art from the files
