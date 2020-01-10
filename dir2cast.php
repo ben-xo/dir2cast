@@ -460,14 +460,14 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
     /**
      * Takes a category specification string and arrayifies it.
      * e.g.  
-     * 'Music | Technology > Gadgets '
+     * 'Music, Technology > Gadgets '
      * becomes
      * array( 'Music' => true, 'Technology' => array( 'Gadgets' ) );
      * @param string $category_string
      */
     public function addCategories($category_string) {
         $categories = array();
-        foreach(explode('|', $category_string) as $top_level_category)
+        foreach(explode(',', $category_string) as $top_level_category)
         {
             $sub_categories = explode('>', $top_level_category);
             $top_level_category = trim( array_shift($sub_categories) );
