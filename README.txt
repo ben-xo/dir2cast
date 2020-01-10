@@ -1,4 +1,4 @@
-dir2cast by Ben XO v1.20 (2019-12-30)
+dir2cast by Ben XO v1.21 (2020-01-10)
 ================================================================================
 
 https://github.com/ben-xo/dir2cast/
@@ -185,6 +185,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 HISTORY
 ================================================================================
 
+1.21 2020-01-10 Uncache the podcast when the configuration changes, making it
+                quicker and easier to experiment with settings.
 1.20 2019-12-30 Cache files per media-file, which speeds up large podcasts
                 Upgrade bundled getID3 with better MP4 support
                 Support for <itunes:explicit> tag
