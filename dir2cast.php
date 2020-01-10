@@ -968,6 +968,10 @@ class Dir_Podcast extends Podcast
         $this->source_dir = $source_dir;
     }
 
+    /**
+     * Looks for all files in the media path and adds them to the podcast, 
+     * tracking the most recently modified date in ->max_mtime 
+     */
     protected function scan()
     {        
         if(!$this->scanned)
@@ -1002,6 +1006,11 @@ class Dir_Podcast extends Podcast
         }
     }
     
+    /**
+     * Adds file to ->unsorted_items, and updates ->max_mtime, if it is of a supported type
+     *
+     * @param string $filename
+     */
     public function addItem($filename)
     {
         $pos = strrpos($filename, '.');
@@ -1031,6 +1040,11 @@ class Dir_Podcast extends Podcast
         return count($this->unsorted_items);
     }
 
+    /**
+     * Adds file to ->unsorted_items, and updates ->max_mtime
+     * 
+     * @param RSS_File_Item $the_item
+     */
     protected function addRssFileItem(RSS_File_Item $the_item)
     {
         $filename = $the_item->getFilename();
@@ -1125,8 +1139,8 @@ class Cached_Dir_Podcast extends Dir_Podcast
             // if the cache file is quite new, don't both regenerating.
             if( $cache_date < time() - MIN_CACHE_TIME ) 
             {
-                $this->scan();
-                if( $this->cache_is_stale($cache_date) )
+                $this->scan(); // sets $this->max_mtime
+                if( $this->cache_is_stale($cache_date, $this->max_mtime) )
                 {
                     $this->uncache();
                 }
@@ -1138,18 +1152,28 @@ class Cached_Dir_Podcast extends Dir_Podcast
         }
     }
     
+    public function uncacheIfOlderThan($cache_date)
+    {
+        
+    }
+    
     /**
      * Cache is considered stale (i.e. not a good representation of the source folder) if:
      * * the date of the cache is < the date of the most recent modified file OR
      *   the date of the cache is < the date of the most recent modification to the folder of media
      * * AND the most recent change is more than MIN_CACHE_TIME in the past (to avoid incomplete files)
      *
+     * $cache_date is usually the modification time of the cache file itself.
+     *  
+     * $most_recent_modification is usually passed in from $this->max_mtime i.e. the most recently modified
+     * podcast media file, and can be 0 if there are no files at all in the podcast yet.
+     *
      * @param int $cache_date
+     * @param int $most_recent_modification
      * @return boolean
      */
-    public function cache_is_stale($cache_date)
+    protected function cache_is_stale($cache_date, $most_recent_modification)
     {
-        $most_recent_modification = $this->max_mtime;
         if($most_recent_modification == 0)
         {
             // there may be no media yet, but let's check using the time of the folder anyway
