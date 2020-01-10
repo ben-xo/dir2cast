@@ -968,6 +968,10 @@ class Dir_Podcast extends Podcast
         $this->source_dir = $source_dir;
     }
 
+    /**
+     * Looks for all files in the media path and adds them to the podcast, 
+     * tracking the most recently modified date in ->max_mtime 
+     */
     protected function scan()
     {        
         if(!$this->scanned)
@@ -1002,6 +1006,11 @@ class Dir_Podcast extends Podcast
         }
     }
     
+    /**
+     * Adds file to ->unsorted_items, and updates ->max_mtime, if it is of a supported type
+     *
+     * @param string $filename
+     */
     public function addItem($filename)
     {
         $pos = strrpos($filename, '.');
@@ -1031,6 +1040,17 @@ class Dir_Podcast extends Podcast
         return count($this->unsorted_items);
     }
 
+    public function updateMaxMtime($date)
+    {
+        if($date > $this->max_mtime)
+            $this->max_mtime = $date;
+    }
+
+    /**
+     * Adds file to ->unsorted_items, and updates ->max_mtime
+     * 
+     * @param RSS_File_Item $the_item
+     */
     protected function addRssFileItem(RSS_File_Item $the_item)
     {
         $filename = $the_item->getFilename();
@@ -1042,8 +1062,7 @@ class Dir_Podcast extends Podcast
 
             // one array per mtime, just in case several MP3s share the same mtime.
             $this->unsorted_items[$filemtime][] = $the_item;
-            if($filemtime > $this->max_mtime)
-                $this->max_mtime = $filemtime;
+            $this->updateMaxMtime($filemtime);
         }
     }
 
@@ -1096,6 +1115,8 @@ class Cached_Dir_Podcast extends Dir_Podcast
 
     /**
      * Constructor
+     * 
+     * After constructing, you must call ->init(), although you may call 
      *
      * @param string $source_dir
      * @param string $temp_dir
@@ -1109,8 +1130,6 @@ class Cached_Dir_Podcast extends Dir_Podcast
         $this->temp_file = rtrim($temp_dir, '/') . '/' . md5($source_dir) . '_' . $safe_source_dir . '.xml';
 
         parent::__construct($source_dir);
-
-        $this->init();
     }
 
     /**
@@ -1125,8 +1144,8 @@ class Cached_Dir_Podcast extends Dir_Podcast
             // if the cache file is quite new, don't both regenerating.
             if( $cache_date < time() - MIN_CACHE_TIME ) 
             {
-                $this->scan();
-                if( $this->cache_is_stale($cache_date) )
+                $this->scan(); // sets $this->max_mtime
+                if( $this->cache_is_stale($cache_date, $this->max_mtime) )
                 {
                     $this->uncache();
                 }
@@ -1144,12 +1163,17 @@ class Cached_Dir_Podcast extends Dir_Podcast
      *   the date of the cache is < the date of the most recent modification to the folder of media
      * * AND the most recent change is more than MIN_CACHE_TIME in the past (to avoid incomplete files)
      *
+     * $cache_date is usually the modification time of the cache file itself.
+     *  
+     * $most_recent_modification is usually passed in from $this->max_mtime i.e. the most recently modified
+     * podcast media file, and can be 0 if there are no files at all in the podcast yet.
+     *
      * @param int $cache_date
+     * @param int $most_recent_modification
      * @return boolean
      */
-    public function cache_is_stale($cache_date)
+    protected function cache_is_stale($cache_date, $most_recent_modification)
     {
-        $most_recent_modification = $this->max_mtime;
         if($most_recent_modification == 0)
         {
             // there may be no media yet, but let's check using the time of the folder anyway
@@ -1377,8 +1401,10 @@ class SettingsHandler
         // Anything else it contains will be used as a fall-back if no dir-specific dir2cast.ini exists
         if(file_exists( dirname(__FILE__) . '/dir2cast.ini' ))
         {
-            self::load_from_ini(dirname(__FILE__) . '/dir2cast.ini' );
+            $ini_file_name = dirname(__FILE__) . '/dir2cast.ini';
+            self::load_from_ini( $ini_file_name );
             self::finalize(array('TMP_DIR', 'MP3_BASE', 'MP3_DIR', 'MIN_CACHE_TIME', 'FORCE_PASSWORD'));
+            define('INI_FILE', $ini_file_name);
         }
         
         $cli_options = getopt('', array('help', 'media-dir::', 'media-url::', 'output::'));
@@ -1662,6 +1688,7 @@ if(!defined('NO_DISPATCHER'))
     SettingsHandler::defaults();
     
     $podcast = new Locking_Cached_Dir_Podcast(MP3_DIR, TMP_DIR);
+
     if( strlen(FORCE_PASSWORD) && isset($_GET['force']) && FORCE_PASSWORD == $_GET['force'] )
     {
         $podcast->uncache();    
@@ -1671,6 +1698,14 @@ if(!defined('NO_DISPATCHER'))
     {
         $podcast->uncache();
     }
+
+    // Ensure that the cache is invalidated if we have updated dir2cast.php or dir2cast.ini
+    // n.b. this doesn't uncache individual media file caches, but also they have a versioning mechanism.
+    $podcast->updateMaxMtime(filemtime(__FILE__));
+    if(defined('INI_FILE'))
+        $podcast->updateMaxMtime(filemtime(INI_FILE));
+
+    $podcast->init(); // checks the cache file, or scans for media folder if the cache is out of date. 
 
     if(!$podcast->isCached())
     {
