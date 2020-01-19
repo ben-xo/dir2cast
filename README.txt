@@ -1,4 +1,4 @@
-dir2cast by Ben XO v1.21 (2020-01-10)
+dir2cast by Ben XO v1.22 (2020-01-19)
 ================================================================================
 
 https://github.com/ben-xo/dir2cast/
@@ -185,6 +185,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 HISTORY
 ================================================================================
 
+1.22 2020-01-19 iTunes categories now use comma instead of pipe as a separator.
+				Characters which are valid UTF-8 but invalid XML are removed.
+				Most ini examples updated to use double quotes.
 1.21 2020-01-10 Uncache the podcast when the configuration changes, making it
                 quicker and easier to experiment with settings.
 1.20 2019-12-30 Cache files per media-file, which speeds up large podcasts
