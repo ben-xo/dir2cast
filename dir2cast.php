@@ -680,7 +680,7 @@ class RSS_File_Item extends RSS_Item {
     }
 }
 
-class Media_RSS_Item extends RSS_File_Item implements Serializable {
+abstract class Media_RSS_Item extends RSS_File_Item implements Serializable {
 
     public function __construct($filename)
     {
@@ -691,7 +691,8 @@ class Media_RSS_Item extends RSS_File_Item implements Serializable {
     public function setFromMediaFile($file)
     { 
         // don't do any heavy-lifting here as this is called by the constructor, which 
-        // is called once for every file in the dir (not just the ITEM_COUNT in the cast) 
+        // is called once for every media file in the dir (not just the ITEM_COUNT in the cast)
+        // TODO: this will go slightly faster if we don't do these syscalls here
         $this->setLength(filesize($file));
         $this->setPubDate(date('r', filemtime($file)));
     }
@@ -708,15 +709,10 @@ class Media_RSS_Item extends RSS_File_Item implements Serializable {
         return implode(' - ', $title_parts);
     }
 
-    public function getType()
-    {
-        return 'audio/mpeg';
-    }
-
     public function getDescription()
     {
         // The default value is "comment". dir2cast prior to v1.19
-        // used value "file" it's here fore backward compatibility
+        // used value "file", so it's here for backward compatibility
         if(DESCRIPTION_SOURCE == 'summary' || DESCRIPTION_SOURCE == 'file')
             return $this->getSummary();
 
@@ -845,8 +841,8 @@ abstract class Podcast extends GetterSetter
     
     public function http_headers()
     {
-        // The correct content type is application/rss+xml; however, the de-facto
-        // standard is now text/xml. See https://stackoverflow.com/questions/595616/what-is-the-correct-mime-type-to-use-for-an-rss-feed
+        // The correct content type is application/rss+xml; however, the de-facto standard is now text/xml. 
+        // See https://stackoverflow.com/questions/595616/what-is-the-correct-mime-type-to-use-for-an-rss-feed
         header('Content-type: text/xml; charset=UTF-8');
         header('Last-modified: ' . $this->getLastBuildDate());
     }
@@ -919,7 +915,7 @@ abstract class Podcast extends GetterSetter
         return str_replace( 
             array('&amp;', '&lt;', '&gt;'), 
             array('&#x26;', '&#x3C;', '&#x3E;'), 
-            $doc->saveXML()
+            utf8_for_xml($doc->saveXML())
         );
     }
 
@@ -1664,14 +1660,33 @@ function magic_stripslashes($s)
     return get_magic_quotes_gpc() ? stripslashes($s) : $s;
 }
 
-/*
+/**
  * Filters a path so that it is not absolute and contains no ".." components.
  * 
  * @param string the path to filter
+ * @return string filtered path
+ * 
  */
 function safe_path($p)
 {
     return preg_replace('#(?<=^|/)(?:\.\.(?:/|$)|/)#', '', $p);
+}
+
+/**
+ * https://stackoverflow.com/questions/12229572/php-generated-xml-shows-invalid-char-value-27-message
+ * https://github.com/ben-xo/dir2cast/issues/35
+ * 
+ * Not all valid UTF-8 characters are valid XML characters. In particular, legacy ASCII control codes
+ * (such as field separators) are valid UTF-8 but not valid XML. We strip them from the text when 
+ * rendering the XML.
+ * 
+ * 
+ * @param string text that will go in an XML document
+ * @return string safer text that will go in an XML
+ */
+function utf8_for_xml($s)
+{
+    return preg_replace('/[^\x{0009}\x{000a}\x{000d}\x{0020}-\x{D7FF}\x{E000}-\x{FFFD}]+/u', '', $s);
 }
 
 /* DISPATCH *********************************************/
