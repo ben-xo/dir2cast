@@ -915,7 +915,7 @@ abstract class Podcast extends GetterSetter
         return str_replace( 
             array('&amp;', '&lt;', '&gt;'), 
             array('&#x26;', '&#x3C;', '&#x3E;'), 
-            $doc->saveXML()
+            utf8_for_xml($doc->saveXML())
         );
     }
 
@@ -1670,6 +1670,23 @@ function magic_stripslashes($s)
 function safe_path($p)
 {
     return preg_replace('#(?<=^|/)(?:\.\.(?:/|$)|/)#', '', $p);
+}
+
+/**
+ * https://stackoverflow.com/questions/12229572/php-generated-xml-shows-invalid-char-value-27-message
+ * https://github.com/ben-xo/dir2cast/issues/35
+ * 
+ * Not all valid UTF-8 characters are valid XML characters. In particular, legacy ASCII control codes
+ * (such as field separators) are valid UTF-8 but not valid XML. We strip them from the text when 
+ * rendering the XML.
+ * 
+ * 
+ * @param string text that will go in an XML document
+ * @return string safer text that will go in an XML
+ */
+function utf8_for_xml($s)
+{
+    return preg_replace('/[^\x{0009}\x{000a}\x{000d}\x{0020}-\x{D7FF}\x{E000}-\x{FFFD}]+/u', '', $s);
 }
 
 /* DISPATCH *********************************************/
