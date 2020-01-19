@@ -1603,7 +1603,7 @@ class SettingsHandler
             define('ITUNES_CATEGORIES', '');
         
         if(!defined('ITUNES_EXPLICIT'))
-            define('ITUNES_EXPLICIT', 'false');
+            define('ITUNES_EXPLICIT', '');
             
         if(!defined('LONG_TITLES'))
             define('LONG_TITLES', false);
