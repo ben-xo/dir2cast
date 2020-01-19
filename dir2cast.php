@@ -680,7 +680,7 @@ class RSS_File_Item extends RSS_Item {
     }
 }
 
-class Media_RSS_Item extends RSS_File_Item implements Serializable {
+abstract class Media_RSS_Item extends RSS_File_Item implements Serializable {
 
     public function __construct($filename)
     {
@@ -706,11 +706,6 @@ class Media_RSS_Item extends RSS_File_Item implements Serializable {
         }
         if($this->getID3Title()) $title_parts[] = $this->getID3Title();
         return implode(' - ', $title_parts);
-    }
-
-    public function getType()
-    {
-        return 'audio/mpeg';
     }
 
     public function getDescription()
