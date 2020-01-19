@@ -691,7 +691,8 @@ abstract class Media_RSS_Item extends RSS_File_Item implements Serializable {
     public function setFromMediaFile($file)
     { 
         // don't do any heavy-lifting here as this is called by the constructor, which 
-        // is called once for every file in the dir (not just the ITEM_COUNT in the cast) 
+        // is called once for every media file in the dir (not just the ITEM_COUNT in the cast)
+        // TODO: this will go slightly faster if we don't do these syscalls here
         $this->setLength(filesize($file));
         $this->setPubDate(date('r', filemtime($file)));
     }
@@ -711,7 +712,7 @@ abstract class Media_RSS_Item extends RSS_File_Item implements Serializable {
     public function getDescription()
     {
         // The default value is "comment". dir2cast prior to v1.19
-        // used value "file" it's here fore backward compatibility
+        // used value "file", so it's here for backward compatibility
         if(DESCRIPTION_SOURCE == 'summary' || DESCRIPTION_SOURCE == 'file')
             return $this->getSummary();
 
@@ -840,8 +841,8 @@ abstract class Podcast extends GetterSetter
     
     public function http_headers()
     {
-        // The correct content type is application/rss+xml; however, the de-facto
-        // standard is now text/xml. See https://stackoverflow.com/questions/595616/what-is-the-correct-mime-type-to-use-for-an-rss-feed
+        // The correct content type is application/rss+xml; however, the de-facto standard is now text/xml. 
+        // See https://stackoverflow.com/questions/595616/what-is-the-correct-mime-type-to-use-for-an-rss-feed
         header('Content-type: text/xml; charset=UTF-8');
         header('Last-modified: ' . $this->getLastBuildDate());
     }
@@ -1659,10 +1660,12 @@ function magic_stripslashes($s)
     return get_magic_quotes_gpc() ? stripslashes($s) : $s;
 }
 
-/*
+/**
  * Filters a path so that it is not absolute and contains no ".." components.
  * 
  * @param string the path to filter
+ * @return string filtered path
+ * 
  */
 function safe_path($p)
 {
