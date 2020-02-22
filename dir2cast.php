@@ -629,7 +629,7 @@ class RSS_File_Item extends RSS_Item {
      */
     public function getTitle()
     {
-        return $this->getFilename();
+        return basename($this->getFilename());
     }
     
     public function getType()
