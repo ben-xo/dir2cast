@@ -621,6 +621,17 @@ class RSS_File_Item extends RSS_Item {
         return ltrim(substr($filename, strlen(MP3_DIR)), '/');
     }
     
+    /**
+     * Default title for an RSS Item is its filename.
+     * Subclasses (Such as Media_RSS_Item, MP3_RSS_Item, etc) override this using e.g. ID3 tags.
+     * 
+     * @return string
+     */
+    public function getTitle()
+    {
+        return $this->getFilename();
+    }
+    
     public function getType()
     {
         return 'application/octet-stream';
@@ -697,6 +708,21 @@ abstract class Media_RSS_Item extends RSS_File_Item implements Serializable {
         $this->setPubDate(date('r', filemtime($file)));
     }
 
+    /**
+     * The title of the file item as it should appear in the podcast.
+     * 
+     * Media_RSS_Items will derive this from the ID3 (or other) tags in the file, if available.
+     * 
+     * The default title is just the "Title" tag, unless LONG_TITLES is set, in which case
+     * it's "Album - Artist - Title" using the applicable tags.
+     * 
+     * If these are all blank, it falls back to the filename so that you can at least see what is
+     * what in the feed.
+     * 
+     * @see RSS_File_Item::getTitle()
+     * 
+     * @return string
+     */
     public function getTitle()
     {
         $title_parts = array();
@@ -705,8 +731,15 @@ abstract class Media_RSS_Item extends RSS_File_Item implements Serializable {
             if($this->getID3Album()) $title_parts[] = $this->getID3Album();
             if($this->getID3Artist()) $title_parts[] = $this->getID3Artist();
         }
-        if($this->getID3Title()) $title_parts[] = $this->getID3Title();
-        return implode(' - ', $title_parts);
+        if($this->getID3Title())
+        {
+            $title_parts[] = $this->getID3Title();
+        }
+        if(!empty($title_parts))
+        {
+            return implode(' - ', $title_parts);
+        }
+        return parent::getTitle();
     }
 
     public function getDescription()
