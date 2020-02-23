@@ -166,7 +166,7 @@ Add some configuration like the following to your sites conf
       rewrite ^(/dir2cast)/rss $1/dir2cast.php last;
     }
 
-This assume the URL you want is /dir2cast/rss, and that the URL of dir2cast.php
+This assumes the URL you want is /dir2cast/rss, and that the URL of dir2cast.php
 is /dir2cast/dir2cast.php
 
 
