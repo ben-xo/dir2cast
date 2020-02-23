@@ -1,4 +1,4 @@
-dir2cast by Ben XO v1.22 (2020-01-19)
+dir2cast by Ben XO v1.23 (2020-02-23)
 ================================================================================
 
 https://github.com/ben-xo/dir2cast/
@@ -151,7 +151,7 @@ PLEASE NOTE: just to check that you understand this section...
 COPYRIGHT & LICENSE
 ================================================================================
 
-Copyright (c) 2008, Ben XO (me@ben-xo.com).
+Copyright (c) 2008-2020, Ben XO (me@ben-xo.com).
 
 The software is released under the BSD License.
 
@@ -185,81 +185,4 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 HISTORY
 ================================================================================
 
-1.22 2020-01-19 iTunes categories now use comma instead of pipe as a separator.
-				Characters which are valid UTF-8 but invalid XML are removed.
-				Most ini examples updated to use double quotes.
-1.21 2020-01-10 Uncache the podcast when the configuration changes, making it
-                quicker and easier to experiment with settings.
-1.20 2019-12-30 Cache files per media-file, which speeds up large podcasts
-                Upgrade bundled getID3 with better MP4 support
-                Support for <itunes:explicit> tag
-                General speed improvements
-1.19 2019-12-21 Extract cover art from MP4 and M4A files.
-1.18 2019-12-21 Bugfix for image URLs. Better CLI options.
-1.17 2019-12-21 Automatically extract cover art from the files
-1.16 2019-12-16 Other fixes for PHP7.x
-1.15 2019-12-16 Other fixes for PHP7.x
-1.15 2019-12-15 Upgrade getID3 to 1.9.18-201911300717 - fixes PHP7.4 support
-1.14 2019-12-12 Support for mp4 videos
-1.13 2019-12-11 Suppress deprecation warnings, as both dir2cast and getID3
-                trigger the error handler on newer PHPs
-1.12 2018-03-22 Switched to de-facto text/xml content-type
-                Suggested by RobertBozic
-1.11 2018-02-28 Added charset=utf-8 to the Content-type header.
-                Suggested by RobertBozic
-1.10 2018-01-21 Added RECURSIVE_DIRECTORY_ITERATOR option for scanning nested
-                folders. Suggested by ognjiscar
-1.9.1 18-01-21 Small PHP7 fix.
-1.9 2017-12-27 Merged changes from cbz:
-               * Upgraded getID3
-               * Added support for M4A files
-1.8 2016-07-04 Merged changes from Jeff Bearer:
-               * Added support for PNG podcast cover art
-               * create tempdir if it does not already exist
-               * support for item specific images
-               * support for writing output to an RSS file
-               * directory specific MP3_URL
-               * customizable content type
-               * add option to have <description> populated by description.txt
-1.7.2 14-03-06 Update homepage information in file to the GitHub.
-1.7.1 11-02-17 Remove unused mpc_old code from getID3, which false-positived
-               on one of my MP3s.
-1.7 2010-12-10 <itunes:summary> is now excluded if it's not explicitly set, as
-               iTunes will happily fall back to the <description> and there's
-               no point duplicating this. Changed <itunes:subtitle> to pull from
-               ID3 Artist field, rather than ID3 Album field, as this is more
-               useful for me. <itunes:subtitle> can now be set with a file in
-               the same was as <itunes:summary>. Also added new INI parameter
-               ITUNES_SUBTITLE_SUFFIX, which is appended to the subtitle of 
-               every item. I suggest using this for an appropriate 'Click here
-               for more info!' message, to lead people to the description or
-               summary.
-1.6 2010-11-27 Fix bug including summary info from either ID3 album field
-               or filename.txt reported by Nilicule. Thanks!
-1.5 2010-07-31 Add optional RSS <image> tag. This is not the same as the 
-               <itunes:image> tag, as it has size restrictions. 
-1.4 2010-03-10 Make <description> in a CDATA section
-1.3 2009-05-28 Fixed nasty regeneration bug where no items in the feed would
-               get any metadata after adding a file to the feed. The workaround
-               was to clear the cache, but this update fixes it. Also, make
-               the feed more robust against getID3's handling of broken MP3s.
-1.2 2009-05-04 Changed the contents of the <title> tag per item. Added a new 
-               configuration option LONG_TITLE to enable the old behaviour.
-               Added new URL parameter ?force=password to enable clearing of
-               the cache if, for some reason, the URL is not generated
-               correctly.
-1.1 2009-04-23 Fix an error in the default dir2cast.ini
-1.0 2008-03-17 Fixed a couple of bugs with incomplete ID3 tags.
-               The most-common case, that of hitting the cache, has been 
-               streamlined so that it doesn't hit the defaults-setup code
-               or parse the .ini files unless necessary.
-0.9 2008-03-02 Added .ini file configuration, added MP3_BASE option.
-0.8 2008-02-27 Fixed ?dir= so it works intuitively, and much more safely.
-0.7 2008-02-25 W3 feed validator conformance fixes and fixed itunes:image.
-0.6 2008-02-25 Updated the licensing information.
-0.5 2008-02-25 Fixed losing itunes item tags when a dir changes.
-0.4 2008-02-24 Added a whole error handler with pretty errors
-0.3 2008-02-24 Fixed the auto URL detection code. Made the config clearer.
-               Renamed some of the config parameters for clarity.
-0.2 2008-02-23 Fixed bug with missing '/' and wrong urlencoding on spaces.
-0.1 2008-02-22 Initial Release
+See CHANGELOG.txt
