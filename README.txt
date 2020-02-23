@@ -124,6 +124,10 @@ http://www.mysite.com/dir2cast/dir2cast.php?dir=cast2 .
 "PRETTY" URLS FOR YOUR PODCASTS
 --------------------------------------------------------------------------------
 
+### If Your Web Server is Apache
+
+I assume you already have PHP working with Apache.
+
 This hint requires your web server to be Apache with 'mod_rewrite' enabled.
 
 From the example above, your podcast URL will be:
@@ -146,6 +150,24 @@ PLEASE NOTE: just to check that you understand this section...
 * If you use the RewriteRule supplied, dir2cast.php must be in the folder above
   the MP3 folders. (If this is not the case, you will have to set MP3_BASE in 
   the ini file, and change the rule for your circumstance.)
+
+
+### If Your Web Server is NGINX
+
+I assume you already have PHP working on NGINX
+
+From the example above, your podcast URL would be:
+
+    http://www.mysite.com/dir2cast/dir2cast.php?dir=cast1
+
+Add some configuration like the following to your sites conf
+
+    location = /dir2cast/rss {
+      rewrite ^(/dir2cast)/rss $1/dir2cast.php last;
+    }
+
+This assume the URL you want is /dir2cast/rss, and that the URL of dir2cast.php
+is /dir2cast/dir2cast.php
 
 
 COPYRIGHT & LICENSE
