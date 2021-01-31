@@ -27,7 +27,6 @@
 error_reporting(E_ALL | E_STRICT);
 
 define('NO_DISPATCHER', true);
-// require_once '../dir2cast.php';
 
 function rmrf($dir) {
     // from https://www.php.net/manual/en/function.rmdir.php
@@ -37,3 +36,25 @@ function rmrf($dir) {
     }
     return rmdir($dir);
 }
+
+function is_valid_xml($filename)
+{
+    $output = array();
+    $returncode = false;
+    $filename = escapeshellarg($filename);
+    exec("xmllint --noout '$filename'", $output, $returncode);
+    if($returncode != 0)
+    {
+        echo join('\n', $output);
+    }
+    return $returncode == 0;
+}
+
+function ___autoload($class)
+{
+    require_once '../dir2cast.php';
+    return true;
+}
+
+// oh PHPUnit.
+spl_autoload_register('___autoload');
