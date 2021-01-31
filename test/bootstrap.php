@@ -27,4 +27,13 @@
 error_reporting(E_ALL | E_STRICT);
 
 define('NO_DISPATCHER', true);
-require_once '../dir2cast.php';
+// require_once '../dir2cast.php';
+
+function rmrf($dir) {
+    // from https://www.php.net/manual/en/function.rmdir.php
+    $files = array_diff(scandir($dir), array('.','..'));
+    foreach ($files as $file) {
+      (is_dir("$dir/$file")) ? rmrf("$dir/$file") : unlink("$dir/$file");
+    }
+    return rmdir($dir);
+}
