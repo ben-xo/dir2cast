@@ -1027,8 +1027,8 @@ class Dir_Podcast extends Podcast
                 $item_count = $this->addItem($file->getPath() . '/' . $file->getFileName());
             }
             
-            if(0 == $item_count)
-                throw new Exception("No Items found in {$this->source_dir}");
+            // if(0 == $item_count)
+            //     throw new Exception("No Items found in {$this->source_dir}");
                     
             $this->scanned = true;
             $this->post_scan();
@@ -1775,7 +1775,14 @@ class Dispatcher
             $fh = fopen(OUTPUT_FILE, "w");
             fwrite($fh,$podcast->generate());
             fclose($fh);
+
+            if(empty($podcast->getItems()))
+            {
+                echo "** Warning: generated podcast found no episodes.\n";
+                return -1;
+            }
         }
+        return 0;
     }
 }
 
@@ -1841,7 +1848,7 @@ if(!defined('NO_DISPATCHER'))
     $dispatcher->uncache_if_output_file();
     $dispatcher->update_mtime_if_dir2cast_or_settings_modified();
     $dispatcher->init();
-    $dispatcher->output();
+    exit($dispatcher->output());
 }
 
 /* THE END *********************************************/
