@@ -1361,7 +1361,12 @@ class ErrorHandler
     {    
         if(self::$errors)
         {
-            if(ini_get('html_errors'))
+            if(!defined('CLI_ONLY') && !ini_get('html_errors'))
+            {
+                header("Content-type: text/plain"); // reset the content-type
+            }
+
+            if(!defined('CLI_ONLY') && ini_get('html_errors'))
             {
                 header("Content-type: text/html"); // reset the content-type
                         
@@ -1401,11 +1406,12 @@ class ErrorHandler
             }
             else
             {
-                header("Content-type: text/plain"); // reset the content-type
+                // define('CLI_ONLY') || !ini_get('html_errors')
                 echo "Error: $message (on line $errline of $errfile)\n";
                 if(!empty(ErrorHandler::$primer))
                     echo strip_tags(self::get_primed_error(ErrorHandler::$primer)) . "\n";
             }
+
             exit(-1);
         }
     }
@@ -1480,6 +1486,9 @@ class SettingsHandler
         
         if(!defined('FORCE_PASSWORD'))
             define('FORCE_PASSWORD', '');
+
+        if(isset($argv) && isset($argv[0]))
+            define('CLI_ONLY', true);
     }
     
     /**
