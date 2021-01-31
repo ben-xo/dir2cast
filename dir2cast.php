@@ -1680,6 +1680,96 @@ class SettingsHandler
 
 class SerializationException extends Exception {}
 
+class Dispatcher
+{
+    protected $podcast;
+
+    public function __construct(Locking_Cached_Dir_Podcast $podcast)
+    {
+        $this->podcast = $podcast;
+    }
+
+    public function uncache_if_forced($force_password, $get)
+    {
+        if( strlen($force_password) && isset($get['force']) && $force_password == $get['force'] )
+        {
+            $this->podcast->uncache();
+        }
+    }
+
+    public function uncache_if_output_file()
+    {
+        if(defined('OUTPUT_FILE'))
+        {
+            $this->podcast->uncache();
+        }
+    }
+
+    public function update_mtime_if_dir2cast_or_settings_modified()
+    {
+        // Ensure that the cache is invalidated if we have updated dir2cast.php or dir2cast.ini
+        // n.b. this doesn't uncache individual media file caches, but also they have a versioning mechanism.
+        $this->podcast->updateMaxMtime(filemtime(__FILE__));
+        if(defined('INI_FILE'))
+            $this->podcast->updateMaxMtime(filemtime(INI_FILE));
+    }
+
+    public function init()
+    {
+        $podcast = $this->podcast;
+
+        $podcast->init(); // checks the cache file, or scans for media folder if the cache is out of date.
+
+        if(!$podcast->isCached())
+        {
+            $getid3 = $podcast->addHelper(new Caching_getID3_Podcast_Helper(TMP_DIR, new getID3_Podcast_Helper()));
+            $atom   = $podcast->addHelper(new Atom_Podcast_Helper());
+            $itunes = $podcast->addHelper(new iTunes_Podcast_Helper());
+
+            $podcast->setTitle(TITLE);
+            $podcast->setLink(LINK);
+            $podcast->setDescription(DESCRIPTION);
+            $podcast->setLanguage(LANGUAGE);
+            $podcast->setCopyright(COPYRIGHT);
+            $podcast->setWebMaster(WEBMASTER);
+            $podcast->setTtl(TTL);
+            $podcast->setImage(IMAGE);
+
+            $atom->setSelfLink(RSS_LINK);
+
+            $itunes->setSubtitle(ITUNES_SUBTITLE);
+            $itunes->setAuthor(ITUNES_AUTHOR);
+            $itunes->setSummary(ITUNES_SUMMARY);
+            $itunes->setImage(ITUNES_IMAGE);
+            $itunes->setExplicit(ITUNES_EXPLICIT);
+
+            $itunes->setOwnerName(ITUNES_OWNER_NAME);
+            $itunes->setOwnerEmail(ITUNES_OWNER_EMAIL);
+
+            $itunes->addCategories(ITUNES_CATEGORIES);
+
+            $podcast->setGenerator(GENERATOR);
+        }
+    }
+
+    public function output()
+    {
+        $podcast = $this->podcast;
+        if(!defined('OUTPUT_FILE'))
+        {
+            $podcast->http_headers();
+            echo $podcast->generate();
+        }
+        else
+        {
+            echo "Writing RSS to: ". OUTPUT_FILE ."\n";
+            $fh = fopen(OUTPUT_FILE, "w");
+            fwrite($fh,$podcast->generate());
+            fclose($fh);
+        }
+    }
+}
+
 /* FUNCTIONS **********************************************/
 
 /**
@@ -1736,68 +1826,13 @@ if(!defined('NO_DISPATCHER'))
     SettingsHandler::defaults();
     
     $podcast = new Locking_Cached_Dir_Podcast(MP3_DIR, TMP_DIR);
+    $dispatcher = new Dispatcher($podcast);
 
-    if( strlen(FORCE_PASSWORD) && isset($_GET['force']) && FORCE_PASSWORD == $_GET['force'] )
-    {
-        $podcast->uncache();    
-    }
-
-    if(defined('OUTPUT_FILE'))
-    {
-        $podcast->uncache();
-    }
-
-    // Ensure that the cache is invalidated if we have updated dir2cast.php or dir2cast.ini
-    // n.b. this doesn't uncache individual media file caches, but also they have a versioning mechanism.
-    $podcast->updateMaxMtime(filemtime(__FILE__));
-    if(defined('INI_FILE'))
-        $podcast->updateMaxMtime(filemtime(INI_FILE));
-
-    $podcast->init(); // checks the cache file, or scans for media folder if the cache is out of date. 
-
-    if(!$podcast->isCached())
-    {
-        $getid3 = $podcast->addHelper(new Caching_getID3_Podcast_Helper(TMP_DIR, new getID3_Podcast_Helper()));
-        $atom   = $podcast->addHelper(new Atom_Podcast_Helper());
-        $itunes = $podcast->addHelper(new iTunes_Podcast_Helper());
-        
-        $podcast->setTitle(TITLE);
-        $podcast->setLink(LINK);
-        $podcast->setDescription(DESCRIPTION);
-        $podcast->setLanguage(LANGUAGE);
-        $podcast->setCopyright(COPYRIGHT);
-        $podcast->setWebMaster(WEBMASTER);
-        $podcast->setTtl(TTL);
-        $podcast->setImage(IMAGE);
-        
-        $atom->setSelfLink(RSS_LINK);
-        
-        $itunes->setSubtitle(ITUNES_SUBTITLE);
-        $itunes->setAuthor(ITUNES_AUTHOR);
-        $itunes->setSummary(ITUNES_SUMMARY);
-        $itunes->setImage(ITUNES_IMAGE);
-        $itunes->setExplicit(ITUNES_EXPLICIT);
-        
-        $itunes->setOwnerName(ITUNES_OWNER_NAME);
-        $itunes->setOwnerEmail(ITUNES_OWNER_EMAIL);
-        
-        $itunes->addCategories(ITUNES_CATEGORIES);
-        
-        $podcast->setGenerator(GENERATOR);
-    }
-    
-    if(!defined('OUTPUT_FILE'))
-    {
-        $podcast->http_headers();
-        echo $podcast->generate();
-    }
-    else
-    {
-        echo "Writing RSS to: ". OUTPUT_FILE ."\n";
-        $fh = fopen(OUTPUT_FILE, "w");
-        fwrite($fh,$podcast->generate());
-        fclose($fh);
-    }
+    $dispatcher->uncache_if_forced(FORCE_PASSWORD, $_GET);
+    $dispatcher->uncache_if_output_file();
+    $dispatcher->update_mtime_if_dir2cast_or_settings_modified();
+    $dispatcher->init();
+    $dispatcher->output();
 }
 
 /* THE END *********************************************/
