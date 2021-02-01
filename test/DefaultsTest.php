@@ -59,7 +59,7 @@ final class DefaultsTest extends TestCase
         $old_mtime = filemtime($cached_output_files[0]);
 
         sleep(1);
-        passthru('php dir2cast.php --output=out.xml');
+        exec('php dir2cast.php --output=out.xml');
         $new_content = file_get_contents(self::$file);
 
         // check that the cache file has had its mtime "refreshed"
@@ -80,7 +80,7 @@ final class DefaultsTest extends TestCase
         $old_mtime = filemtime($cached_output_files[0]);
 
         sleep(1);
-        passthru('php dir2cast.php --output=out.xml');
+        exec('php dir2cast.php --output=out.xml');
         $new_content = file_get_contents(self::$file); // should have different publishDate
         $this->assertNotEquals(self::$content, $new_content);
 
