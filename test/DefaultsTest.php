@@ -37,69 +37,6 @@ final class DefaultsTest extends TestCase
         $this->assertSame(255, self::$returncode);
     }
 
-    public function test_default_empty_podcast_caches_output_in_default_folder(): void
-    {
-        // caches the output in the default temp folder
-        $this->assertTrue(is_dir('./temp'));
-        $cached_output_files = glob('./temp/*.xml');
-        $this->assertSame(1, sizeof($cached_output_files));
-
-        // caches what was generated
-        $this->assertSame(
-            self::$content,
-            file_get_contents($cached_output_files[0])
-        );
-    }
-
-    public function test_default_empty_podcast_obeys_minimum_cache_time(): void
-    {
-        $cached_output_files = glob('./temp/*.xml');
-        clearstatcache();
-        touch($cached_output_files[0]);
-        $old_mtime = filemtime($cached_output_files[0]);
-
-        sleep(1);
-        exec('php dir2cast.php --output=out.xml');
-        $new_content = file_get_contents(self::$file);
-
-        // check that the cache file has had its mtime "refreshed"
-        clearstatcache();
-        $new_mtime = filemtime($cached_output_files[0]);
-        $this->assertNotEquals($old_mtime, $new_mtime);
-        $this->assertEquals(self::$content, $new_content);
-    }
-
-    public function test_expired_podcast_is_regenerated(): void
-    {
-        $cached_output_files = glob('./temp/*.xml');
-        foreach ($cached_output_files as $file) {
-            touch($file, time()-86400);
-        }
-
-        clearstatcache();
-        $old_mtime = filemtime($cached_output_files[0]);
-
-        sleep(1);
-        exec('php dir2cast.php --output=out.xml');
-        $new_content = file_get_contents(self::$file); // should have different publishDate
-        $this->assertNotEquals(self::$content, $new_content);
-
-        clearstatcache();
-        $new_mtime = filemtime($cached_output_files[0]);
-        $this->assertNotEquals($old_mtime, $new_mtime);
-    }
-
-    public function test_update_to_dir2cast_php_invalidates_cache(): void
-    {
-
-    }
-
-    public function test_update_to_dir2cast_ini_invalidates_cache(): void
-    {
-
-    }
-
-
     public function test_default_empty_podcast_is_valid_with_default_values(): void
     {
         // generated valid XML
