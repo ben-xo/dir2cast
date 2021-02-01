@@ -89,6 +89,15 @@ final class DefaultsTest extends TestCase
         $this->assertNotEquals($old_mtime, $new_mtime);
     }
 
+    public function test_update_to_dir2cast_php_invalidates_cache(): void
+    {
+
+    }
+
+    public function test_update_to_dir2cast_ini_invalidates_cache(): void
+    {
+
+    }
 
 
     public function test_default_empty_podcast_is_valid_with_default_values(): void
