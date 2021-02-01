@@ -8,6 +8,8 @@ final class DefaultsTest extends TestCase
     public static $output = '';
     public static $returncode = 0;
 
+    public static $content = '';
+
     public static function setUpBeforeClass(): void
     {
         is_dir('./testdir') && rmrf('./testdir');
@@ -17,20 +19,26 @@ final class DefaultsTest extends TestCase
         exec('php dir2cast.php --output=out.xml', self::$output, self::$returncode);
     }
 
-    public function test_default_empty_podcast(): void
+    public function test_default_empty_podcast_creates_output(): void
     {
         $this->assertTrue(file_exists(self::$file));
 
-        $content = file_get_contents(self::$file);
-        $this->assertTrue(strlen($content) > 0);
+        self::$content = file_get_contents(self::$file);
+        $this->assertTrue(strlen(self::$content) > 0);
+    }
 
+    public function test_default_empty_podcast_produces_warning(): void
+    {
         // warns the podcast is empty
         $this->assertSame(
             'Writing RSS to: out.xml\n** Warning: generated podcast found no episodes.',
             implode('\n', self::$output)
         );
         $this->assertSame(255, self::$returncode);
+    }
 
+    public function test_default_empty_podcast_caches_output_in_default_folder(): void
+    {
         // caches the output in the default temp folder
         $this->assertTrue(is_dir('./temp'));
         $cached_output_files = glob('./temp/*.xml');
@@ -38,12 +46,15 @@ final class DefaultsTest extends TestCase
 
         // caches what was generated
         $this->assertSame(
-            $content,
+            self::$content,
             file_get_contents($cached_output_files[0])
         );
+    }
 
+    public function test_default_empty_podcast_is_valid_with_default_values(): void
+    {
         // generated valid XML
-        $data = simplexml_load_string($content);
+        $data = simplexml_load_string(self::$content);
 
         $this->assertEquals('testdir', $data->channel->title);
         $this->assertEquals('http://www.example.com/', $data->channel->link);
