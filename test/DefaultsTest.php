@@ -67,8 +67,8 @@ final class DefaultsTest extends TestCase
         $this->assertLessThan(time() + 100, strtotime((string)$data->channel->lastBuildDate));
         $this->assertEquals(1, preg_match(
             "#^dir2cast \d+.\d+ by Ben XO \(https://github\.com/ben-xo/dir2cast/\)$#",
-            (string)$data->channel->generator)
-        );
+            (string)$data->channel->generator
+        ));
 
         $atom_elements = $data->channel->children("http://www.w3.org/2005/Atom");
         $this->assertEquals('http://www.example.com/rss', $atom_elements->link->attributes()['href']);
