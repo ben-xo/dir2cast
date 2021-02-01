@@ -51,6 +51,46 @@ final class DefaultsTest extends TestCase
         );
     }
 
+    public function test_default_empty_podcast_obeys_minimum_cache_time(): void
+    {
+        $cached_output_files = glob('./temp/*.xml');
+        clearstatcache();
+        touch($cached_output_files[0]);
+        $old_mtime = filemtime($cached_output_files[0]);
+
+        sleep(1);
+        passthru('php dir2cast.php --output=out.xml');
+        $new_content = file_get_contents(self::$file);
+
+        // check that the cache file has had its mtime "refreshed"
+        clearstatcache();
+        $new_mtime = filemtime($cached_output_files[0]);
+        $this->assertNotEquals($old_mtime, $new_mtime);
+        $this->assertEquals(self::$content, $new_content);
+    }
+
+    public function test_expired_podcast_is_regenerated(): void
+    {
+        $cached_output_files = glob('./temp/*.xml');
+        foreach ($cached_output_files as $file) {
+            touch($file, time()-86400);
+        }
+
+        clearstatcache();
+        $old_mtime = filemtime($cached_output_files[0]);
+
+        sleep(1);
+        passthru('php dir2cast.php --output=out.xml');
+        $new_content = file_get_contents(self::$file); // should have different publishDate
+        $this->assertNotEquals(self::$content, $new_content);
+
+        clearstatcache();
+        $new_mtime = filemtime($cached_output_files[0]);
+        $this->assertNotEquals($old_mtime, $new_mtime);
+    }
+
+
+
     public function test_default_empty_podcast_is_valid_with_default_values(): void
     {
         // generated valid XML
@@ -85,7 +125,7 @@ final class DefaultsTest extends TestCase
     public static function tearDownAfterClass(): void
     {
         chdir('..');
-        rmrf('./testdir');
+        // rmrf('./testdir');
     }
 
 }
