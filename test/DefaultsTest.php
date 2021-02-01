@@ -48,6 +48,19 @@ final class DefaultsTest extends TestCase
         $this->assertEquals('testdir', $data->channel->title);
         $this->assertEquals('http://www.example.com/', $data->channel->link);
         $this->assertEquals('Podcast', $data->channel->description);
+        $this->assertEquals('en-us', $data->channel->language);
+        $this->assertEquals('60', $data->channel->ttl);
+
+        $atom_elements = $data->channel->children("http://www.w3.org/2005/Atom");
+        $this->assertEquals('http://www.example.com/rss', $atom_elements->link->attributes()['href']);
+        $this->assertEquals('self', $atom_elements->link->attributes()['rel']);
+        $this->assertEquals('application/rss+xml', $atom_elements->link->attributes()['type']);
+
+        $itunes_elements = $data->channel->children("http://www.itunes.com/dtds/podcast-1.0.dtd");
+        $this->assertEquals('Podcast', $itunes_elements->subtitle);
+        $this->assertEquals('Podcast', $itunes_elements->summary);
+        $this->assertEquals('', $itunes_elements->author);
+
     }
 
     public function tearDown(): void
