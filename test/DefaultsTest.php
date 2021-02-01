@@ -43,7 +43,11 @@ final class DefaultsTest extends TestCase
         );
 
         // generated valid XML
-        $this->assertTrue(is_valid_xml($this->file));
+        $data = simplexml_load_string($content);
+
+        $this->assertEquals('testdir', $data->channel->title);
+        $this->assertEquals('http://www.example.com/', $data->channel->link);
+        $this->assertEquals('Podcast', $data->channel->description);
     }
 
     public function tearDown(): void
