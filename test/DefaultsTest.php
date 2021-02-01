@@ -4,32 +4,32 @@ use PHPUnit\Framework\TestCase;
 
 final class DefaultsTest extends TestCase
 {
-    public $file = 'out.xml';
+    public static $file = 'out.xml';
+    public static $output = '';
+    public static $returncode = 0;
 
-    public function setUp(): void
+    public static function setUpBeforeClass(): void
     {
         is_dir('./testdir') && rmrf('./testdir');
         mkdir('./testdir');
         copy('../dir2cast.php', './testdir/dir2cast.php');
         chdir('./testdir');
+        exec('php dir2cast.php --output=out.xml', self::$output, self::$returncode);
     }
 
     public function test_default_empty_podcast(): void
     {
-        $output = array();
-        $returncode = false;
-        exec('php dir2cast.php --output=out.xml', $output, $returncode);
-        $this->assertTrue(file_exists($this->file));
+        $this->assertTrue(file_exists(self::$file));
 
-        $content = file_get_contents($this->file);
+        $content = file_get_contents(self::$file);
         $this->assertTrue(strlen($content) > 0);
 
         // warns the podcast is empty
         $this->assertSame(
             'Writing RSS to: out.xml\n** Warning: generated podcast found no episodes.',
-            implode('\n', $output)
+            implode('\n', self::$output)
         );
-        $this->assertSame(255, $returncode);
+        $this->assertSame(255, self::$returncode);
 
         // caches the output in the default temp folder
         $this->assertTrue(is_dir('./temp'));
@@ -71,10 +71,10 @@ final class DefaultsTest extends TestCase
 
     }
 
-    public function tearDown(): void
+    public static function tearDownAfterClass(): void
     {
         chdir('..');
-        // rmrf('./testdir');
+        rmrf('./testdir');
     }
 
 }
