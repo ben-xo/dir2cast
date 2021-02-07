@@ -84,7 +84,8 @@ function __autoloader($class_name)
             break;
             
         default:
-            require_once $class_name . '.php';
+            if(file_exists($class_name . '.php'))
+                require_once $class_name . '.php';
     }
 }
 spl_autoload_register('__autoloader');
