@@ -107,9 +107,29 @@ final class PodcastTest extends TestCase
     }
 
 
-    // public function test_html_entities_are_rss_compatible()
-    // {
-    // }
+    public function test_html_entities_are_rss_compatible()
+    {
+        $mp = new MyPodcast();
+
+        $mp->setTitle('<<<');
+        $mp->setDescription('⛄️');
+        $mp->setWebMaster('>>>');
+        $mp->setGenerator('&amp;');
+
+        $content = $mp->generate();
+        $data = simplexml_load_string($content);
+
+        $this->assertEquals('<<<', $data->channel->title);
+        $this->assertEquals('⛄️', $data->channel->description);
+        $this->assertEquals('>>>', $data->channel->webMaster);
+        $this->assertEquals('&amp;', $data->channel->generator);
+
+        $this->assertEquals(0, preg_match('/&amp;/', $content));
+        $this->assertEquals(0, preg_match('/&lt;/', $content));
+        $this->assertEquals(0, preg_match('/&gt;/', $content));
+    }
+
+    // TODO: these tests overlap with RSS_Item tests
 
     // public function test_added_items()
     // {
