@@ -45,5 +45,34 @@ final class RSS_ItemTest extends TestCase
         $this->assertEquals('1:23', $enclosure->attributes()->length);
         $this->assertEquals('test', $enclosure->attributes()->type);
 
+        // no image by default
+        foreach ($data->channel->item[0] as $el) {
+            $this->assertNotEquals('image', $el->getName());
+        }
+    }
+
+    public function test_rss_item_default_title()
+    {
+        $mp = new MyPodcast();
+        $item = new RSS_Item();
+        $mp->addRssItem($item);
+
+        $content = $mp->generate();
+        $data = simplexml_load_string($content, 'SimpleXMLElement', LIBXML_NOCDATA);
+
+        $this->assertEquals('(untitled)', $data->channel->item[0]->title);
+    }
+
+    public function test_adds_image_to_item_if_set()
+    {
+        $mp = new MyPodcast();
+        $item = new RSS_Item();
+        $item->setImage('visuals.jpg'); 
+        $mp->addRssItem($item);
+
+        $content = $mp->generate();
+        $data = simplexml_load_string($content, 'SimpleXMLElement', LIBXML_NOCDATA);
+
+        $this->assertEquals('visuals.jpg', $data->channel->item[0]->image);
     }
 }
