@@ -26,8 +26,6 @@
 
 error_reporting(E_ALL | E_STRICT);
 
-define('NO_DISPATCHER', true);
-
 function rmrf($dir) {
     // from https://www.php.net/manual/en/function.rmdir.php
     $files = array_diff(scandir($dir), array('.','..'));
@@ -49,3 +47,7 @@ function prepare_testing_dir()
     }
     chdir('./testdir');    
 }
+
+define('NO_DISPATCHER', true);
+define('CLI_ONLY', true);
+require_once('../dir2cast.php');

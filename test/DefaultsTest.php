@@ -2,6 +2,10 @@
 
 use PHPUnit\Framework\TestCase;
 
+/**
+ * @runInSeparateProcess
+ * @preserveGlobalState disabled
+ */
 final class DefaultsTest extends TestCase
 {
     public static $file = 'out.xml';
