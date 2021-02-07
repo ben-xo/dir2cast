@@ -12,10 +12,7 @@ final class DefaultsTest extends TestCase
 
     public static function setUpBeforeClass(): void
     {
-        is_dir('./testdir') && rmrf('./testdir');
-        mkdir('./testdir');
-        copy('../dir2cast.php', './testdir/dir2cast.php');
-        chdir('./testdir');
+        prepare_testing_dir();
         exec('php dir2cast.php --output=out.xml', self::$output, self::$returncode);
     }
 

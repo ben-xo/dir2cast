@@ -12,15 +12,7 @@ final class CachingTest extends TestCase
 
     public static function setUpBeforeClass(): void
     {
-        is_dir('./testdir') && rmrf('./testdir');
-        mkdir('./testdir');
-        mkdir('./testdir/getID3');
-        copy('../dir2cast.php', './testdir/dir2cast.php');
-        foreach(glob('../getID3/*.php') as $file)
-        {
-            copy($file, './testdir/getID3/' . basename($file));
-        }
-        chdir('./testdir');
+        prepare_testing_dir();
         exec('php dir2cast.php --output=out.xml', self::$output, self::$returncode);
         self::$content = file_get_contents(self::$file);
     }
@@ -42,11 +34,10 @@ final class CachingTest extends TestCase
     public function test_default_empty_podcast_obeys_minimum_cache_time(): void
     {
         // too new to bust the cache
-        // file_put_contents('empty.mp3', 'test');
+        file_put_contents('empty.mp3', 'test');
         touch('empty.mp3');
 
         exec('php dir2cast.php --output=out.xml', self::$output, self::$returncode);
-        var_dump(self::$output);
 
         $new_content = file_get_contents(self::$file);
         $this->assertEquals(self::$content, $new_content);

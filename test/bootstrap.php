@@ -37,24 +37,15 @@ function rmrf($dir) {
     return rmdir($dir);
 }
 
-function is_valid_xml($filename)
+function prepare_testing_dir()
 {
-    $output = array();
-    $returncode = false;
-    $filename = escapeshellarg($filename);
-    exec("xmllint --noout '$filename'", $output, $returncode);
-    if($returncode != 0)
+    is_dir('./testdir') && rmrf('./testdir');
+    mkdir('./testdir');
+    mkdir('./testdir/getID3');
+    copy('../dir2cast.php', './testdir/dir2cast.php');
+    foreach(glob('../getID3/*.php') as $file)
     {
-        echo join('\n', $output);
+        copy($file, './testdir/getID3/' . basename($file));
     }
-    return $returncode == 0;
+    chdir('./testdir');    
 }
-
-function ___autoload($class)
-{
-    require_once '../dir2cast.php';
-    return true;
-}
-
-// oh PHPUnit.
-spl_autoload_register('___autoload');
