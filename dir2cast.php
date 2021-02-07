@@ -953,6 +953,11 @@ abstract class Podcast extends GetterSetter
         );
     }
 
+    public function addRssItem(RSS_Item $item)
+    {
+        $this->items[] = $item;
+    }
+
     /**
      * @return array of RSS_Item
      */
