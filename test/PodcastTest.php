@@ -47,17 +47,65 @@ final class PodcastTest extends TestCase
         $this->assertLessThan(time() + 100, strtotime((string)$data->channel->lastBuildDate));
     }
 
-    // public function test_basic_feed_properties()
-    // {
-    // }
+    public function test_basic_feed_properties()
+    {
+        $mp = new MyPodcast();
 
-    // public function test_dynamic_copyright_year()
-    // {
-    // }
+        $mp->setTitle('the title');
+        $mp->setLink('http://www.example.com/');
+        $mp->setDescription('You may be eaten by a grue');
+        $mp->setLanguage('en-gb');
+        $mp->setTtl('100');
+        $mp->setWebMaster('Ben XO');
+        $mp->setCopyright('1984');
+        $mp->setGenerator('The Unit Test Factory');
 
-    // public function test_feed_image()
-    // {
-    // }
+        $content = $mp->generate();
+        $data = simplexml_load_string($content);
+
+        $this->assertEquals('the title', $data->channel->title);
+        $this->assertEquals('http://www.example.com/', $data->channel->link);
+        $this->assertEquals('You may be eaten by a grue', $data->channel->description);
+        $this->assertEquals('en-gb', $data->channel->language);
+        $this->assertEquals('100', $data->channel->ttl);
+        $this->assertEquals('Ben XO', $data->channel->webMaster);
+        $this->assertEquals('1984', $data->channel->copyright);
+        $this->assertEquals('The Unit Test Factory', $data->channel->generator);
+    }
+
+    public function test_dynamic_copyright_year()
+    {
+        $mp = new MyPodcast();
+        $mp->setCopyright('Copyright Ben XO %YEAR%');
+        $content = $mp->generate();
+        $data = simplexml_load_string($content);
+        $this->assertEquals('Copyright Ben XO ' . date('Y'), $data->channel->copyright);
+    }
+
+    public function test_feed_no_image()
+    {
+        $mp = new MyPodcast();
+        $content = $mp->generate();
+        $data = simplexml_load_string($content);
+        foreach ($data->channel->children() as $el) {
+            $this->assertNotEquals('image', $el->getName());
+        }
+    }
+
+    public function test_feed_with_image()
+    {
+        $mp = new MyPodcast();
+        $mp->setImage('image.jpg');
+        $mp->setLink('http://www.example.com/');
+        $mp->setTitle('Something');
+        $content = $mp->generate();
+        $data = simplexml_load_string($content);
+        $this->assertNotNull($data->channel->image);
+        $this->assertEquals('image.jpg', $data->channel->image->url);
+        $this->assertEquals('http://www.example.com/', $data->channel->image->link);
+        $this->assertEquals('Something', $data->channel->image->title);
+    }
+
 
     // public function test_html_entities_are_rss_compatible()
     // {
