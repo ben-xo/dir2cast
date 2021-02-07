@@ -51,6 +51,25 @@ final class RSS_ItemTest extends TestCase
         }
     }
 
+    public function test_html_description_with_DESCRIPTION_HTML_set()
+    {
+        define('DESCRIPTION_HTML', true);
+        $mp = new MyPodcast();
+
+        $item = new RSS_Item();
+        $item->setDescription("<h1>test</h1>");
+        $mp->addRssItem($item);
+
+        $content = $mp->generate();
+        $data = simplexml_load_string($content, 'SimpleXMLElement', LIBXML_NOCDATA);
+
+        // description is a CDATA section, so we have to double-decode it
+        $this->assertEquals(
+            "<h1>test</h1>",
+            (string)$data->channel->item[0]->description
+        );
+    }
+
     public function test_rss_item_default_title()
     {
         $mp = new MyPodcast();
