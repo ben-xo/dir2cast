@@ -51,3 +51,9 @@ function prepare_testing_dir()
 define('NO_DISPATCHER', true);
 define('CLI_ONLY', true);
 require_once('../dir2cast.php');
+
+
+// Test classes
+
+class MyPodcast extends Podcast { }
+

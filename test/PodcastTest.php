@@ -2,8 +2,6 @@
 
 use PHPUnit\Framework\TestCase;
 
-class MyPodcast extends Podcast { }
-
 /**
  * @runInSeparateProcess
  * @preserveGlobalState disabled
