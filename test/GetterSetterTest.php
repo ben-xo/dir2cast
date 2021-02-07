@@ -2,10 +2,7 @@
 
 use PHPUnit\Framework\TestCase;
 
-class MyGetterSetter extends GetterSetter
-{
-
-}
+class MyGetterSetter extends GetterSetter { }
 
 final class GetterSetterTest extends TestCase
 {

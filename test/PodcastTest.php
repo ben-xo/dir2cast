@@ -2,10 +2,7 @@
 
 use PHPUnit\Framework\TestCase;
 
-class MyPodcast extends Podcast
-{
-
-}
+class MyPodcast extends Podcast { }
 
 /**
  * @runInSeparateProcess
