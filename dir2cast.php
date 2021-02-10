@@ -342,6 +342,7 @@ class Atom_Podcast_Helper extends GetterSetter implements Podcast_Helper {
 class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
     
     protected $owner_name, $owner_email, $image_href, $explicit;
+    protected $categories = array();
     
     public function __construct() { }
     
