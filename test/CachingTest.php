@@ -2,10 +2,6 @@
 
 use PHPUnit\Framework\TestCase;
 
-/**
- * @runInSeparateProcess
- * @preserveGlobalState disabled
- */
 final class CachingTest extends TestCase
 {
     public static $file = 'out.xml';

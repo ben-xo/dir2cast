@@ -2,10 +2,6 @@
 
 use PHPUnit\Framework\TestCase;
 
-/**
- * @runInSeparateProcess
- * @preserveGlobalState disabled
- */
 final class PodcastHelperTest extends TestCase
 {
 

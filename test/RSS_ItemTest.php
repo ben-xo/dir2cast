@@ -2,10 +2,6 @@
 
 use PHPUnit\Framework\TestCase;
 
-/**
- * @runInSeparateProcess
- * @preserveGlobalState disabled
- */
 final class RSS_ItemTest extends TestCase
 {
 
@@ -51,6 +47,10 @@ final class RSS_ItemTest extends TestCase
         }
     }
 
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
     public function test_html_description_with_DESCRIPTION_HTML_set()
     {
         define('DESCRIPTION_HTML', true);

@@ -2,10 +2,6 @@
 
 use PHPUnit\Framework\TestCase;
 
-/**
- * @runInSeparateProcess
- * @preserveGlobalState disabled
- */
 final class iTunes_Podcast_HelperTest extends TestCase
 {
 
