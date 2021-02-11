@@ -12,7 +12,7 @@ final class iTunes_Podcast_HelperTest extends TestCase
     public function test_adds_namespace_to_podcast()
     {
         $mp = new MyPodcast();
-        $atom = $mp->addHelper(new iTunes_Podcast_Helper());
+        $mp->addHelper(new iTunes_Podcast_Helper());
         $content = $mp->generate();
 
         $this->assertEquals(1, preg_match(
