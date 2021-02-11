@@ -18,7 +18,7 @@ final class RSS_ItemTest extends TestCase
         $item->setLink('link.mp3');
         $item->setPubDate('today');
         $item->setDescription("<<< &&& >>> ⚠️\netc");
-        $item->setLength("1:23");
+        $item->setLength("1000000");
         $item->setType("test");
 
         $mp->addRssItem($item);
@@ -38,7 +38,7 @@ final class RSS_ItemTest extends TestCase
 
         $enclosure = $data->channel->item[0]->enclosure;
         $this->assertEquals('link.mp3', $enclosure->attributes()->url);
-        $this->assertEquals('1:23', $enclosure->attributes()->length);
+        $this->assertEquals('1000000', $enclosure->attributes()->length);
         $this->assertEquals('test', $enclosure->attributes()->type);
 
         // no image by default
