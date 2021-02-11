@@ -58,8 +58,9 @@ final class RSS_Item_iTunes_Podcast_HelperTest extends TestCase
 
         $content = $mp->generate();
         $data = simplexml_load_string($content, 'SimpleXMLElement');
-        $itunes_item0 = $data->channel->item[0]->children('http://www.itunes.com/dtds/podcast-1.0.dtd');
-        $itunes_item1 = $data->channel->item[1]->children('http://www.itunes.com/dtds/podcast-1.0.dtd');
+        $item = $data->channel->item;
+        $itunes_item0 = $item[0]->children('http://www.itunes.com/dtds/podcast-1.0.dtd');
+        $itunes_item1 = $item[1]->children('http://www.itunes.com/dtds/podcast-1.0.dtd');
 
         $this->assertEquals('testing Click here for more…', $itunes_item0->subtitle);
         $this->assertEquals(' Click here for more…', $itunes_item1->subtitle);
