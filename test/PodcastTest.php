@@ -124,29 +124,4 @@ final class PodcastTest extends TestCase
         $this->assertEquals(0, preg_match('/&gt;/', $content));
     }
 
-    // TODO: these tests overlap with RSS_Item tests
-
-    // public function test_added_items()
-    // {
-
-    // }
-
-    // public function test_helpers_applied_to_already_added_items()
-    // {
-
-    // }
-
-    // public function test_helpers_applied_to_newly_added_items()
-    // {
-
-    // }
-
-    // public function test_helpers_namespaces_applied_to_document()
-    // {
-    // }
-
-    // public function test_helpers_content_added_to_channel()
-    // {
-
-    // }
 }
