@@ -957,6 +957,11 @@ abstract class Podcast extends GetterSetter
     public function addRssItem(RSS_Item $item)
     {
         $this->items[] = $item;
+
+        // attach helpers to the new item.
+        // new helpers will be attached if they are added later.
+       foreach($this->helpers as $helper)
+            $item->addHelper($helper);
     }
 
     /**
