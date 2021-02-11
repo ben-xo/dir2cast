@@ -2,18 +2,23 @@
 
 use PHPUnit\Framework\TestCase;
 
-final class RSS_ItemTest extends TestCase
+class RSS_ItemTest extends TestCase
 {
-
-    public static function setUpBeforeClass(): void
+    public function newRSSItem()
     {
+        return new RSS_Item();
+    }
+
+    public function getDefaultTitle()
+    {
+        return '(untitled)';
     }
 
     public function test_rss_item_added_to_podcast_channel()
     {
         $mp = new MyPodcast();
 
-        $item = new RSS_Item();
+        $item = $this->newRSSItem();
         $item->setTitle('item title');
         $item->setLink('link.mp3');
         $item->setPubDate('today');
@@ -56,7 +61,7 @@ final class RSS_ItemTest extends TestCase
         define('DESCRIPTION_HTML', true);
         $mp = new MyPodcast();
 
-        $item = new RSS_Item();
+        $item = $this->newRSSItem();
         $item->setDescription("<h1>test</h1>");
         $mp->addRssItem($item);
 
@@ -73,19 +78,19 @@ final class RSS_ItemTest extends TestCase
     public function test_rss_item_default_title()
     {
         $mp = new MyPodcast();
-        $item = new RSS_Item();
+        $item = $this->newRSSItem();
         $mp->addRssItem($item);
 
         $content = $mp->generate();
         $data = simplexml_load_string($content, 'SimpleXMLElement', LIBXML_NOCDATA);
 
-        $this->assertEquals('(untitled)', $data->channel->item[0]->title);
+        $this->assertEquals($this->getDefaultTitle(), $data->channel->item[0]->title);
     }
 
     public function test_adds_image_to_item_if_set()
     {
         $mp = new MyPodcast();
-        $item = new RSS_Item();
+        $item = $this->newRSSItem();
         $item->setImage('visuals.jpg'); 
         $mp->addRssItem($item);
 

@@ -631,11 +631,23 @@ class RSS_File_Item extends RSS_Item {
      */
     public function getTitle()
     {
+        $overridden_title = parent::getTitle();
+        if($overridden_title)
+        {
+            return $overridden_title;
+        }
+
         return basename($this->getFilename());
     }
     
     public function getType()
     {
+        $overridden_type = parent::getType();
+        if($overridden_type)
+        {
+            return $overridden_type;
+        }
+
         return 'application/octet-stream';
     }
         
@@ -683,6 +695,12 @@ class RSS_File_Item extends RSS_Item {
      */
     public function getImage()
     {
+        $overridden_image = parent::getImage();
+        if($overridden_image)
+        {
+            return $overridden_image;
+        }
+
         $image_file_name = $this->getImageFilename('png');
         if(file_exists( $image_file_name ))
             return $this->filenameToUrl($image_file_name);
