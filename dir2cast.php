@@ -620,7 +620,11 @@ class RSS_File_Item extends RSS_Item {
 
     protected function stripBasePath($filename)
     {
-        return ltrim(substr($filename, strlen(MP3_DIR)), '/');
+        if(strpos($filename, MP3_DIR) === 0)
+        {
+            return ltrim(substr($filename, strlen(MP3_DIR)), '/');
+        }
+        return $filename;
     }
     
     /**
