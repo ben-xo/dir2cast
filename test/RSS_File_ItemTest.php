@@ -53,6 +53,43 @@ final class RSS_File_ItemTest extends RSS_ItemTest
         $this->assertEquals('http://www.example.com/mp3/example', $item->getLink());
     }
 
+    // test image png
+    public function test_png_image_from_filesystem() {
+        touch('example.png');
+        $item = $this->newRSSItem();
+        $this->assertEquals('http://www.example.com/mp3/example.png', $item->getImage());
+        unlink('example.png');
+    }
+    // test image png no extension
+    public function test_png_image_from_filesystem_no_extension() {
+        touch('example.png');
+        $item = new RSS_File_Item('example');
+        $this->assertEquals('http://www.example.com/mp3/example.png', $item->getImage());
+        unlink('example.png');
+    }
+    // test image jpg
+    public function test_jpg_image_from_filesystem() {
+        touch('example.jpg');
+        $item = $this->newRSSItem();
+        $this->assertEquals('http://www.example.com/mp3/example.jpg', $item->getImage());
+        unlink('example.jpg');
+    }
+    // test image jpg no extension
+    public function test_jpg_image_from_filesystem_no_extension() {
+        touch('example.jpg');
+        $item = new RSS_File_Item('example');
+        $this->assertEquals('http://www.example.com/mp3/example.jpg', $item->getImage());
+        unlink('example.jpg');
+    }
+
+    public function tearDown(): void
+    {
+        file_exists('example.jpg') && unlink('example.jpg');
+        file_exists('example.png') && unlink('example.png');
+    }
+
+    // TODO: implement these in RSS_File_Item_iTunes_Podcast_HelperTest
+
     // test summary override
     // test summary with matching filename
     // test summary with matching filename with no extension
@@ -62,6 +99,4 @@ final class RSS_File_ItemTest extends RSS_ItemTest
     // test subtitle with matching filename
     // test subtitle with matching filename with no extension
 
-    // test image png
-    // test image jpg
 }
