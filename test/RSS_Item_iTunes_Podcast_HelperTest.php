@@ -36,28 +36,34 @@ final class RSS_Item_iTunes_Podcast_HelperTest extends TestCase
         $this->assertEquals('cover.jpg', $itunes_item->image->attributes()->href);
     }
 
-    // /**
-    //  * @runInSeparateProcess
-    //  * @preserveGlobalState disabled
-    //  */
-    // public function test_html_description_with_DESCRIPTION_HTML_set()
-    // {
-    //     define('DESCRIPTION_HTML', true);
-    //     $mp = new MyPodcast();
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_rss_item_itunes_subtitle_suffix()
+    {
+        define('ITUNES_SUBTITLE_SUFFIX', ' Click here for more…');
 
-    //     $item = new RSS_Item();
-    //     $item->setDescription("<h1>test</h1>");
-    //     $mp->addRssItem($item);
+        $mp = new MyPodcast();
+        $helper = new iTunes_Podcast_Helper();
+        $mp->addHelper($helper);
 
-    //     $content = $mp->generate();
-    //     $data = simplexml_load_string($content, 'SimpleXMLElement', LIBXML_NOCDATA);
+        $item0 = new RSS_Item();
+        $item0->setSubtitle("testing");
 
-    //     // description is a CDATA section, so we have to double-decode it
-    //     $this->assertEquals(
-    //         "<h1>test</h1>",
-    //         (string)$data->channel->item[0]->description
-    //     );
-    // }
+        $item1 = new RSS_Item();
+
+        $mp->addRssItem($item0);
+        $mp->addRssItem($item1);
+
+        $content = $mp->generate();
+        $data = simplexml_load_string($content, 'SimpleXMLElement');
+        $itunes_item0 = $data->channel->item[0]->children('http://www.itunes.com/dtds/podcast-1.0.dtd');
+        $itunes_item1 = $data->channel->item[1]->children('http://www.itunes.com/dtds/podcast-1.0.dtd');
+
+        $this->assertEquals('testing Click here for more…', $itunes_item0->subtitle);
+        $this->assertEquals(' Click here for more…', $itunes_item1->subtitle);
+    }
 
 
 }
