@@ -687,8 +687,14 @@ class RSS_File_Item extends RSS_Item {
             return file_get_contents($summary_file_name);
     }
 
-    protected function getImageFilename($type) {
-        return dirname($this->getFilename()) . '/' . basename($this->getFilename(), '.' . $this->getExtension()) . '.' . $type;
+    protected function getImageFilename($type)
+    {
+        $image_file_name = basename($this->getFilename(), '.' . $this->getExtension()) . '.' . $type;
+        if(strpos($image_file_name, '/') === false)
+        {
+            return $image_file_name;
+        }
+        return dirname($this->getFilename()) . '/' . $image_file_name;
     }
 
     /**

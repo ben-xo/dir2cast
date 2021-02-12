@@ -60,6 +60,7 @@ final class RSS_File_ItemTest extends RSS_ItemTest
         $this->assertEquals('http://www.example.com/mp3/example.png', $item->getImage());
         unlink('example.png');
     }
+
     // test image png no extension
     public function test_png_image_from_filesystem_no_extension() {
         touch('example.png');
@@ -67,6 +68,15 @@ final class RSS_File_ItemTest extends RSS_ItemTest
         $this->assertEquals('http://www.example.com/mp3/example.png', $item->getImage());
         unlink('example.png');
     }
+
+    // test image png dot only
+    public function test_png_image_from_filesystem_dot_only() {
+        touch('example.png');
+        $item = new RSS_File_Item('example.');
+        $this->assertEquals('http://www.example.com/mp3/example.png', $item->getImage());
+        unlink('example.png');
+    }
+
     // test image jpg
     public function test_jpg_image_from_filesystem() {
         touch('example.jpg');
@@ -74,10 +84,19 @@ final class RSS_File_ItemTest extends RSS_ItemTest
         $this->assertEquals('http://www.example.com/mp3/example.jpg', $item->getImage());
         unlink('example.jpg');
     }
+
     // test image jpg no extension
     public function test_jpg_image_from_filesystem_no_extension() {
         touch('example.jpg');
         $item = new RSS_File_Item('example');
+        $this->assertEquals('http://www.example.com/mp3/example.jpg', $item->getImage());
+        unlink('example.jpg');
+    }
+
+    // test image jpg dot only
+    public function test_jpg_image_from_filesystem_dot_only() {
+        touch('example.jpg');
+        $item = new RSS_File_Item('example.');
         $this->assertEquals('http://www.example.com/mp3/example.jpg', $item->getImage());
         unlink('example.jpg');
     }
