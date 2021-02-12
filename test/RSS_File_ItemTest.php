@@ -101,10 +101,50 @@ final class RSS_File_ItemTest extends RSS_ItemTest
         unlink('example.jpg');
     }
 
+    // test summary default
+    public function test_summary_default() {
+        $item = $this->newRSSItem();
+        $this->assertEquals('', $item->getSummary());
+    }
+
+    // test summary override
+    public function test_summary_override() {
+        file_put_contents('example.txt', 'WRONG');
+        $item = $this->newRSSItem();
+        $item->setSummary('RIGHT');
+        $this->assertEquals('RIGHT', $item->getSummary());
+        unlink('example.txt');
+    }
+
+    // test summary
+    public function test_summary_from_filesystem() {
+        file_put_contents('example.txt', 'special summary!');
+        $item = $this->newRSSItem();
+        $this->assertEquals('special summary!', $item->getSummary());
+        unlink('example.txt');
+    }
+
+    // test summary no extension
+    public function test_summary_from_filesystem_no_extension() {
+        file_put_contents('example.txt', 'special summary 2!');
+        $item = new RSS_File_Item('example');
+        $this->assertEquals('special summary 2!', $item->getSummary());
+        unlink('example.txt');
+    }
+
+    // test summary dot only
+    public function test_summary_from_filesystem_dot_only() {
+        file_put_contents('example.txt', 'special summary 3!');
+        $item = new RSS_File_Item('example.');
+        $this->assertEquals('special summary 3!', $item->getSummary());
+        unlink('example.txt');
+    }
+
     public function tearDown(): void
     {
         file_exists('example.jpg') && unlink('example.jpg');
         file_exists('example.png') && unlink('example.png');
+        file_exists('example.txt') && unlink('example.txt');
     }
 
     // TODO: implement these in RSS_File_Item_iTunes_Podcast_HelperTest
