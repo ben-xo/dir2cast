@@ -688,6 +688,12 @@ class RSS_File_Item extends RSS_Item {
      */
     public function getSubtitle()
     {
+        $overridden_subtitle = parent::getSubtitle();
+        if($overridden_subtitle)
+        {
+            return $overridden_subtitle;
+        }
+
         $summary_file_name = dirname($this->getFilename()) . '/' . basename($this->getFilename(), '.' . $this->getExtension()) . '_subtitle.txt';
         if(file_exists( $summary_file_name ))
             return file_get_contents($summary_file_name);

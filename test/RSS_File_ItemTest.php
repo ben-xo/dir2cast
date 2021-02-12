@@ -140,11 +140,51 @@ final class RSS_File_ItemTest extends RSS_ItemTest
         unlink('example.txt');
     }
 
+    // test subtitle default
+    public function test_subtitle_default() {
+        $item = $this->newRSSItem();
+        $this->assertEquals('', $item->getSubtitle());
+    }
+
+    // test subtitle override
+    public function test_subtitle_override() {
+        file_put_contents('example_subtitle.txt', 'WRONG');
+        $item = $this->newRSSItem();
+        $item->setSubtitle('RIGHT');
+        $this->assertEquals('RIGHT', $item->getSubtitle());
+        unlink('example_subtitle.txt');
+    }
+
+    // test subtitle
+    public function test_subtitle_from_filesystem() {
+        file_put_contents('example_subtitle.txt', 'special subtitle!');
+        $item = $this->newRSSItem();
+        $this->assertEquals('special subtitle!', $item->getSubtitle());
+        unlink('example_subtitle.txt');
+    }
+
+    // test subtitle no extension
+    public function test_subtitle_from_filesystem_no_extension() {
+        file_put_contents('example_subtitle.txt', 'special subtitle 2!');
+        $item = new RSS_File_Item('example');
+        $this->assertEquals('special subtitle 2!', $item->getSubtitle());
+        unlink('example_subtitle.txt');
+    }
+
+    // test subtitle dot only
+    public function test_subtitle_from_filesystem_dot_only() {
+        file_put_contents('example_subtitle.txt', 'special subtitle 3!');
+        $item = new RSS_File_Item('example.');
+        $this->assertEquals('special subtitle 3!', $item->getSubtitle());
+        unlink('example_subtitle.txt');
+    }
+
     public function tearDown(): void
     {
         file_exists('example.jpg') && unlink('example.jpg');
         file_exists('example.png') && unlink('example.png');
         file_exists('example.txt') && unlink('example.txt');
+        file_exists('example_subtitle.txt') && unlink('example_subtitle.txt');
     }
 
     // TODO: implement these in RSS_File_Item_iTunes_Podcast_HelperTest
