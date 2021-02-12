@@ -186,16 +186,4 @@ final class RSS_File_ItemTest extends RSS_ItemTest
         file_exists('example.txt') && unlink('example.txt');
         file_exists('example_subtitle.txt') && unlink('example_subtitle.txt');
     }
-
-    // TODO: implement these in RSS_File_Item_iTunes_Podcast_HelperTest
-
-    // test summary override
-    // test summary with matching filename
-    // test summary with matching filename with no extension
-
-
-    // test subtitle override
-    // test subtitle with matching filename
-    // test subtitle with matching filename with no extension
-
 }
