@@ -23,6 +23,11 @@ class RSS_File_ItemTest extends RSS_ItemTest
         return $this->default_title_from_file;
     }
 
+    public function getDefaultSubtitle()
+    {
+        return '';
+    }
+
     public function setUp(): void
     {
         // most common case for tests in this file.
@@ -168,7 +173,7 @@ class RSS_File_ItemTest extends RSS_ItemTest
     // test subtitle default
     public function test_subtitle_default() {
         $item = $this->newRSSItem();
-        $this->assertEquals('', $item->getSubtitle());
+        $this->assertEquals($this->getDefaultSubtitle(), $item->getSubtitle());
     }
 
     // test subtitle override
