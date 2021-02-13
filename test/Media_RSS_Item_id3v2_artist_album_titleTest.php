@@ -33,4 +33,9 @@ class Media_RSS_Item_id3v2_artist_album_titleTest extends Media_RSS_ItemTest
     {
         return 'EXAMPLE7';
     } 
+
+    public function getDefaultSubtitle()
+    {
+        return 'ARTIST7';
+    }
 }

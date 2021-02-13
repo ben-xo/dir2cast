@@ -28,4 +28,9 @@ class Media_RSS_Item_id3v1_artist_titleTest extends Media_RSS_ItemTest
     {
         return 'EXAMPLE2';
     }
+
+    public function getDefaultSubtitle()
+    {
+        return 'ARTIST2';
+    }
 }

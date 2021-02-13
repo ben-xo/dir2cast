@@ -27,5 +27,10 @@ class Media_RSS_Item_id3v2_artist_titleTest extends Media_RSS_ItemTest
     public function getDefaultTitle()
     {
         return 'EXAMPLE6';
-    } 
+    }
+
+    public function getDefaultSubtitle()
+    {
+        return 'ARTIST6';
+    }
 }
