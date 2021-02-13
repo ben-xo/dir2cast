@@ -628,6 +628,15 @@ class RSS_File_Item extends RSS_Item {
     }
     
     /**
+     * RSS_File_Items will always have a title (the filename) so, in subclasses, to check if one was set manually
+     * you must call this method, not just check if parent::getTitle() is empty.
+     */
+    protected function hasOverridenTitle()
+    {
+        return !!parent::getTitle();
+    }
+
+    /**
      * Default title for an RSS Item is its filename.
      * Subclasses (Such as Media_RSS_Item, MP3_RSS_Item, etc) override this using e.g. ID3 tags.
      * 
@@ -767,6 +776,11 @@ class Media_RSS_Item extends RSS_File_Item implements Serializable {
      */
     public function getTitle()
     {
+        if($this->hasOverridenTitle())
+        {
+            return parent::getTitle();
+        }
+
         $title_parts = array();
         if(LONG_TITLES)
         {
