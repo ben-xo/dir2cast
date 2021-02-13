@@ -10,6 +10,11 @@ class Media_RSS_ItemTest extends RSS_File_ItemTest
     {
         RSS_File_ItemTest::setUpBeforeClass();
         Media_RSS_Item::$LONG_TITLES = false;
+    }
+
+    public function setUp(): void
+    {
+        parent::setUp();
         Media_RSS_Item::$DESCRIPTION_SOURCE = 'comment';
     }
 
@@ -69,10 +74,40 @@ class Media_RSS_ItemTest extends RSS_File_ItemTest
         $this->assertEquals(date('r', $this->mtime), $item->getPubDate());
     }
 
-    public function test_description_from_comment_tag()
+    public function test_description_from_comment_tag_by_default()
     {
         $item = $this->newRSSItem();
         $this->assertEquals($this->getID3Comment(), $item->getDescription());
+    }
+
+    public function test_description_from_summary_when_source_is_summary()
+    {
+        Media_RSS_Item::$DESCRIPTION_SOURCE = 'summary';
+        $item = $this->newRSSItem();
+        $this->assertEquals($item->getSummary(), $item->getDescription());
+    }
+
+    public function test_description_from_summary_when_source_is_file()
+    {
+        Media_RSS_Item::$DESCRIPTION_SOURCE = 'file';
+        $item = $this->newRSSItem();
+        $this->assertEquals($item->getSummary(), $item->getDescription());
+    }
+
+    public function test_description_from_override_when_source_is_summary()
+    {
+        Media_RSS_Item::$DESCRIPTION_SOURCE = 'summary';
+        $item = $this->newRSSItem();
+        $item->setSummary('testing1');
+        $this->assertEquals('testing1', $item->getDescription());
+    }
+
+    public function test_description_from_override_when_source_is_file()
+    {
+        Media_RSS_Item::$DESCRIPTION_SOURCE = 'file';
+        $item = $this->newRSSItem();
+        $item->setSummary('testing2');
+        $this->assertEquals('testing2', $item->getDescription());
     }
 
     /**
@@ -82,6 +117,20 @@ class Media_RSS_ItemTest extends RSS_File_ItemTest
     public function test_summary_default() {
         $item = $this->newRSSItem();
         $this->assertEquals($this->getID3Comment(), $item->getSummary());
+    }
+
+    public function test_summary_from_description_when_summary_not_set()
+    {
+        $item = $this->newRSSItem();
+        $item->setDescription('YES REALLY');
+        $this->assertEquals('YES REALLY', $item->getSummary());
+    }
+
+    public function test_summary_from_description_when_summary_not_set_and_description_source_summary()
+    {
+        Media_RSS_Item::$DESCRIPTION_SOURCE = 'summary';
+        $item = $this->newRSSItem();
+        $this->assertEquals('', $item->getSummary());
     }
 
     public function tearDown(): void
