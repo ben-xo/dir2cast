@@ -1725,7 +1725,7 @@ class SettingsHandler
             define('ITUNES_SUBTITLE_SUFFIX', '');
 
         if(!defined('DESCRIPTION_SOURCE'))
-            define('DESCRIPTION_SOURCE', 'id3');
+            define('DESCRIPTION_SOURCE', 'comment');
 
         if(!defined('RECURSIVE_DIRECTORY_ITERATOR'))
             define('RECURSIVE_DIRECTORY_ITERATOR', false);
