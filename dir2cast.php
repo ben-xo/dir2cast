@@ -744,6 +744,8 @@ class RSS_File_Item extends RSS_Item {
 
 class Media_RSS_Item extends RSS_File_Item implements Serializable {
 
+    static $LONG_TITLES = false;
+
     public function __construct($filename)
     {
         $this->setFromMediaFile($filename);
@@ -782,7 +784,7 @@ class Media_RSS_Item extends RSS_File_Item implements Serializable {
         }
 
         $title_parts = array();
-        if(LONG_TITLES)
+        if(self::$LONG_TITLES)
         {
             if($this->getID3Album()) $title_parts[] = $this->getID3Album();
             if($this->getID3Artist()) $title_parts[] = $this->getID3Artist();
@@ -817,7 +819,7 @@ class Media_RSS_Item extends RSS_File_Item implements Serializable {
     public function getSummary()
     {
         $summary = parent::getSummary();
-        if(null == $summary && !LONG_TITLES)
+        if(null == $summary && !self::$LONG_TITLES)
         {
             // use description as summary if there's no file-based override
             $summary = $this->getDescription();
@@ -828,7 +830,7 @@ class Media_RSS_Item extends RSS_File_Item implements Serializable {
     public function getSubtitle()
     {
         $subtitle = parent::getSubtitle();
-        if(null == $subtitle && !LONG_TITLES)
+        if(null == $subtitle && !self::$LONG_TITLES)
         {
             // use artist as subtitle if there's no file-based override
             $subtitle = $this->getID3Artist();
@@ -1806,6 +1808,8 @@ class Dispatcher
             $getid3 = $podcast->addHelper(new Caching_getID3_Podcast_Helper(TMP_DIR, new getID3_Podcast_Helper()));
             $atom   = $podcast->addHelper(new Atom_Podcast_Helper());
             $itunes = $podcast->addHelper(new iTunes_Podcast_Helper());
+
+            Media_RSS_Item::$LONG_TITLES = LONG_TITLES;
 
             $podcast->setTitle(TITLE);
             $podcast->setLink(LINK);

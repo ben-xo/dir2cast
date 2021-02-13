@@ -9,7 +9,7 @@ class Media_RSS_ItemTest extends RSS_File_ItemTest
     public static function setUpBeforeClass(): void
     {
         RSS_File_ItemTest::setUpBeforeClass();
-        defined('LONG_TITLES') || define('LONG_TITLES', false);
+        Media_RSS_Item::$LONG_TITLES = false;
         defined('DESCRIPTION_SOURCE') || define('DESCRIPTION_SOURCE', 'comment');
     }
 
