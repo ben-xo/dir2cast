@@ -24,7 +24,7 @@ class RSS_File_ItemTest extends RSS_ItemTest
     {
         $item = $this->newRSSItem();
         $this->assertEquals('example.mp3', $item->getFilename());
-        $this->assertEquals('example.mp3', $item->getTitle());
+        $this->assertEquals($this->getDefaultTitle(), $item->getTitle());
         $this->assertEquals('http://www.example.com/mp3/example.mp3', $item->getLink());
         $this->assertEquals('application/octet-stream', $item->getType());
     }
@@ -33,7 +33,6 @@ class RSS_File_ItemTest extends RSS_ItemTest
     {
         $item = new RSS_File_Item(getcwd() . '/example.mp3');
         $this->assertEquals(getcwd() . '/example.mp3', $item->getFilename());
-        $this->assertEquals('example.mp3', $item->getTitle());
         $this->assertEquals('http://www.example.com/mp3/example.mp3', $item->getLink());
     }
 
@@ -41,7 +40,6 @@ class RSS_File_ItemTest extends RSS_ItemTest
     {
         $item = new RSS_File_Item('example');
         $this->assertEquals('example', $item->getFilename());
-        $this->assertEquals('example', $item->getTitle());
         $this->assertEquals('http://www.example.com/mp3/example', $item->getLink());
     }
 
@@ -49,7 +47,6 @@ class RSS_File_ItemTest extends RSS_ItemTest
     {
         $item = new RSS_File_Item(getcwd() . '/example');
         $this->assertEquals(getcwd() . '/example', $item->getFilename());
-        $this->assertEquals('example', $item->getTitle());
         $this->assertEquals('http://www.example.com/mp3/example', $item->getLink());
     }
 
