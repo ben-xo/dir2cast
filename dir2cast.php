@@ -733,7 +733,7 @@ class RSS_File_Item extends RSS_Item {
     }
 }
 
-abstract class Media_RSS_Item extends RSS_File_Item implements Serializable {
+class Media_RSS_Item extends RSS_File_Item implements Serializable {
 
     public function __construct($filename)
     {
@@ -767,6 +767,12 @@ abstract class Media_RSS_Item extends RSS_File_Item implements Serializable {
      */
     public function getTitle()
     {
+        $overridden_title = parent::getTitle();
+        if($overridden_title)
+        {
+            return $overridden_title;
+        }
+
         $title_parts = array();
         if(LONG_TITLES)
         {
@@ -786,6 +792,12 @@ abstract class Media_RSS_Item extends RSS_File_Item implements Serializable {
 
     public function getDescription()
     {
+        $overridden_description = parent::getDescription();
+        if($overridden_description)
+        {
+            return $overridden_description;
+        }
+
         // The default value is "comment". dir2cast prior to v1.19
         // used value "file", so it's here for backward compatibility
         if(DESCRIPTION_SOURCE == 'summary' || DESCRIPTION_SOURCE == 'file')
