@@ -767,12 +767,6 @@ class Media_RSS_Item extends RSS_File_Item implements Serializable {
      */
     public function getTitle()
     {
-        $overridden_title = parent::getTitle();
-        if($overridden_title)
-        {
-            return $overridden_title;
-        }
-
         $title_parts = array();
         if(LONG_TITLES)
         {
