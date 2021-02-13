@@ -4,7 +4,7 @@ use PHPUnit\Framework\TestCase;
 
 class Media_RSS_ItemTest extends RSS_File_ItemTest
 {
-    private $mtime;
+    protected $mtime;
 
     public static function setUpBeforeClass(): void
     {
@@ -13,23 +13,75 @@ class Media_RSS_ItemTest extends RSS_File_ItemTest
         defined('DESCRIPTION_SOURCE') || define('DESCRIPTION_SOURCE', 'comment');
     }
 
+    public function getMediaFileContent()
+    {
+        return 'x';
+    }
+
+    public function getMediaFileLength()
+    {
+        return 1;
+    }
+
+    // ID3 / tag data is typically set by getID3_Podcast_Helper, which is not under test here.
+
+    public function getID3Artist()
+    {
+        return '';
+    }
+
+    public function getID3Album()
+    {
+        return '';
+    }
+
+    public function getID3Title()
+    {
+        return '';
+    }
+
+    public function getID3Comment()
+    {
+        return '';
+    }
+
     public function newRSSItem()
     {
         // default tests are conducted with an empty file (which, therefore, has no ID3 tags to read)
-        file_put_contents('example.mp3', 'x');
+        file_put_contents('example.mp3', $this->getMediaFileContent());
 
         // ensure that tests do not fail when getting unlucky with when the clock ticks.
         $this->mtime = time();
         touch('example.mp3', $this->mtime);
 
-        return new Media_RSS_Item('example.mp3');
+        $item = new Media_RSS_Item('example.mp3');
+        $item->setID3Album($this->getID3Album());
+        $item->setID3Title($this->getID3Title());
+        $item->setID3Artist($this->getID3Artist());
+        $item->setID3Comment($this->getID3Comment());
+        return $item;
     }
 
     public function test_constructor_sets_default_properties_from_file_metadata()
     {
         $item = $this->newRSSItem();
-        $this->assertEquals('1', $item->getLength());
+        $this->assertEquals($this->getMediaFileLength(), $item->getLength());
         $this->assertEquals(date('r', $this->mtime), $item->getPubDate());
+    }
+
+    public function test_description_from_comment_tag()
+    {
+        $item = $this->newRSSItem();
+        $this->assertEquals($this->getID3Comment(), $item->getDescription());
+    }
+
+    /**
+     * For Media RSS files, the default summary is ID3 the description, which is in turn the ID3 comment
+     * @override
+     */
+    public function test_summary_default() {
+        $item = $this->newRSSItem();
+        $this->assertEquals($this->getID3Comment(), $item->getSummary());
     }
 
     public function tearDown(): void
