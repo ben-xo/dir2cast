@@ -811,7 +811,7 @@ class Media_RSS_Item extends RSS_File_Item implements Serializable {
         // The default value is "comment". dir2cast prior to v1.19
         // used value "file", so it's here for backward compatibility
         if(DESCRIPTION_SOURCE == 'summary' || DESCRIPTION_SOURCE == 'file')
-            return $this->getSummary();
+            return parent::getSummary(); // call to parent because otherwise we could co-recurse.
 
         return $this->getID3Comment();
     }
@@ -819,7 +819,7 @@ class Media_RSS_Item extends RSS_File_Item implements Serializable {
     public function getSummary()
     {
         $summary = parent::getSummary();
-        if(null == $summary && !self::$LONG_TITLES)
+        if(!$summary)
         {
             // use description as summary if there's no file-based override
             $summary = $this->getDescription();
@@ -830,9 +830,10 @@ class Media_RSS_Item extends RSS_File_Item implements Serializable {
     public function getSubtitle()
     {
         $subtitle = parent::getSubtitle();
-        if(null == $subtitle && !self::$LONG_TITLES)
+        if(!$subtitle && !self::$LONG_TITLES)
         {
             // use artist as subtitle if there's no file-based override
+            // but not if LONG_TITLES is set (as it's already in the title)
             $subtitle = $this->getID3Artist();
         }
         return $subtitle;
