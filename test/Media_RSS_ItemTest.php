@@ -10,7 +10,7 @@ class Media_RSS_ItemTest extends RSS_File_ItemTest
     {
         RSS_File_ItemTest::setUpBeforeClass();
         Media_RSS_Item::$LONG_TITLES = false;
-        defined('DESCRIPTION_SOURCE') || define('DESCRIPTION_SOURCE', 'comment');
+        Media_RSS_Item::$DESCRIPTION_SOURCE = 'comment';
     }
 
     public function getMediaFileContent()

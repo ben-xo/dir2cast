@@ -745,6 +745,7 @@ class RSS_File_Item extends RSS_Item {
 class Media_RSS_Item extends RSS_File_Item implements Serializable {
 
     static $LONG_TITLES = false;
+    static $DESCRIPTION_SOURCE = 'comment';
 
     public function __construct($filename)
     {
@@ -810,7 +811,7 @@ class Media_RSS_Item extends RSS_File_Item implements Serializable {
 
         // The default value is "comment". dir2cast prior to v1.19
         // used value "file", so it's here for backward compatibility
-        if(DESCRIPTION_SOURCE == 'summary' || DESCRIPTION_SOURCE == 'file')
+        if(self::$DESCRIPTION_SOURCE == 'summary' || self::$DESCRIPTION_SOURCE == 'file')
             return parent::getSummary(); // call to parent because otherwise we could co-recurse.
 
         return $this->getID3Comment();
@@ -1811,6 +1812,7 @@ class Dispatcher
             $itunes = $podcast->addHelper(new iTunes_Podcast_Helper());
 
             Media_RSS_Item::$LONG_TITLES = LONG_TITLES;
+            Media_RSS_Item::$DESCRIPTION_SOURCE = DESCRIPTION_SOURCE;
 
             $podcast->setTitle(TITLE);
             $podcast->setLink(LINK);
