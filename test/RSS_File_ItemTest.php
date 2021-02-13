@@ -10,14 +10,25 @@ class RSS_File_ItemTest extends RSS_ItemTest
         defined('MP3_DIR') || define('MP3_DIR', getcwd());
     }
 
+    protected $filename;
+    protected $default_title_from_file;
+
     public function newRSSItem()
     {
-        return new RSS_File_Item('example.mp3');
+        return new RSS_File_Item($this->filename);
     }
 
     public function getDefaultTitle()
     {
-        return 'example.mp3';
+        return $this->default_title_from_file;
+    }
+
+    public function setUp(): void
+    {
+        // most common case for tests in this file.
+        $this->filename = 'example.mp3';
+        $this->default_title_from_file = 'example.mp3';
+        parent::setUp();
     }
 
     public function test_constructor_sets_default_properties_from_filename()
@@ -31,21 +42,26 @@ class RSS_File_ItemTest extends RSS_ItemTest
 
     public function test_filename_with_full_path()
     {
-        $item = new RSS_File_Item(getcwd() . '/example.mp3');
+        $this->filename = getcwd() . '/example.mp3';
+        $item = $this->newRSSItem();
         $this->assertEquals(getcwd() . '/example.mp3', $item->getFilename());
         $this->assertEquals('http://www.example.com/mp3/example.mp3', $item->getLink());
     }
 
     public function test_filename_without_extension()
     {
-        $item = new RSS_File_Item('example');
+        $this->filename = 'example';
+        $this->default_title_from_file = 'example';
+        $item = $this->newRSSItem();
         $this->assertEquals('example', $item->getFilename());
         $this->assertEquals('http://www.example.com/mp3/example', $item->getLink());
     }
 
     public function test_filename_with_full_path_without_extension()
     {
-        $item = new RSS_File_Item(getcwd() . '/example');
+        $this->filename = getcwd() . '/example';
+        $this->default_title_from_file = 'example';
+        $item = $this->newRSSItem();
         $this->assertEquals(getcwd() . '/example', $item->getFilename());
         $this->assertEquals('http://www.example.com/mp3/example', $item->getLink());
     }
@@ -60,16 +76,20 @@ class RSS_File_ItemTest extends RSS_ItemTest
 
     // test image png no extension
     public function test_png_image_from_filesystem_no_extension() {
+        $this->filename = 'example';
+        $this->default_title_from_file = 'example';
         touch('example.png');
-        $item = new RSS_File_Item('example');
+        $item = $this->newRSSItem();
         $this->assertEquals('http://www.example.com/mp3/example.png', $item->getImage());
         unlink('example.png');
     }
 
     // test image png dot only
     public function test_png_image_from_filesystem_dot_only() {
+        $this->filename = 'example.';
+        $this->default_title_from_file = 'example.';
         touch('example.png');
-        $item = new RSS_File_Item('example.');
+        $item = $this->newRSSItem();
         $this->assertEquals('http://www.example.com/mp3/example.png', $item->getImage());
         unlink('example.png');
     }
@@ -84,16 +104,20 @@ class RSS_File_ItemTest extends RSS_ItemTest
 
     // test image jpg no extension
     public function test_jpg_image_from_filesystem_no_extension() {
+        $this->filename = 'example';
+        $this->default_title_from_file = 'example';
         touch('example.jpg');
-        $item = new RSS_File_Item('example');
+        $item = $this->newRSSItem();
         $this->assertEquals('http://www.example.com/mp3/example.jpg', $item->getImage());
         unlink('example.jpg');
     }
 
     // test image jpg dot only
     public function test_jpg_image_from_filesystem_dot_only() {
+        $this->filename = 'example.';
+        $this->default_title_from_file = 'example.';
         touch('example.jpg');
-        $item = new RSS_File_Item('example.');
+        $item = $this->newRSSItem();
         $this->assertEquals('http://www.example.com/mp3/example.jpg', $item->getImage());
         unlink('example.jpg');
     }
@@ -123,16 +147,20 @@ class RSS_File_ItemTest extends RSS_ItemTest
 
     // test summary no extension
     public function test_summary_from_filesystem_no_extension() {
+        $this->filename = 'example';
+        $this->default_title_from_file = 'example';
         file_put_contents('example.txt', 'special summary 2!');
-        $item = new RSS_File_Item('example');
+        $item = $this->newRSSItem();
         $this->assertEquals('special summary 2!', $item->getSummary());
         unlink('example.txt');
     }
 
     // test summary dot only
     public function test_summary_from_filesystem_dot_only() {
+        $this->filename = 'example.';
+        $this->default_title_from_file = 'example.';
         file_put_contents('example.txt', 'special summary 3!');
-        $item = new RSS_File_Item('example.');
+        $item = $this->newRSSItem();
         $this->assertEquals('special summary 3!', $item->getSummary());
         unlink('example.txt');
     }
@@ -162,16 +190,20 @@ class RSS_File_ItemTest extends RSS_ItemTest
 
     // test subtitle no extension
     public function test_subtitle_from_filesystem_no_extension() {
+        $this->filename = 'example';
+        $this->default_title_from_file = 'example';
         file_put_contents('example_subtitle.txt', 'special subtitle 2!');
-        $item = new RSS_File_Item('example');
+        $item = $this->newRSSItem();
         $this->assertEquals('special subtitle 2!', $item->getSubtitle());
         unlink('example_subtitle.txt');
     }
 
     // test subtitle dot only
     public function test_subtitle_from_filesystem_dot_only() {
+        $this->filename = 'example.';
+        $this->default_title_from_file = 'example.';
         file_put_contents('example_subtitle.txt', 'special subtitle 3!');
-        $item = new RSS_File_Item('example.');
+        $item = $this->newRSSItem();
         $this->assertEquals('special subtitle 3!', $item->getSubtitle());
         unlink('example_subtitle.txt');
     }

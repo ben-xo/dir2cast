@@ -48,13 +48,13 @@ class Media_RSS_ItemTest extends RSS_File_ItemTest
     public function newRSSItem()
     {
         // default tests are conducted with an empty file (which, therefore, has no ID3 tags to read)
-        file_put_contents('example.mp3', $this->getMediaFileContent());
+        file_put_contents($this->filename, $this->getMediaFileContent());
 
         // ensure that tests do not fail when getting unlucky with when the clock ticks.
         $this->mtime = time();
-        touch('example.mp3', $this->mtime);
+        touch($this->filename, $this->mtime);
 
-        $item = new Media_RSS_Item('example.mp3');
+        $item = new Media_RSS_Item($this->filename);
         $item->setID3Album($this->getID3Album());
         $item->setID3Title($this->getID3Title());
         $item->setID3Artist($this->getID3Artist());
@@ -86,7 +86,7 @@ class Media_RSS_ItemTest extends RSS_File_ItemTest
 
     public function tearDown(): void
     {
-        file_exists('example.mp3') && unlink('example.mp3');
+        file_exists($this->filename) && unlink($this->filename);
         parent::tearDown();
     }
 }
