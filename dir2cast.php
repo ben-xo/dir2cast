@@ -822,7 +822,7 @@ class Media_RSS_Item extends RSS_File_Item implements Serializable {
         $subtitle = parent::getSubtitle();
         if(null == $subtitle && !LONG_TITLES)
         {
-            // use artist as summary if there's no file-based override
+            // use artist as subtitle if there's no file-based override
             $subtitle = $this->getID3Artist();
         }
         return $subtitle;
