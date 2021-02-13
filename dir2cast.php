@@ -740,6 +740,23 @@ class RSS_File_Item extends RSS_Item {
         if(file_exists( $image_file_name ))
             return $this->filenameToUrl($image_file_name);
     }
+
+    public function saveImage($mime_type, $data)
+    {
+        switch($mime_type) {
+            case 'image/jpeg':
+                $filename = $this->getImageFilename('jpg');
+                if(!file_exists($filename) && is_writable(dirname($filename)))
+                    file_put_contents($filename, $data);
+                break;
+
+            case 'image/png':
+                $filename = $this->getImageFilename('png');
+                if(!file_exists($filename) && is_writable(dirname($filename)))
+                    file_put_contents($filename, $data);
+                break;
+        }
+    }
 }
 
 class Media_RSS_Item extends RSS_File_Item implements Serializable {
@@ -838,23 +855,6 @@ class Media_RSS_Item extends RSS_File_Item implements Serializable {
             $subtitle = $this->getID3Artist();
         }
         return $subtitle;
-    }
-
-    public function saveImage($mime_type, $data)
-    {
-        switch($mime_type) {
-            case 'image/jpeg':
-                $filename = $this->getImageFilename('jpg');
-                if(!file_exists($filename) && is_writable(dirname($filename)))
-                    file_put_contents($filename, $data);
-                break;
-
-            case 'image/png':
-                $filename = $this->getImageFilename('png');
-                if(!file_exists($filename) && is_writable(dirname($filename)))
-                    file_put_contents($filename, $data);
-                break;
-        }
     }
 
     /**
