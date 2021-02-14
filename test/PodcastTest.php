@@ -2,16 +2,21 @@
 
 use PHPUnit\Framework\TestCase;
 
-final class PodcastTest extends TestCase
+class PodcastTest extends TestCase
 {
 
     public static function setUpBeforeClass(): void
     {
     }
 
+    public function newPodcast()
+    {
+        return new MyPodcast();
+    }
+
     public function test_generate_with_defaults_is_valid_xml()
     {
-        $mp = new MyPodcast();
+        $mp = $this->newPodcast();
         $content = $mp->generate();
         $data = simplexml_load_string($content);
 
@@ -30,7 +35,7 @@ final class PodcastTest extends TestCase
 
     public function test_generate_with_defaults_has_current_build_date()
     {
-        $mp = new MyPodcast();
+        $mp = $this->newPodcast();
         $content = $mp->generate();
         $data = simplexml_load_string($content);
         
@@ -40,7 +45,7 @@ final class PodcastTest extends TestCase
 
     public function test_basic_feed_properties()
     {
-        $mp = new MyPodcast();
+        $mp = $this->newPodcast();
 
         $mp->setTitle('the title');
         $mp->setLink('http://www.example.com/');
@@ -66,7 +71,7 @@ final class PodcastTest extends TestCase
 
     public function test_dynamic_copyright_year()
     {
-        $mp = new MyPodcast();
+        $mp = $this->newPodcast();
         $mp->setCopyright('Copyright Ben XO %YEAR%');
         $content = $mp->generate();
         $data = simplexml_load_string($content);
@@ -75,7 +80,7 @@ final class PodcastTest extends TestCase
 
     public function test_feed_no_image()
     {
-        $mp = new MyPodcast();
+        $mp = $this->newPodcast();
         $content = $mp->generate();
         $data = simplexml_load_string($content);
         foreach ($data->channel->children() as $el) {
@@ -85,7 +90,7 @@ final class PodcastTest extends TestCase
 
     public function test_feed_with_image()
     {
-        $mp = new MyPodcast();
+        $mp = $this->newPodcast();
         $mp->setImage('image.jpg');
         $mp->setLink('http://www.example.com/');
         $mp->setTitle('Something');
@@ -100,7 +105,7 @@ final class PodcastTest extends TestCase
 
     public function test_html_entities_are_rss_compatible()
     {
-        $mp = new MyPodcast();
+        $mp = $this->newPodcast();
 
         $mp->setTitle('<<<');
         $mp->setDescription('⛄️');
