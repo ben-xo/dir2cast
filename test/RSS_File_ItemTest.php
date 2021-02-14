@@ -10,6 +10,12 @@ class RSS_File_ItemTest extends RSS_ItemTest
         RSS_File_Item::$FILES_DIR = getcwd();
     }
 
+
+    public function getDefaultType()
+    {
+        return 'application/octet-stream';
+    }
+
     protected $filename;
     protected $filename_base;
     protected $default_title_from_file;
@@ -44,7 +50,7 @@ class RSS_File_ItemTest extends RSS_ItemTest
         $this->assertEquals('example.mp3', $item->getFilename());
         $this->assertEquals($this->getDefaultTitle(), $item->getTitle());
         $this->assertEquals('http://www.example.com/mp3/example.mp3', $item->getLink());
-        $this->assertEquals('application/octet-stream', $item->getType());
+        $this->assertEquals($this->getDefaultType(), $item->getType());
     }
 
     public function test_filename_with_full_path()

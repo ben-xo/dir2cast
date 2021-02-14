@@ -895,25 +895,28 @@ class Media_RSS_Item extends RSS_File_Item implements Serializable {
 
 class MP3_RSS_Item extends Media_RSS_Item 
 {
-    public function getType()
+    public function __construct($filename)
     {
-        return 'audio/mpeg';
+        parent::__construct($filename);
+        $this->setType('audio/mpeg');
     }
 }
 
 class M4A_RSS_Item extends Media_RSS_Item
 {
-    public function getType()
+    public function __construct($filename)
     {
-        return 'audio/mp4';
+        parent::__construct($filename);
+        $this->setType('audio/mp4');
     }
 }
 
 class MP4_RSS_Item extends Media_RSS_Item
 {
-    public function getType()
+    public function __construct($filename)
     {
-        return 'video/mp4';
+        parent::__construct($filename);
+        $this->setType('video/mp4');
     }
 }
 

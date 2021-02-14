@@ -50,6 +50,8 @@ class Media_RSS_ItemTest extends RSS_File_ItemTest
         return '';
     }
 
+    protected $media_rss_item_class = 'Media_RSS_Item';
+
     public function newRSSItem()
     {
         // default tests are conducted with an empty file (which, therefore, has no ID3 tags to read)
@@ -59,7 +61,8 @@ class Media_RSS_ItemTest extends RSS_File_ItemTest
         $this->mtime = time();
         touch($this->filename, $this->mtime);
 
-        $item = new Media_RSS_Item($this->filename);
+        $class = $this->media_rss_item_class;
+        $item = new $class($this->filename);
         $item->setID3Album($this->getID3Album());
         $item->setID3Title($this->getID3Title());
         $item->setID3Artist($this->getID3Artist());
