@@ -1065,6 +1065,8 @@ abstract class Podcast extends GetterSetter
 
 class Dir_Podcast extends Podcast
 {
+    static $RECURSIVE_DIRECTORY_ITERATOR = false;
+
     protected $source_dir;
     protected $scanned = false;
     protected $unsorted_items = array();
@@ -1091,7 +1093,7 @@ class Dir_Podcast extends Podcast
             
             // scan the dir
 
-            if(RECURSIVE_DIRECTORY_ITERATOR)
+            if(self::$RECURSIVE_DIRECTORY_ITERATOR)
             {
                 $di = new RecursiveIteratorIterator(
                     new RecursiveDirectoryIterator($this->source_dir),
@@ -1740,6 +1742,9 @@ class SettingsHandler
         if(!defined('AUTO_SAVE_COVER_ART'))
             define('AUTO_SAVE_COVER_ART', true);
 
+
+        // Set up up factory settings for Podcast subclasses
+        Dir_Podcast::$RECURSIVE_DIRECTORY_ITERATOR = RECURSIVE_DIRECTORY_ITERATOR;
     }
     
     public static function load_from_ini($file)
@@ -1817,7 +1822,7 @@ class Dispatcher
             $atom   = $podcast->addHelper(new Atom_Podcast_Helper());
             $itunes = $podcast->addHelper(new iTunes_Podcast_Helper());
 
-            // Set up up factory settings RSS Items
+            // Set up up factory settings for RSS Items
             RSS_File_Item::$FILES_URL = MP3_URL; // TODO: rename this to MEDIA_URL
             RSS_File_Item::$FILES_DIR = MP3_DIR; // TODO: rename this to MEDIA_DIR
             Media_RSS_Item::$LONG_TITLES = LONG_TITLES;
