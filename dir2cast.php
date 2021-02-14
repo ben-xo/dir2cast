@@ -1066,6 +1066,7 @@ abstract class Podcast extends GetterSetter
 class Dir_Podcast extends Podcast
 {
     static $RECURSIVE_DIRECTORY_ITERATOR = false;
+    static $ITEM_COUNT = 10;
 
     protected $source_dir;
     protected $scanned = false;
@@ -1201,7 +1202,7 @@ class Dir_Podcast extends Podcast
             foreach($item_list as $item)
             {
                 $this->items[$i++] = $item;
-                if($i >= ITEM_COUNT)
+                if($i >= self::$ITEM_COUNT)
                     break 2;
             }
         }
@@ -1745,6 +1746,7 @@ class SettingsHandler
 
         // Set up up factory settings for Podcast subclasses
         Dir_Podcast::$RECURSIVE_DIRECTORY_ITERATOR = RECURSIVE_DIRECTORY_ITERATOR;
+        Dir_Podcast::$ITEM_COUNT = ITEM_COUNT;
     }
     
     public static function load_from_ini($file)
