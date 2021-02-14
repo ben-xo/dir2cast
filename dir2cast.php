@@ -923,7 +923,6 @@ class MP4_RSS_Item extends Media_RSS_Item
 
 abstract class Podcast extends GetterSetter
 {
-    protected $max_mtime = 0;
     protected $items = array();
     protected $helpers = array();
     
@@ -1071,6 +1070,7 @@ class Dir_Podcast extends Podcast
     protected $source_dir;
     protected $scanned = false;
     protected $unsorted_items = array();
+    protected $max_mtime = 0;
     
     /**
      * Constructor
