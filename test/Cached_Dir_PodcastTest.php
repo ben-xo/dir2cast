@@ -46,10 +46,30 @@ class Cached_Dir_PodcastTest extends Dir_PodcastTest
 
         $mp2 = $this->newPodcast();
         $mp2->init();
-        $content2 = $mp->generate();
+        $content2 = $mp2->generate();
 
         // should not pick up extra.mp3 as the cache file isn't old enough
         $this->assertEquals($content, $content2);
+    }
+
+    public function test_does_not_use_generated_cache_file_if_min_time_has_elapsed()
+    {
+        Cached_Dir_Podcast::$MIN_CACHE_TIME = -1;
+        $filemtime = $this->createTestItems();
+        $mp = $this->newPodcast();
+        $mp->init();
+        $content = $mp->generate();
+
+        // this should be considered
+        file_put_contents('extra.mp3', 'new data');
+        touch('extra.mp3', $filemtime + 200);
+
+        $mp2 = $this->newPodcast();
+        $mp2->init();
+        $content2 = $mp2->generate();
+
+        // should not pick up extra.mp3 as the cache file isn't old enough
+        $this->assertNotEquals($content, $content2);
     }
 
     public function tearDown(): void
