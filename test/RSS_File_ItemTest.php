@@ -6,8 +6,8 @@ class RSS_File_ItemTest extends RSS_ItemTest
 {
     public static function setUpBeforeClass(): void
     {
-        defined('MP3_URL') || define('MP3_URL', 'http://www.example.com/mp3/');
-        defined('MP3_DIR') || define('MP3_DIR', getcwd());
+        RSS_File_Item::$FILES_URL = 'http://www.example.com/mp3/';
+        RSS_File_Item::$FILES_DIR = getcwd();
     }
 
     protected $filename;

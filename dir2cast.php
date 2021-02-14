@@ -587,6 +587,9 @@ class RSS_Item extends GetterSetter {
 
 class RSS_File_Item extends RSS_Item {
     
+    static $FILES_URL;
+    static $FILES_DIR;
+
     public function __construct($filename)
     {
         $this->setFilename($filename);
@@ -615,14 +618,14 @@ class RSS_File_Item extends RSS_Item {
 
     protected function filenameToUrl($filename)
     {
-        return rtrim(MP3_URL, '/') . '/' . str_replace('%2F', '/', rawurlencode($this->stripBasePath($filename)));
+        return rtrim(self::$FILES_URL, '/') . '/' . str_replace('%2F', '/', rawurlencode($this->stripBasePath($filename)));
     }
 
     protected function stripBasePath($filename)
     {
-        if(strpos($filename, MP3_DIR) === 0)
+        if(strpos($filename, self::$FILES_DIR) === 0)
         {
-            return ltrim(substr($filename, strlen(MP3_DIR)), '/');
+            return ltrim(substr($filename, strlen(self::$FILES_DIR)), '/');
         }
         return $filename;
     }
@@ -1811,6 +1814,8 @@ class Dispatcher
             $atom   = $podcast->addHelper(new Atom_Podcast_Helper());
             $itunes = $podcast->addHelper(new iTunes_Podcast_Helper());
 
+            RSS_File_Item::$FILES_URL = MP3_URL; // TODO: rename this to MEDIA_URL
+            RSS_File_Item::$FILES_DIR = MP3_DIR; // TODO: rename this to MEDIA_DIR
             Media_RSS_Item::$LONG_TITLES = LONG_TITLES;
             Media_RSS_Item::$DESCRIPTION_SOURCE = DESCRIPTION_SOURCE;
 
