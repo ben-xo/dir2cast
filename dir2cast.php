@@ -1160,6 +1160,11 @@ class Dir_Podcast extends Podcast
             $this->max_mtime = $date;
     }
 
+    public function getMaxMtime()
+    {
+        return $this->max_mtime;
+    }
+
     /**
      * Adds file to ->unsorted_items, and updates ->max_mtime
      * 

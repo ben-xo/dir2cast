@@ -31,10 +31,10 @@ class Dir_PodcastTest extends PodcastTest
         file_put_contents('test4.other', 'content');
 
         $filemtime = time();
-        touch('test1.mp3', $filemtime);
-        touch('test2.mp4', $filemtime-50);
-        touch('test3.m4a', $filemtime-100);
-        touch('test4.other', $filemtime-150);
+        touch('test1.mp3', $filemtime+50);
+        touch('test2.mp4', $filemtime);
+        touch('test3.m4a', $filemtime-50);
+        touch('test4.other', $filemtime-100);
 
         return $filemtime;
     }
@@ -44,19 +44,21 @@ class Dir_PodcastTest extends PodcastTest
         $mp = $this->newPodcast();
         $content = $mp->generate();
         $this->assertEmpty($mp->getItems());
+        $this->assertEquals(0, $mp->getMaxMtime());
     }
 
     public function test_three_supported_files_of_zero_length_not_added_to_podcast()
     {
         $filemtime = time();
-        touch('test1.mp3', $filemtime);
-        touch('test2.mp4', $filemtime-50);
-        touch('test3.m4a', $filemtime-100);
-        touch('test4.other', $filemtime-150);
+        touch('test1.mp3', $filemtime+50);
+        touch('test2.mp4', $filemtime);
+        touch('test3.m4a', $filemtime-50);
+        touch('test4.other', $filemtime-100);
         
         $mp = $this->newPodcast();
         $content = $mp->generate();
         $this->assertEmpty($mp->getItems());
+        $this->assertEquals(0, $mp->getMaxMtime());
     }
 
     public function test_three_supported_files_added_to_podcast()
@@ -70,6 +72,7 @@ class Dir_PodcastTest extends PodcastTest
         $this->assertInstanceOf(MP3_RSS_Item::class, $items[0]);
         $this->assertInstanceOf(MP4_RSS_Item::class, $items[1]);
         $this->assertInstanceOf(M4A_RSS_Item::class, $items[2]);
+        $this->assertEquals($filemtime+50, $mp->getMaxMtime());
     }
 
     public function test_helpers_added_to_found_items()
