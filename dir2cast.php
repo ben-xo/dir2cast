@@ -1232,6 +1232,8 @@ class Cached_Dir_Podcast extends Dir_Podcast
     protected $cache_date;
     protected $serve_from_cache;
 
+    static $MIN_CACHE_TIME = 5; // seconds
+
     /**
      * Constructor
      * 
@@ -1261,7 +1263,7 @@ class Cached_Dir_Podcast extends Dir_Podcast
             $cache_date = filemtime($this->temp_file);
 
             // if the cache file is quite new, don't both regenerating.
-            if( $cache_date < time() - MIN_CACHE_TIME ) 
+            if( $cache_date < time() - self::$MIN_CACHE_TIME ) 
             {
                 $this->scan(); // sets $this->max_mtime
                 if( $this->cache_is_stale($cache_date, $this->max_mtime) )
@@ -1301,7 +1303,7 @@ class Cached_Dir_Podcast extends Dir_Podcast
 
         // disregard changes that are so new that the file may still be being uploaded.
         // Nobody wants an incomplete feed!
-        return $cache_date < $most_recent_modification - MIN_CACHE_TIME;
+        return $cache_date < $most_recent_modification - self::$MIN_CACHE_TIME;
     }
 
     /**
@@ -1325,13 +1327,15 @@ class Cached_Dir_Podcast extends Dir_Podcast
     {
         if($this->serve_from_cache)
         {
+            if(!file_exists($this->temp_file))
+                throw new RuntimeException("serve_from_cache set, but cache file not found");
+
             $output = file_get_contents($this->temp_file); // serve cached copy
         }
         else
         {
             $output = parent::generate();
-            file_put_contents($this->temp_file, $output); // save cached copy
-            $this->serve_from_cache = true;
+            $this->serve_from_cache = file_put_contents($this->temp_file, $output); // save cached copy
         }
             
         return $output;
@@ -1752,6 +1756,7 @@ class SettingsHandler
         // Set up up factory settings for Podcast subclasses
         Dir_Podcast::$RECURSIVE_DIRECTORY_ITERATOR = RECURSIVE_DIRECTORY_ITERATOR;
         Dir_Podcast::$ITEM_COUNT = ITEM_COUNT;
+        Cached_Dir_Podcast::$MIN_CACHE_TIME = MIN_CACHE_TIME;
     }
     
     public static function load_from_ini($file)
