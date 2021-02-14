@@ -54,7 +54,6 @@ final class PodcastHelperTest extends TestCase
 
     }
 
-
     public function test_helpers_given_opportunity_to_add_namespace()
     {
         $helper = $this->createMock(Podcast_Helper::class);
@@ -70,18 +69,7 @@ final class PodcastHelperTest extends TestCase
         $content = $mp->generate();
     }
 
-    public function test_helpers_given_opportunity_to_append_to_channel()
-    {
-        $helper = $this->createMock(Podcast_Helper::class);
-        $helper->expects($this->once())->method('appendToChannel');
-
-        $helper2 = $this->createMock(Podcast_Helper::class);
-        $helper2->expects($this->once())->method('appendToChannel');
-
-        $mp = new MyPodcast();
-        $mp->addHelper($helper);
-        $mp->addHelper($helper2);
-
-        $content = $mp->generate();
-    }
+    // TODO: test appendImage
+    // TODO: test pre_generate
+    // TODO: test post_generate
 }
