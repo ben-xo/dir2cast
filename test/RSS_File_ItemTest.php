@@ -11,6 +11,7 @@ class RSS_File_ItemTest extends RSS_ItemTest
     }
 
     protected $filename;
+    protected $filename_base;
     protected $default_title_from_file;
 
     public function newRSSItem()
@@ -32,6 +33,7 @@ class RSS_File_ItemTest extends RSS_ItemTest
     {
         // most common case for tests in this file.
         $this->filename = 'example.mp3';
+        $this->filename_base = 'example';
         $this->default_title_from_file = 'example.mp3';
         parent::setUp();
     }
@@ -211,6 +213,35 @@ class RSS_File_ItemTest extends RSS_ItemTest
         $item = $this->newRSSItem();
         $this->assertEquals('special subtitle 3!', $item->getSubtitle());
         unlink('example_subtitle.txt');
+    }
+
+    public function test_saveImage_jpg()
+    {
+        $item = $this->newRSSItem();
+        $expected_image_filename = $this->filename_base . '.jpg';
+        $this->assertFalse(file_exists($expected_image_filename));
+        $item->saveImage('image/jpeg', 'JFIF content');
+        $this->assertTrue(file_exists($expected_image_filename));
+        $this->assertEquals('JFIF content', file_get_contents($expected_image_filename));
+    }
+
+    public function test_saveImage_png()
+    {
+        $item = $this->newRSSItem();
+        $expected_image_filename = $this->filename_base . '.png';
+        $this->assertFalse(file_exists($expected_image_filename));
+        $item->saveImage('image/png', 'PNG content');
+        $this->assertTrue(file_exists($expected_image_filename));
+        $this->assertEquals('PNG content', file_get_contents($expected_image_filename));
+    }
+
+    public function test_saveImage_anything_else()
+    {
+        $item = $this->newRSSItem();
+        $file_count_before = count(glob($this->filename_base . '*'));
+        $item->saveImage('application/octet-stream', 'random data');
+        $file_count_after = count(glob($this->filename_base . '*'));
+        $this->assertEquals($file_count_before, $file_count_after);
     }
 
     public function tearDown(): void
