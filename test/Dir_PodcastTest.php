@@ -9,6 +9,11 @@ class Dir_PodcastTest extends PodcastTest
     {
         PodcastTest::setUpBeforeClass();
         prepare_testing_dir();
+    }
+
+    public function setUp(): void
+    {
+        parent::setUp();
         Dir_Podcast::$RECURSIVE_DIRECTORY_ITERATOR = false;
         Dir_Podcast::$ITEM_COUNT = 10;
     }
@@ -16,6 +21,22 @@ class Dir_PodcastTest extends PodcastTest
     public function newPodcast()
     {
         return new Dir_Podcast('.');
+    }
+
+    public function createTestItems()
+    {
+        file_put_contents('test1.mp3', 'content');
+        file_put_contents('test2.mp4', 'content');
+        file_put_contents('test3.m4a', 'content');
+        file_put_contents('test4.other', 'content');
+
+        $filemtime = time();
+        touch('test1.mp3', $filemtime);
+        touch('test2.mp4', $filemtime-50);
+        touch('test3.m4a', $filemtime-100);
+        touch('test4.other', $filemtime-150);
+
+        return $filemtime;
     }
 
     public function test_empty_dir_leads_to_empty_podcast()
@@ -40,17 +61,7 @@ class Dir_PodcastTest extends PodcastTest
 
     public function test_three_supported_files_added_to_podcast()
     {
-        file_put_contents('test1.mp3', 'content');
-        file_put_contents('test2.mp4', 'content');
-        file_put_contents('test3.m4a', 'content');
-        file_put_contents('test4.other', 'content');
-
-        $filemtime = time();
-        touch('test1.mp3', $filemtime);
-        touch('test2.mp4', $filemtime-50);
-        touch('test3.m4a', $filemtime-100);
-        touch('test4.other', $filemtime-150);
-
+        $filemtime = $this->createTestItems();
         $mp = $this->newPodcast();
         $content = $mp->generate();
         $this->assertCount(3, $mp->getItems());
@@ -60,6 +71,49 @@ class Dir_PodcastTest extends PodcastTest
         $this->assertInstanceOf(MP4_RSS_Item::class, $items[1]);
         $this->assertInstanceOf(M4A_RSS_Item::class, $items[2]);
     }
+
+    public function test_helpers_added_to_found_items()
+    {
+        $filemtime = $this->createTestItems();
+        $mp = $this->newPodcast();
+
+        $helper = $this->createMock(Podcast_Helper::class);
+        $helper->expects($this->exactly(3))->method('appendToItem');
+
+        $helper2 = $this->createMock(Podcast_Helper::class);
+        $helper2->expects($this->exactly(3))->method('appendToItem');
+
+        $mp->addHelper($helper);
+        $mp->addHelper($helper2);
+
+        $content = $mp->generate();
+    }
+
+    public function test_files_added_to_podcast_obeys_ITEM_COUNT()
+    {
+        Dir_Podcast::$ITEM_COUNT = 2;
+
+        $filemtime = $this->createTestItems();
+
+        $mp = $this->newPodcast();
+
+        $helper = $this->createMock(Podcast_Helper::class);
+        $helper->expects($this->exactly(2))->method('appendToItem');
+
+        $helper2 = $this->createMock(Podcast_Helper::class);
+        $helper2->expects($this->exactly(2))->method('appendToItem');
+
+        $mp->addHelper($helper);
+        $mp->addHelper($helper2);
+
+        $content = $mp->generate();
+        $this->assertCount(2, $mp->getItems());
+
+        $items = $mp->getItems();
+        $this->assertInstanceOf(MP3_RSS_Item::class, $items[0]);
+        $this->assertInstanceOf(MP4_RSS_Item::class, $items[1]);
+    }
+
 
     public function tearDown(): void
     {
