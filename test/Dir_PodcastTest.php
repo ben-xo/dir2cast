@@ -81,7 +81,11 @@ class Dir_PodcastTest extends PodcastTest
         $mp = $this->newPodcast();
         $mp->generate();
 
-        $this->tearDown(); // delete all the files
+        // delete all the files
+        unlink('test1.mp3');
+        unlink('test2.mp4');
+        unlink('test3.m4a');
+        unlink('test4.other');
 
         $content = $mp->generate(); // generate again
 
