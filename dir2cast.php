@@ -1814,6 +1814,7 @@ class Dispatcher
             $atom   = $podcast->addHelper(new Atom_Podcast_Helper());
             $itunes = $podcast->addHelper(new iTunes_Podcast_Helper());
 
+            // Set up up factory settings RSS Items
             RSS_File_Item::$FILES_URL = MP3_URL; // TODO: rename this to MEDIA_URL
             RSS_File_Item::$FILES_DIR = MP3_DIR; // TODO: rename this to MEDIA_DIR
             Media_RSS_Item::$LONG_TITLES = LONG_TITLES;
