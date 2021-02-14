@@ -1117,7 +1117,8 @@ class Dir_Podcast extends Podcast
                     
             $this->scanned = true;
             $this->post_scan();
-        }
+            $this->sort();
+       }
     }
     
     /**
@@ -1188,7 +1189,6 @@ class Dir_Podcast extends Podcast
     protected function pre_generate()
     {
         $this->scan();
-        $this->sort();
         
         // Add helpers here, NOT during scan(). 
         // scan() is also used just to get mtimes to see if we need to regenerate the feed.
@@ -1235,7 +1235,7 @@ class Cached_Dir_Podcast extends Dir_Podcast
     /**
      * Constructor
      * 
-     * After constructing, you must call ->init(), although you may call 
+     * After constructing, you should call ->init() to make use of the whole-feed cache
      *
      * @param string $source_dir
      * @param string $temp_dir

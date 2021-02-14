@@ -75,6 +75,25 @@ class Dir_PodcastTest extends PodcastTest
         $this->assertEquals($filemtime+50, $mp->getMaxMtime());
     }
 
+    public function test_generating_twice_doesnt_rescan()
+    {
+        $filemtime = $this->createTestItems();
+        $mp = $this->newPodcast();
+        $mp->generate();
+
+        $this->tearDown(); // delete all the files
+
+        $content = $mp->generate(); // generate again
+
+        $this->assertCount(3, $mp->getItems());
+
+        $items = $mp->getItems();
+        $this->assertInstanceOf(MP3_RSS_Item::class, $items[0]);
+        $this->assertInstanceOf(MP4_RSS_Item::class, $items[1]);
+        $this->assertInstanceOf(M4A_RSS_Item::class, $items[2]);
+        $this->assertEquals($filemtime+50, $mp->getMaxMtime());
+    }
+
     public function test_helpers_added_to_found_items()
     {
         $filemtime = $this->createTestItems();
