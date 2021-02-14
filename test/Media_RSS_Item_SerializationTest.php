@@ -40,6 +40,10 @@ class Media_RSS_Item_SerializationTest extends TestCase
         $item2 = unserialize($serialized);
     }
 
+    /**
+     * TODO: I am using serialize/unserialize wrong here. I should unset these properties on load, not save.
+     *       But that would require a version bump in the cache constant.
+     */
     public function test_unserialize_does_not_overwrite_properties_set_from_fs_metadata()
     {
         $item = new Media_RSS_Item('example.mp3');
