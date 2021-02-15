@@ -52,7 +52,7 @@ class Cached_Dir_PodcastTest extends Dir_PodcastTest
         $this->assertEquals($content, $content2);
     }
 
-    public function test_does_not_use_generated_cache_file_if_min_time_has_elapsed()
+    public function test_does_not_use_generated_cache_file_if_min_time_has_elapsed_and_theres_new_content()
     {
         Cached_Dir_Podcast::$MIN_CACHE_TIME = -1;
         $filemtime = $this->createTestItems();
@@ -70,6 +70,35 @@ class Cached_Dir_PodcastTest extends Dir_PodcastTest
 
         // should not pick up extra.mp3 as the cache file isn't old enough
         $this->assertNotEquals($content, $content2);
+    }
+
+
+    public function test_renews_cache_if_old_but_not_stale()
+    {
+        $filemtime = $this->createTestItems();
+        touch('test1.mp3', $filemtime - 10); // older than min time
+        $mp = $this->newPodcast();
+        $mp->init();
+        $content = $mp->generate();
+
+        // cache file now exists. Artificially age it by 6 seconds so it's older than MIN_CACHE_TIME
+        foreach(glob('temp/*.xml') as $filename)
+        {
+            touch($filename, $filemtime - 6);
+        }
+
+        $mp2 = $this->newPodcast();
+        $mp2->init();
+        $content2 = $mp2->generate();
+
+        // should have used cache file anyway
+        $this->assertEquals($content, $content2);
+
+        foreach(glob('temp/*.xml') as $filename)
+        {
+            // cache file should have been refreshed
+            $this->assertGreaterThan($filemtime - 6, filemtime($filename));
+        }
     }
 
     public function tearDown(): void
