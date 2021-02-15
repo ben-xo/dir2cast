@@ -27,8 +27,8 @@ class Cached_Dir_PodcastTest extends Dir_PodcastTest
     public function test_generate_saves_a_cache_file()
     {
         $this->createTestItems();
-        $mp = $this->newPodcast();
         $this->assertEmpty(glob('temp/*'));
+        $mp = $this->newPodcast();
         $content = $mp->generate();
         $this->assertNotEmpty(glob('temp/*'));
     }
@@ -38,6 +38,7 @@ class Cached_Dir_PodcastTest extends Dir_PodcastTest
         $filemtime = $this->createTestItems();
         $mp = $this->newPodcast();
         $content = $mp->generate();
+        unset($mp); // release lock, in sub tests
 
         // this should be ignored
         file_put_contents('extra.mp3', 'new data');
@@ -56,6 +57,7 @@ class Cached_Dir_PodcastTest extends Dir_PodcastTest
         $filemtime = $this->createTestItems();
         $mp = $this->newPodcast();
         $content = $mp->generate();
+        unset($mp); // release lock, in sub tests
 
         // this should be considered
         file_put_contents('extra.mp3', 'new data');
@@ -75,6 +77,7 @@ class Cached_Dir_PodcastTest extends Dir_PodcastTest
         touch('test1.mp3', $filemtime - 10); // older than min time
         $mp = $this->newPodcast();
         $content = $mp->generate();
+        unset($mp); // release lock, in sub tests
 
         // cache file now exists. Artificially age it by 6 seconds so it's older than MIN_CACHE_TIME
         foreach(glob('temp/*.xml') as $filename)
