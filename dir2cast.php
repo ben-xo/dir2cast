@@ -1262,7 +1262,7 @@ class Cached_Dir_Podcast extends Dir_Podcast
         {
             $cache_date = filemtime($this->temp_file);
 
-            // if the cache file is quite new, don't both regenerating.
+            // if the cache file is quite new, don't bother regenerating.
             if( $cache_date < time() - self::$MIN_CACHE_TIME ) 
             {
                 $this->scan(); // sets $this->max_mtime
