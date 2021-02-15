@@ -37,7 +37,6 @@ class Cached_Dir_PodcastTest extends Dir_PodcastTest
     {
         $filemtime = $this->createTestItems();
         $mp = $this->newPodcast();
-        $mp->init();
         $content = $mp->generate();
 
         // this should be ignored
@@ -45,7 +44,6 @@ class Cached_Dir_PodcastTest extends Dir_PodcastTest
         touch('extra.mp3', $filemtime + 200);
 
         $mp2 = $this->newPodcast();
-        $mp2->init();
         $content2 = $mp2->generate();
 
         // should not pick up extra.mp3 as the cache file isn't old enough
@@ -57,7 +55,6 @@ class Cached_Dir_PodcastTest extends Dir_PodcastTest
         Cached_Dir_Podcast::$MIN_CACHE_TIME = -1;
         $filemtime = $this->createTestItems();
         $mp = $this->newPodcast();
-        $mp->init();
         $content = $mp->generate();
 
         // this should be considered
@@ -65,7 +62,6 @@ class Cached_Dir_PodcastTest extends Dir_PodcastTest
         touch('extra.mp3', $filemtime + 200);
 
         $mp2 = $this->newPodcast();
-        $mp2->init();
         $content2 = $mp2->generate();
 
         // should not pick up extra.mp3 as the cache file isn't old enough
@@ -78,7 +74,6 @@ class Cached_Dir_PodcastTest extends Dir_PodcastTest
         $filemtime = $this->createTestItems();
         touch('test1.mp3', $filemtime - 10); // older than min time
         $mp = $this->newPodcast();
-        $mp->init();
         $content = $mp->generate();
 
         // cache file now exists. Artificially age it by 6 seconds so it's older than MIN_CACHE_TIME
@@ -88,7 +83,6 @@ class Cached_Dir_PodcastTest extends Dir_PodcastTest
         }
 
         $mp2 = $this->newPodcast();
-        $mp2->init();
         $content2 = $mp2->generate();
 
         // should have used cache file anyway
