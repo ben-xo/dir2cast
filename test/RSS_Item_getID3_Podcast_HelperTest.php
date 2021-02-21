@@ -93,6 +93,22 @@ final class RSS_Item_getID3_Podcast_HelperTest extends TestCase
         $this->assertEquals('', $item->getImage());
     }
 
+    public function test_id3v1_comment()
+    {
+        $mp = new MyPodcast();
+        $helper = new getID3_Podcast_Helper();
+        $mp->addHelper($helper);
+
+        copy('../fixtures/id3v1_comment.mp3', './id3v1_comment.mp3');
+        $item = new Media_RSS_Item('id3v1_comment.mp3');
+
+        $mp->addRssItem($item);
+
+        $content = $mp->generate();
+
+        $this->assertEquals('COMMENT4', $item->getID3Comment());
+    }
+
     public function test_id3v2_artist_album_title()
     {
         $mp = new MyPodcast();
@@ -153,6 +169,22 @@ final class RSS_Item_getID3_Podcast_HelperTest extends TestCase
         $this->assertEquals('', $item->getImage());
     }
 
+    public function test_id3v2_comment()
+    {
+        $mp = new MyPodcast();
+        $helper = new getID3_Podcast_Helper();
+        $mp->addHelper($helper);
+
+        copy('../fixtures/id3v2_comment.mp3', './id3v2_comment.mp3');
+        $item = new Media_RSS_Item('id3v2_comment.mp3');
+
+        $mp->addRssItem($item);
+
+        $content = $mp->generate();
+
+        $this->assertEquals('COMMENT8', $item->getID3Comment());
+    }
+
     public function tearDown(): void
     {
         file_exists('empty.mp3') && unlink('empty.mp3');
@@ -162,6 +194,8 @@ final class RSS_Item_getID3_Podcast_HelperTest extends TestCase
         file_exists('id3v2_artist_album_title.mp3') && unlink('id3v2_artist_album_title.mp3');
         file_exists('id3v2_artist_title.mp3') && unlink('id3v2_artist_title.mp3');
         file_exists('id3v2_title.mp3') && unlink('id3v2_title.mp3');
+        file_exists('id3v1_comment.mp3') && unlink('id3v1_comment.mp3');
+        file_exists('id3v2_comment.mp3') && unlink('id3v2_comment.mp3');
     }
 
     public static function tearDownAfterClass(): void
