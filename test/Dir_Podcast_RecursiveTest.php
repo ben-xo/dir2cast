@@ -2,7 +2,7 @@
 
 use PHPUnit\Framework\TestCase;
 
-class Dir_PodcastTest_Recursive extends Dir_PodcastTest
+class Dir_Podcast_RecursiveTest extends Dir_PodcastTest
 {
 
     public static function setUpBeforeClass(): void
@@ -28,10 +28,30 @@ class Dir_PodcastTest_Recursive extends Dir_PodcastTest
         file_put_contents('test4/test4.other', 'content');
 
         $filemtime = time();
-        touch('test1/test1.mp3', $filemtime);
-        touch('test2/test2.mp4', $filemtime-50);
-        touch('test3/test3.m4a', $filemtime-100);
-        touch('test4/test4.other', $filemtime-150);
+        touch('test1/test1.mp3', $filemtime+50);
+        touch('test2/test2.mp4', $filemtime);
+        touch('test3/test3.m4a', $filemtime-50);
+        touch('test4/test4.other', $filemtime-100);
+
+        return $filemtime;
+    }
+
+    public function createEmptyTestItems()
+    {
+        mkdir('test1');
+        mkdir('test2');
+        mkdir('test3');
+        mkdir('test4');
+        file_put_contents('test1/test1.mp3', '');
+        file_put_contents('test2/test2.mp4', '');
+        file_put_contents('test3/test3.m4a', '');
+        file_put_contents('test4/test4.other', '');
+
+        $filemtime = time();
+        touch('test1/test1.mp3', $filemtime+50);
+        touch('test2/test2.mp4', $filemtime);
+        touch('test3/test3.m4a', $filemtime-50);
+        touch('test4/test4.other', $filemtime-100);
 
         return $filemtime;
     }
@@ -43,25 +63,7 @@ class Dir_PodcastTest_Recursive extends Dir_PodcastTest
         $this->assertEmpty($mp->getItems());
     }
 
-    public function test_three_supported_files_of_zero_length_not_added_to_podcast()
-    {
-        mkdir('test1');
-        mkdir('test2');
-        mkdir('test3');
-        mkdir('test4');
-
-        $filemtime = time();
-        touch('test1/test1.mp3', $filemtime);
-        touch('test2/test2.mp4', $filemtime-50);
-        touch('test3/test3.m4a', $filemtime-100);
-        touch('test4/test4.other', $filemtime-150);
-        
-        $mp = $this->newPodcast();
-        $content = $mp->generate();
-        $this->assertEmpty($mp->getItems());
-    }
-
-    public function tearDown(): void
+    protected function delete_test_files()
     {
         file_exists('test1/test1.mp3') && unlink('test1/test1.mp3');
         file_exists('test2/test2.mp4') && unlink('test2/test2.mp4');
@@ -71,7 +73,7 @@ class Dir_PodcastTest_Recursive extends Dir_PodcastTest
         is_dir('test2') && rmdir('test2');
         is_dir('test3') && rmdir('test3');
         is_dir('test4') && rmdir('test4');
-        parent::tearDown();
+        parent::delete_test_files();
     }
 
     public static function tearDownAfterClass(): void

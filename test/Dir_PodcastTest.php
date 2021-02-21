@@ -13,6 +13,7 @@ class Dir_PodcastTest extends PodcastTest
 
     public function setUp(): void
     {
+        $this->delete_test_files();
         parent::setUp();
         Dir_Podcast::$RECURSIVE_DIRECTORY_ITERATOR = false;
         Dir_Podcast::$ITEM_COUNT = 10;
@@ -39,6 +40,22 @@ class Dir_PodcastTest extends PodcastTest
         return $filemtime;
     }
 
+    public function createEmptyTestItems()
+    {
+        file_put_contents('test1.mp3', '');
+        file_put_contents('test2.mp4', '');
+        file_put_contents('test3.m4a', '');
+        file_put_contents('test4.other', '');
+
+        $filemtime = time();
+        touch('test1.mp3', $filemtime+50);
+        touch('test2.mp4', $filemtime);
+        touch('test3.m4a', $filemtime-50);
+        touch('test4.other', $filemtime-100);
+
+        return $filemtime;
+    }
+
     public function test_empty_dir_leads_to_empty_podcast()
     {
         $mp = $this->newPodcast();
@@ -49,11 +66,7 @@ class Dir_PodcastTest extends PodcastTest
 
     public function test_three_supported_files_of_zero_length_not_added_to_podcast()
     {
-        $filemtime = time();
-        touch('test1.mp3', $filemtime+50);
-        touch('test2.mp4', $filemtime);
-        touch('test3.m4a', $filemtime-50);
-        touch('test4.other', $filemtime-100);
+        $filemtime = $this->createEmptyTestItems();
         
         $mp = $this->newPodcast();
         $content = $mp->generate();
@@ -82,10 +95,7 @@ class Dir_PodcastTest extends PodcastTest
         $mp->generate();
 
         // delete all the files
-        unlink('test1.mp3');
-        unlink('test2.mp4');
-        unlink('test3.m4a');
-        unlink('test4.other');
+        $this->delete_test_files();
 
         $content = $mp->generate(); // generate again
 
@@ -140,13 +150,17 @@ class Dir_PodcastTest extends PodcastTest
         $this->assertInstanceOf(MP4_RSS_Item::class, $items[1]);
     }
 
-
-    public function tearDown(): void
+    protected function delete_test_files()
     {
         file_exists('test1.mp3') && unlink('test1.mp3');
         file_exists('test2.mp4') && unlink('test2.mp4');
         file_exists('test3.m4a') && unlink('test3.m4a');
         file_exists('test4.other') && unlink('test4.other');
+    }
+
+    public function tearDown(): void
+    {
+        $this->delete_test_files();
         parent::tearDown();
     }
 
