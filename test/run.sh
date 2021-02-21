@@ -11,3 +11,4 @@ if [[ "${tests[@]}" == "" ]]; then
 fi
 
 phpunit --bootstrap bootstrap.php ${tests[@]}
+rm -rf testdir

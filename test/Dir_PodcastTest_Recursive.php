@@ -77,6 +77,5 @@ class Dir_PodcastTest_Recursive extends Dir_PodcastTest
     public static function tearDownAfterClass(): void
     {
         Dir_PodcastTest::tearDownAfterClass();
-        // rmrf('./testdir');
     }
 }

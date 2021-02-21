@@ -154,6 +154,5 @@ class Dir_PodcastTest extends PodcastTest
     {
         PodcastTest::tearDownAfterClass();
         chdir('..');
-        // rmrf('./testdir');
     }
 }

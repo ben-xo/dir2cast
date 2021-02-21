@@ -68,7 +68,6 @@ final class DefaultsTest extends TestCase
     public static function tearDownAfterClass(): void
     {
         chdir('..');
-        // rmrf('./testdir');
     }
 
 }
