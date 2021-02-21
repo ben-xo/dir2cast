@@ -1501,7 +1501,7 @@ class ErrorHandler
             }
             else
             {
-                // define('CLI_ONLY') || !ini_get('html_errors')
+                // This case happens when define('CLI_ONLY') || !ini_get('html_errors')
                 echo "Error: $message (on line $errline of $errfile)\n";
                 if(!empty(ErrorHandler::$primer))
                     echo strip_tags(self::get_primed_error(ErrorHandler::$primer)) . "\n";
