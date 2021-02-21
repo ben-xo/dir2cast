@@ -1064,6 +1064,7 @@ abstract class Podcast extends GetterSetter
 
 class Dir_Podcast extends Podcast
 {
+    static $EMPTY_PODCAST_IS_ERROR = false;
     static $RECURSIVE_DIRECTORY_ITERATOR = false;
     static $ITEM_COUNT = 10;
 
@@ -1112,8 +1113,8 @@ class Dir_Podcast extends Podcast
                 $item_count = $this->addItem($file->getPath() . '/' . $file->getFileName());
             }
             
-            // if(0 == $item_count)
-            //     throw new Exception("No Items found in {$this->source_dir}");
+            if(self::$EMPTY_PODCAST_IS_ERROR && 0 == $item_count)
+                throw new Exception("No Items found in {$this->source_dir}");
                     
             $this->scanned = true;
             $this->post_scan();
@@ -1755,6 +1756,7 @@ class SettingsHandler
 
 
         // Set up up factory settings for Podcast subclasses
+        Dir_Podcast::$EMPTY_PODCAST_IS_ERROR = !CLI_ONLY;
         Dir_Podcast::$RECURSIVE_DIRECTORY_ITERATOR = RECURSIVE_DIRECTORY_ITERATOR;
         Dir_Podcast::$ITEM_COUNT = ITEM_COUNT;
         Cached_Dir_Podcast::$MIN_CACHE_TIME = MIN_CACHE_TIME;
