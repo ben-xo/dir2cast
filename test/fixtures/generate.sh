@@ -18,3 +18,7 @@ id3tag -2 -sEXAMPLE5 id3v2_title.mp3
 id3tag -2 -sEXAMPLE6 -aARTIST6 id3v2_artist_title.mp3
 id3tag -2 -sEXAMPLE7 -aARTIST7 -AALBUM7 id3v2_artist_album_title.mp3
 id3tag -2 -cCOMMENT8 id3v2_comment.mp3
+
+
+cp empty.mp4 tagged.mp4
+AtomicParsley tagged.mp4 --overWrite --artist AAA --title TTT --album ALAL --comment CCC 
