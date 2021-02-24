@@ -185,8 +185,51 @@ final class RSS_Item_getID3_Podcast_HelperTest extends TestCase
         $this->assertEquals('COMMENT8', $item->getID3Comment());
     }
 
+    public function test_mp4_empty()
+    {
+        $mp = new MyPodcast();
+        $helper = new getID3_Podcast_Helper();
+        $mp->addHelper($helper);
+
+        copy('../fixtures/empty.mp4', './empty.mp4');
+        $item = new Media_RSS_Item('empty.mp4');
+
+        $mp->addRssItem($item);
+
+        $content = $mp->generate();
+
+        $this->assertEquals('', $item->getDuration());
+        $this->assertEquals('', $item->getID3Title());
+        $this->assertEquals('', $item->getID3Artist());
+        $this->assertEquals('', $item->getID3Album());
+        $this->assertEquals('', $item->getImage());
+    }
+
+    public function test_mp4_tagged()
+    {
+        $mp = new MyPodcast();
+        $helper = new getID3_Podcast_Helper();
+        $mp->addHelper($helper);
+
+        copy('../fixtures/tagged.mp4', './tagged.mp4');
+        $item = new Media_RSS_Item('tagged.mp4');
+
+        $mp->addRssItem($item);
+
+        $content = $mp->generate();
+
+        $this->assertEquals('', $item->getDuration());
+        $this->assertEquals('TTT', $item->getID3Title());
+        $this->assertEquals('AAA', $item->getID3Artist());
+        $this->assertEquals('ALAL', $item->getID3Album());
+        $this->assertEquals('CCC', $item->getID3Comment());
+        $this->assertEquals('', $item->getImage());
+    }
+
     public function tearDown(): void
     {
+        file_exists('empty.mp4') && unlink('empty.mp4');
+        file_exists('tagged.mp4') && unlink('tagged.mp4');
         file_exists('empty.mp3') && unlink('empty.mp3');
         file_exists('id3v1_artist_album_title.mp3') && unlink('id3v1_artist_album_title.mp3');
         file_exists('id3v1_artist_title.mp3') && unlink('id3v1_artist_title.mp3');
