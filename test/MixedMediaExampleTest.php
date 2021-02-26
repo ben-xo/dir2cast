@@ -2,13 +2,12 @@
 
 use PHPUnit\Framework\TestCase;
 
-final class MixedMediaExampleTest extends TestCase
+class MixedMediaExampleTest extends TestCase
 {
     public static $file = 'out.xml';
     public static $output = '';
     public static $returncode = 0;
 
-    public static $content = '';
     public static $filemtime = 0;
 
     public static function setUpBeforeClass(): void
@@ -27,15 +26,14 @@ final class MixedMediaExampleTest extends TestCase
         touch('4.mp3', $now+150);
         self::$filemtime = $now;
 
+        self::$output = '';
         exec('php dir2cast.php --media-url=https://www.example.com/podcast/ --output=out.xml', self::$output, self::$returncode);
     }
 
     public function test_podcast_creates_output(): void
     {
         $this->assertTrue(file_exists(self::$file));
-
-        self::$content = file_get_contents(self::$file);
-        $this->assertTrue(strlen(self::$content) > 0);
+        $this->assertTrue(strlen(file_get_contents(self::$file)) > 0);
     }
 
     public function test_podcast_produces_no_warning(): void
@@ -51,11 +49,10 @@ final class MixedMediaExampleTest extends TestCase
     public function test_podcast_is_valid_with_default_values(): void
     {
         // generated valid XML
-        $data = simplexml_load_string(self::$content);
+        $data = simplexml_load_string(file_get_contents(self::$file));
 
         $this->assertEquals('testdir', $data->channel->title);
         $this->assertEquals('http://www.example.com/', $data->channel->link);
-        $this->assertEquals('Podcast', $data->channel->description);
         $this->assertEquals('en-us', $data->channel->language);
         $this->assertEquals('60', $data->channel->ttl);
 
@@ -73,17 +70,25 @@ final class MixedMediaExampleTest extends TestCase
         $this->assertEquals('application/rss+xml', $atom_elements->link->attributes()['type']);
 
         $itunes_elements = $data->channel->children("http://www.itunes.com/dtds/podcast-1.0.dtd");
-        $this->assertEquals('Podcast', $itunes_elements->subtitle);
-        $this->assertEquals('Podcast', $itunes_elements->summary);
         $this->assertEquals('', $itunes_elements->author);
 
     }
 
+    public function test_podcast_has_correct_overridable_metadata()
+    {
+        $data = simplexml_load_string(file_get_contents(self::$file));
+        $this->assertEquals('Podcast', $data->channel->description);
+
+        $itunes_elements = $data->channel->children("http://www.itunes.com/dtds/podcast-1.0.dtd");
+        $this->assertEquals('Podcast', $itunes_elements->subtitle);
+        $this->assertEquals('Podcast', $itunes_elements->summary);
+
+    }
 
     public function test_podcast_has_expected_items_with_default_behaviour(): void
     {
         // generated valid XML
-        $data = simplexml_load_string(self::$content);
+        $data = simplexml_load_string(file_get_contents(self::$file));
 
         $this->assertCount(4, $data->channel->item);
         $this->assertEquals('4.mp3',    $data->channel->item[0]->title);
@@ -121,12 +126,17 @@ final class MixedMediaExampleTest extends TestCase
         $this->assertEquals('audio/mpeg', $data->channel->item[2]->enclosure->attributes()->type);
         $this->assertEquals('audio/mpeg', $data->channel->item[3]->enclosure->attributes()->type);
 
+        //$this->assertEquals('', $data->channel->item[0]->image);
+        //$this->assertEquals('', $data->channel->item[1]->image);
+        $this->assertEquals('', $data->channel->item[2]->image);
+        $this->assertEquals('', $data->channel->item[3]->image);
+
         $itdtd = "http://www.itunes.com/dtds/podcast-1.0.dtd";
 
         $this->assertEquals('COMMENT8', $data->channel->item[0]->children($itdtd)->summary);
         $this->assertEquals('CCC',      $data->channel->item[1]->children($itdtd)->summary);
         $this->assertEquals('',         $data->channel->item[2]->children($itdtd)->summary);
-        $this->assertEquals('',         $data->channel->item[3]->children($itdtd)->summary);
+        //$this->assertEquals('',         $data->channel->item[3]->children($itdtd)->summary);
 
         $this->assertEquals('',        $data->channel->item[0]->children($itdtd)->author);
         $this->assertEquals('AAA',     $data->channel->item[1]->children($itdtd)->author);
@@ -135,10 +145,27 @@ final class MixedMediaExampleTest extends TestCase
 
         $this->assertEquals('',        $data->channel->item[0]->children($itdtd)->subtitle);
         $this->assertEquals('AAA',     $data->channel->item[1]->children($itdtd)->subtitle);
-        $this->assertEquals('ARTIST7', $data->channel->item[2]->children($itdtd)->subtitle);
+        //$this->assertEquals('ARTIST7', $data->channel->item[2]->children($itdtd)->subtitle);
         $this->assertEquals('ARTIST3', $data->channel->item[3]->children($itdtd)->subtitle);
 
     }
+
+    public function test_podcast_has_expected_overrideable_fields()
+    {
+        $data = simplexml_load_string(file_get_contents(self::$file));
+
+        $this->assertEquals('', $data->channel->item[0]->image);
+        $this->assertEquals('', $data->channel->item[1]->image);
+
+        $itdtd = "http://www.itunes.com/dtds/podcast-1.0.dtd";
+
+        $this->assertEquals('', $data->channel->item[3]->children($itdtd)->summary);
+        $this->assertEquals('ARTIST7', $data->channel->item[2]->children($itdtd)->subtitle);
+        $this->assertEquals('', $data->channel->item[0]->children($itdtd)->image);
+        $this->assertEquals('', $data->channel->item[1]->children($itdtd)->image);
+        
+    }
+
 
     public static function tearDownAfterClass(): void
     {
