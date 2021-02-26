@@ -33,16 +33,28 @@ final class CachingTest extends TestCase
 
     public function test_default_empty_podcast_obeys_minimum_cache_time(): void
     {
-        $this->markTestIncomplete('This test is known to fail');
-
         // too new to bust the cache
+        file_put_contents('empty.mp3', 'test');
+        touch('empty.mp3');
+
+        exec('php dir2cast.php --output=out.xml --dont-uncache', self::$output, self::$returncode);
+
+        $new_content = file_get_contents(self::$file);
+        $this->assertEquals(self::$content, $new_content);
+
+        unlink('empty.mp3');
+    }
+
+    public function test_default_empty_podcast_uncaches_anyway(): void
+    {
+        // too new to bust the cache, but cli runner uncaches anyway
         file_put_contents('empty.mp3', 'test');
         touch('empty.mp3');
 
         exec('php dir2cast.php --output=out.xml', self::$output, self::$returncode);
 
         $new_content = file_get_contents(self::$file);
-        $this->assertEquals(self::$content, $new_content);
+        $this->assertNotEquals(self::$content, $new_content);
 
         unlink('empty.mp3');
     }

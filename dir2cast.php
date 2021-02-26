@@ -1546,10 +1546,10 @@ class SettingsHandler
             define('INI_FILE', $ini_file_name);
         }
         
-        $cli_options = getopt('', array('help', 'media-dir::', 'media-url::', 'output::'));
+        $cli_options = getopt('', array('help', 'media-dir::', 'media-url::', 'output::', 'dont-uncache'));
         if($cli_options) {
             if(isset($cli_options['help'])) {
-                print "Usage: php dir2cast.php [--help] [--media-dir=MP3_DIR] [--media-url=MP3_URL] [--output=OUTPUT_FILE]\n";
+                print "Usage: php dir2cast.php [--help] [--media-dir=MP3_DIR] [--media-url=MP3_URL] [--output=OUTPUT_FILE] [--dont-uncache]\n";
                 exit;
             }
             if(!defined('MP3_DIR') && !empty($cli_options['media-dir']))
@@ -1563,6 +1563,10 @@ class SettingsHandler
             if(!defined('OUTPUT_FILE') && !empty($cli_options['output']))
             {
                 define('OUTPUT_FILE', $cli_options['output']);
+            }
+            if(!defined('DONT_UNCACHE_IF_OUTPUT_FILE') && isset($cli_options['dont-uncache']))
+            {
+                define('DONT_UNCACHE_IF_OUTPUT_FILE', true);
             }
         }
 
@@ -1762,6 +1766,8 @@ class SettingsHandler
         if(!defined('AUTO_SAVE_COVER_ART'))
             define('AUTO_SAVE_COVER_ART', true);
 
+        if(!defined('DONT_UNCACHE_IF_OUTPUT_FILE'))
+            define('DONT_UNCACHE_IF_OUTPUT_FILE', false);
 
         // Set up factory settings for Podcast subclasses
         Dir_Podcast::$EMPTY_PODCAST_IS_ERROR = !CLI_ONLY;
@@ -1819,7 +1825,7 @@ class Dispatcher
 
     public function uncache_if_output_file()
     {
-        if(defined('OUTPUT_FILE'))
+        if(defined('OUTPUT_FILE') && !DONT_UNCACHE_IF_OUTPUT_FILE)
         {
             $this->podcast->uncache();
         }
