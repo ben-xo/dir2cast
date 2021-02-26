@@ -56,7 +56,7 @@
 /* DEFAULTS *********************************************/
 
 // error handler needs these, so let's set them now.
-define('VERSION', '1.23');
+define('VERSION', '1.24');
 define('DIR2CAST_HOMEPAGE', 'https://github.com/ben-xo/dir2cast/');
 define('GENERATOR', 'dir2cast ' . VERSION . ' by Ben XO (' . DIR2CAST_HOMEPAGE . ')');
 
@@ -84,7 +84,8 @@ function __autoloader($class_name)
             break;
             
         default:
-            require_once $class_name . '.php';
+            if(file_exists($class_name . '.php'))
+                require_once $class_name . '.php';
     }
 }
 spl_autoload_register('__autoloader');
@@ -155,6 +156,8 @@ class QuicktimeImageHelper {
  *
  */
 class getID3_Podcast_Helper implements Podcast_Helper {
+
+    static $AUTO_SAVE_COVER_ART = false;
         
     public function appendToChannel(DOMElement $d, DOMDocument $doc) { /* nothing */ }
     public function addNamespaceTo(DOMElement $d, DOMDocument $doc) { /* nothing */ }
@@ -197,7 +200,7 @@ class getID3_Podcast_Helper implements Podcast_Helper {
                 if(!empty($info['comments']['comment'][0]))
                     $item->setID3Comment( $info['comments']['comment'][0] );
 
-                if(AUTO_SAVE_COVER_ART)
+                if(self::$AUTO_SAVE_COVER_ART)
                 {
                     // this works for MP3s
                     if(!empty($info['comments']['picture'][0]))
@@ -341,6 +344,7 @@ class Atom_Podcast_Helper extends GetterSetter implements Podcast_Helper {
 class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
     
     protected $owner_name, $owner_email, $image_href, $explicit;
+    protected $categories = array();
     
     public function __construct() { }
     
@@ -585,6 +589,9 @@ class RSS_Item extends GetterSetter {
 
 class RSS_File_Item extends RSS_Item {
     
+    static $FILES_URL;
+    static $FILES_DIR;
+
     public function __construct($filename)
     {
         $this->setFilename($filename);
@@ -613,14 +620,27 @@ class RSS_File_Item extends RSS_Item {
 
     protected function filenameToUrl($filename)
     {
-        return rtrim(MP3_URL, '/') . '/' . str_replace('%2F', '/', rawurlencode($this->stripBasePath($filename)));
+        return rtrim(self::$FILES_URL, '/') . '/' . str_replace('%2F', '/', rawurlencode($this->stripBasePath($filename)));
     }
 
     protected function stripBasePath($filename)
     {
-        return ltrim(substr($filename, strlen(MP3_DIR)), '/');
+        if(strpos($filename, self::$FILES_DIR) === 0)
+        {
+            return ltrim(substr($filename, strlen(self::$FILES_DIR)), '/');
+        }
+        return $filename;
     }
     
+    /**
+     * RSS_File_Items will always have a title (the filename) so, in subclasses, to check if one was set manually
+     * you must call this method, not just check if parent::getTitle() is empty.
+     */
+    protected function hasOverridenTitle()
+    {
+        return !!parent::getTitle();
+    }
+
     /**
      * Default title for an RSS Item is its filename.
      * Subclasses (Such as Media_RSS_Item, MP3_RSS_Item, etc) override this using e.g. ID3 tags.
@@ -629,11 +649,23 @@ class RSS_File_Item extends RSS_Item {
      */
     public function getTitle()
     {
+        $overridden_title = parent::getTitle();
+        if($overridden_title)
+        {
+            return $overridden_title;
+        }
+
         return basename($this->getFilename());
     }
     
     public function getType()
     {
+        $overridden_type = parent::getType();
+        if($overridden_type)
+        {
+            return $overridden_type;
+        }
+
         return 'application/octet-stream';
     }
         
@@ -648,6 +680,12 @@ class RSS_File_Item extends RSS_Item {
      */
     public function getSummary()
     {
+        $overridden_summary = parent::getSummary();
+        if($overridden_summary)
+        {
+            return $overridden_summary;
+        }
+
         $summary_file_name = dirname($this->getFilename()) . '/' . basename($this->getFilename(), '.' . $this->getExtension()) . '.txt';
         if(file_exists( $summary_file_name ))
             return file_get_contents($summary_file_name);
@@ -664,13 +702,25 @@ class RSS_File_Item extends RSS_Item {
      */
     public function getSubtitle()
     {
+        $overridden_subtitle = parent::getSubtitle();
+        if($overridden_subtitle)
+        {
+            return $overridden_subtitle;
+        }
+
         $summary_file_name = dirname($this->getFilename()) . '/' . basename($this->getFilename(), '.' . $this->getExtension()) . '_subtitle.txt';
         if(file_exists( $summary_file_name ))
             return file_get_contents($summary_file_name);
     }
 
-    protected function getImageFilename($type) {
-        return dirname($this->getFilename()) . '/' . basename($this->getFilename(), '.' . $this->getExtension()) . '.' . $type;
+    protected function getImageFilename($type)
+    {
+        $image_file_name = basename($this->getFilename(), '.' . $this->getExtension()) . '.' . $type;
+        if(strpos($image_file_name, '/') === false)
+        {
+            return $image_file_name;
+        }
+        return dirname($this->getFilename()) . '/' . $image_file_name;
     }
 
     /**
@@ -681,6 +731,12 @@ class RSS_File_Item extends RSS_Item {
      */
     public function getImage()
     {
+        $overridden_image = parent::getImage();
+        if($overridden_image)
+        {
+            return $overridden_image;
+        }
+
         $image_file_name = $this->getImageFilename('png');
         if(file_exists( $image_file_name ))
             return $this->filenameToUrl($image_file_name);
@@ -689,9 +745,35 @@ class RSS_File_Item extends RSS_Item {
         if(file_exists( $image_file_name ))
             return $this->filenameToUrl($image_file_name);
     }
+
+    public function saveImage($mime_type, $data)
+    {
+        if(file_exists($this->getImageFilename('jpg')) || file_exists($this->getImageFilename('png')))
+        {
+            // don't overwrite image which already exists, even if it's of the wrong type.
+            return;
+        }
+
+        switch($mime_type) {
+            case 'image/jpeg':
+                $filename = $this->getImageFilename('jpg');
+                if(is_writable(dirname($filename)))
+                    file_put_contents($filename, $data);
+                break;
+
+            case 'image/png':
+                $filename = $this->getImageFilename('png');
+                if(is_writable(dirname($filename)))
+                    file_put_contents($filename, $data);
+                break;
+        }
+    }
 }
 
-abstract class Media_RSS_Item extends RSS_File_Item implements Serializable {
+class Media_RSS_Item extends RSS_File_Item implements Serializable {
+
+    static $LONG_TITLES = false;
+    static $DESCRIPTION_SOURCE = 'comment';
 
     public function __construct($filename)
     {
@@ -725,8 +807,13 @@ abstract class Media_RSS_Item extends RSS_File_Item implements Serializable {
      */
     public function getTitle()
     {
+        if($this->hasOverridenTitle())
+        {
+            return parent::getTitle();
+        }
+
         $title_parts = array();
-        if(LONG_TITLES)
+        if(self::$LONG_TITLES)
         {
             if($this->getID3Album()) $title_parts[] = $this->getID3Album();
             if($this->getID3Artist()) $title_parts[] = $this->getID3Artist();
@@ -744,10 +831,16 @@ abstract class Media_RSS_Item extends RSS_File_Item implements Serializable {
 
     public function getDescription()
     {
+        $overridden_description = parent::getDescription();
+        if($overridden_description)
+        {
+            return $overridden_description;
+        }
+
         // The default value is "comment". dir2cast prior to v1.19
         // used value "file", so it's here for backward compatibility
-        if(DESCRIPTION_SOURCE == 'summary' || DESCRIPTION_SOURCE == 'file')
-            return $this->getSummary();
+        if(self::$DESCRIPTION_SOURCE == 'summary' || self::$DESCRIPTION_SOURCE == 'file')
+            return parent::getSummary(); // call to parent because otherwise we could co-recurse.
 
         return $this->getID3Comment();
     }
@@ -755,7 +848,7 @@ abstract class Media_RSS_Item extends RSS_File_Item implements Serializable {
     public function getSummary()
     {
         $summary = parent::getSummary();
-        if(null == $summary && !LONG_TITLES)
+        if(!$summary)
         {
             // use description as summary if there's no file-based override
             $summary = $this->getDescription();
@@ -766,29 +859,13 @@ abstract class Media_RSS_Item extends RSS_File_Item implements Serializable {
     public function getSubtitle()
     {
         $subtitle = parent::getSubtitle();
-        if(null == $subtitle && !LONG_TITLES)
+        if(!$subtitle && !self::$LONG_TITLES)
         {
-            // use artist as summary if there's no file-based override
+            // use artist as subtitle if there's no file-based override
+            // but not if LONG_TITLES is set (as it's already in the title)
             $subtitle = $this->getID3Artist();
         }
         return $subtitle;
-    }
-
-    public function saveImage($mime_type, $data)
-    {
-        switch($mime_type) {
-            case 'image/jpeg':
-                $filename = $this->getImageFilename('jpg');
-                if(!file_exists($filename) && is_writable(dirname($filename)))
-                    file_put_contents($filename, $data);
-                break;
-
-            case 'image/png':
-                $filename = $this->getImageFilename('png');
-                if(!file_exists($filename) && is_writable(dirname($filename)))
-                    file_put_contents($filename, $data);
-                break;
-        }
     }
 
     /**
@@ -826,32 +903,34 @@ abstract class Media_RSS_Item extends RSS_File_Item implements Serializable {
 
 class MP3_RSS_Item extends Media_RSS_Item 
 {
-    public function getType()
+    public function __construct($filename)
     {
-        return 'audio/mpeg';
+        parent::__construct($filename);
+        $this->setType('audio/mpeg');
     }
 }
 
 class M4A_RSS_Item extends Media_RSS_Item
 {
-    public function getType()
+    public function __construct($filename)
     {
-        return 'audio/mp4';
+        parent::__construct($filename);
+        $this->setType('audio/mp4');
     }
 }
 
 class MP4_RSS_Item extends Media_RSS_Item
 {
-    public function getType()
+    public function __construct($filename)
     {
-        return 'video/mp4';
+        parent::__construct($filename);
+        $this->setType('video/mp4');
     }
 }
 
 
 abstract class Podcast extends GetterSetter
 {
-    protected $max_mtime = 0;
     protected $items = array();
     protected $helpers = array();
     
@@ -952,6 +1031,16 @@ abstract class Podcast extends GetterSetter
         );
     }
 
+    public function addRssItem(RSS_Item $item)
+    {
+        $this->items[] = $item;
+
+        // attach helpers to the new item.
+        // new helpers will be attached if they are added later.
+       foreach($this->helpers as $helper)
+            $item->addHelper($helper);
+    }
+
     /**
      * @return array of RSS_Item
      */
@@ -983,9 +1072,14 @@ abstract class Podcast extends GetterSetter
 
 class Dir_Podcast extends Podcast
 {
+    static $EMPTY_PODCAST_IS_ERROR = false;
+    static $RECURSIVE_DIRECTORY_ITERATOR = false;
+    static $ITEM_COUNT = 10;
+
     protected $source_dir;
     protected $scanned = false;
     protected $unsorted_items = array();
+    protected $max_mtime = 0;
     
     /**
      * Constructor
@@ -1009,7 +1103,7 @@ class Dir_Podcast extends Podcast
             
             // scan the dir
 
-            if(RECURSIVE_DIRECTORY_ITERATOR)
+            if(self::$RECURSIVE_DIRECTORY_ITERATOR)
             {
                 $di = new RecursiveIteratorIterator(
                     new RecursiveDirectoryIterator($this->source_dir),
@@ -1027,12 +1121,13 @@ class Dir_Podcast extends Podcast
                 $item_count = $this->addItem($file->getPath() . '/' . $file->getFileName());
             }
             
-            if(0 == $item_count)
+            if(self::$EMPTY_PODCAST_IS_ERROR && 0 == $item_count)
                 throw new Exception("No Items found in {$this->source_dir}");
                     
             $this->scanned = true;
             $this->post_scan();
-        }
+            $this->sort();
+       }
     }
     
     /**
@@ -1075,6 +1170,11 @@ class Dir_Podcast extends Podcast
             $this->max_mtime = $date;
     }
 
+    public function getMaxMtime()
+    {
+        return $this->max_mtime;
+    }
+
     /**
      * Adds file to ->unsorted_items, and updates ->max_mtime
      * 
@@ -1098,7 +1198,6 @@ class Dir_Podcast extends Podcast
     protected function pre_generate()
     {
         $this->scan();
-        $this->sort();
         
         // Add helpers here, NOT during scan(). 
         // scan() is also used just to get mtimes to see if we need to regenerate the feed.
@@ -1117,7 +1216,7 @@ class Dir_Podcast extends Podcast
             foreach($item_list as $item)
             {
                 $this->items[$i++] = $item;
-                if($i >= ITEM_COUNT)
+                if($i >= self::$ITEM_COUNT)
                     break 2;
             }
         }
@@ -1142,10 +1241,12 @@ class Cached_Dir_Podcast extends Dir_Podcast
     protected $cache_date;
     protected $serve_from_cache;
 
+    static $MIN_CACHE_TIME = 5; // seconds
+
     /**
      * Constructor
      * 
-     * After constructing, you must call ->init(), although you may call 
+     * After constructing, you should call ->init() to make use of the whole-feed cache
      *
      * @param string $source_dir
      * @param string $temp_dir
@@ -1170,8 +1271,8 @@ class Cached_Dir_Podcast extends Dir_Podcast
         {
             $cache_date = filemtime($this->temp_file);
 
-            // if the cache file is quite new, don't both regenerating.
-            if( $cache_date < time() - MIN_CACHE_TIME ) 
+            // if the cache file is quite new, don't bother regenerating.
+            if( $cache_date < time() - self::$MIN_CACHE_TIME ) 
             {
                 $this->scan(); // sets $this->max_mtime
                 if( $this->cache_is_stale($cache_date, $this->max_mtime) )
@@ -1211,7 +1312,7 @@ class Cached_Dir_Podcast extends Dir_Podcast
 
         // disregard changes that are so new that the file may still be being uploaded.
         // Nobody wants an incomplete feed!
-        return $cache_date < $most_recent_modification - MIN_CACHE_TIME;
+        return $cache_date < $most_recent_modification - self::$MIN_CACHE_TIME;
     }
 
     /**
@@ -1235,6 +1336,9 @@ class Cached_Dir_Podcast extends Dir_Podcast
     {
         if($this->serve_from_cache)
         {
+            if(!file_exists($this->temp_file))
+                throw new RuntimeException("serve_from_cache set, but cache file not found");
+
             $output = file_get_contents($this->temp_file); // serve cached copy
         }
         else
@@ -1361,7 +1465,12 @@ class ErrorHandler
     {    
         if(self::$errors)
         {
-            if(ini_get('html_errors'))
+            if(!defined('CLI_ONLY') && !ini_get('html_errors'))
+            {
+                header("Content-type: text/plain"); // reset the content-type
+            }
+
+            if(!defined('CLI_ONLY') && ini_get('html_errors'))
             {
                 header("Content-type: text/html"); // reset the content-type
                         
@@ -1401,11 +1510,12 @@ class ErrorHandler
             }
             else
             {
-                header("Content-type: text/plain"); // reset the content-type
+                // This case happens when define('CLI_ONLY') || !ini_get('html_errors')
                 echo "Error: $message (on line $errline of $errfile)\n";
                 if(!empty(ErrorHandler::$primer))
                     echo strip_tags(self::get_primed_error(ErrorHandler::$primer)) . "\n";
             }
+
             exit(-1);
         }
     }
@@ -1480,6 +1590,9 @@ class SettingsHandler
         
         if(!defined('FORCE_PASSWORD'))
             define('FORCE_PASSWORD', '');
+
+        if(isset($argv) && isset($argv[0]))
+            define('CLI_ONLY', true);
     }
     
     /**
@@ -1641,7 +1754,7 @@ class SettingsHandler
             define('ITUNES_SUBTITLE_SUFFIX', '');
 
         if(!defined('DESCRIPTION_SOURCE'))
-            define('DESCRIPTION_SOURCE', 'id3');
+            define('DESCRIPTION_SOURCE', 'comment');
 
         if(!defined('RECURSIVE_DIRECTORY_ITERATOR'))
             define('RECURSIVE_DIRECTORY_ITERATOR', false);
@@ -1649,6 +1762,13 @@ class SettingsHandler
         if(!defined('AUTO_SAVE_COVER_ART'))
             define('AUTO_SAVE_COVER_ART', true);
 
+
+        // Set up up factory settings for Podcast subclasses
+        Dir_Podcast::$EMPTY_PODCAST_IS_ERROR = !CLI_ONLY;
+        Dir_Podcast::$RECURSIVE_DIRECTORY_ITERATOR = RECURSIVE_DIRECTORY_ITERATOR;
+        Dir_Podcast::$ITEM_COUNT = ITEM_COUNT;
+        Cached_Dir_Podcast::$MIN_CACHE_TIME = MIN_CACHE_TIME;
+        getID3_Podcast_Helper::$AUTO_SAVE_COVER_ART = AUTO_SAVE_COVER_ART;
     }
     
     public static function load_from_ini($file)
@@ -1679,6 +1799,109 @@ class SettingsHandler
 }
 
 class SerializationException extends Exception {}
+
+class Dispatcher
+{
+    protected $podcast;
+
+    public function __construct(Locking_Cached_Dir_Podcast $podcast)
+    {
+        $this->podcast = $podcast;
+    }
+
+    public function uncache_if_forced($force_password, $get)
+    {
+        if( strlen($force_password) && isset($get['force']) && $force_password == $get['force'] )
+        {
+            $this->podcast->uncache();
+        }
+    }
+
+    public function uncache_if_output_file()
+    {
+        if(defined('OUTPUT_FILE'))
+        {
+            $this->podcast->uncache();
+        }
+    }
+
+    public function update_mtime_if_dir2cast_or_settings_modified()
+    {
+        // Ensure that the cache is invalidated if we have updated dir2cast.php or dir2cast.ini
+        // n.b. this doesn't uncache individual media file caches, but also they have a versioning mechanism.
+        $this->podcast->updateMaxMtime(filemtime(__FILE__));
+        if(defined('INI_FILE'))
+            $this->podcast->updateMaxMtime(filemtime(INI_FILE));
+    }
+
+    public function init()
+    {
+        $podcast = $this->podcast;
+
+        $podcast->init(); // checks the cache file, or scans for media folder if the cache is out of date.
+
+        if(!$podcast->isCached())
+        {
+            $getid3 = $podcast->addHelper(new Caching_getID3_Podcast_Helper(TMP_DIR, new getID3_Podcast_Helper()));
+            $atom   = $podcast->addHelper(new Atom_Podcast_Helper());
+            $itunes = $podcast->addHelper(new iTunes_Podcast_Helper());
+
+            // Set up up factory settings for RSS Items
+            RSS_File_Item::$FILES_URL = MP3_URL; // TODO: rename this to MEDIA_URL
+            RSS_File_Item::$FILES_DIR = MP3_DIR; // TODO: rename this to MEDIA_DIR
+            Media_RSS_Item::$LONG_TITLES = LONG_TITLES;
+            Media_RSS_Item::$DESCRIPTION_SOURCE = DESCRIPTION_SOURCE;
+
+            $podcast->setTitle(TITLE);
+            $podcast->setLink(LINK);
+            $podcast->setDescription(DESCRIPTION);
+            $podcast->setLanguage(LANGUAGE);
+            $podcast->setCopyright(COPYRIGHT);
+            $podcast->setWebMaster(WEBMASTER);
+            $podcast->setTtl(TTL);
+            $podcast->setImage(IMAGE);
+
+            $atom->setSelfLink(RSS_LINK);
+
+            $itunes->setSubtitle(ITUNES_SUBTITLE);
+            $itunes->setAuthor(ITUNES_AUTHOR);
+            $itunes->setSummary(ITUNES_SUMMARY);
+            $itunes->setImage(ITUNES_IMAGE);
+            $itunes->setExplicit(ITUNES_EXPLICIT);
+
+            $itunes->setOwnerName(ITUNES_OWNER_NAME);
+            $itunes->setOwnerEmail(ITUNES_OWNER_EMAIL);
+
+            $itunes->addCategories(ITUNES_CATEGORIES);
+
+            $podcast->setGenerator(GENERATOR);
+        }
+    }
+
+    public function output()
+    {
+        $podcast = $this->podcast;
+        if(!defined('OUTPUT_FILE'))
+        {
+            $podcast->http_headers();
+            echo $podcast->generate();
+        }
+        else
+        {
+            echo "Writing RSS to: ". OUTPUT_FILE ."\n";
+            $fh = fopen(OUTPUT_FILE, "w");
+            fwrite($fh,$podcast->generate());
+            fclose($fh);
+
+            if(empty($podcast->getItems()))
+            {
+                echo "** Warning: generated podcast found no episodes.\n";
+                return -1;
+            }
+        }
+        return 0;
+    }
+}
 
 /* FUNCTIONS **********************************************/
 
@@ -1736,68 +1959,13 @@ if(!defined('NO_DISPATCHER'))
     SettingsHandler::defaults();
     
     $podcast = new Locking_Cached_Dir_Podcast(MP3_DIR, TMP_DIR);
+    $dispatcher = new Dispatcher($podcast);
 
-    if( strlen(FORCE_PASSWORD) && isset($_GET['force']) && FORCE_PASSWORD == $_GET['force'] )
-    {
-        $podcast->uncache();    
-    }
-
-    if(defined('OUTPUT_FILE'))
-    {
-        $podcast->uncache();
-    }
-
-    // Ensure that the cache is invalidated if we have updated dir2cast.php or dir2cast.ini
-    // n.b. this doesn't uncache individual media file caches, but also they have a versioning mechanism.
-    $podcast->updateMaxMtime(filemtime(__FILE__));
-    if(defined('INI_FILE'))
-        $podcast->updateMaxMtime(filemtime(INI_FILE));
-
-    $podcast->init(); // checks the cache file, or scans for media folder if the cache is out of date. 
-
-    if(!$podcast->isCached())
-    {
-        $getid3 = $podcast->addHelper(new Caching_getID3_Podcast_Helper(TMP_DIR, new getID3_Podcast_Helper()));
-        $atom   = $podcast->addHelper(new Atom_Podcast_Helper());
-        $itunes = $podcast->addHelper(new iTunes_Podcast_Helper());
-        
-        $podcast->setTitle(TITLE);
-        $podcast->setLink(LINK);
-        $podcast->setDescription(DESCRIPTION);
-        $podcast->setLanguage(LANGUAGE);
-        $podcast->setCopyright(COPYRIGHT);
-        $podcast->setWebMaster(WEBMASTER);
-        $podcast->setTtl(TTL);
-        $podcast->setImage(IMAGE);
-        
-        $atom->setSelfLink(RSS_LINK);
-        
-        $itunes->setSubtitle(ITUNES_SUBTITLE);
-        $itunes->setAuthor(ITUNES_AUTHOR);
-        $itunes->setSummary(ITUNES_SUMMARY);
-        $itunes->setImage(ITUNES_IMAGE);
-        $itunes->setExplicit(ITUNES_EXPLICIT);
-        
-        $itunes->setOwnerName(ITUNES_OWNER_NAME);
-        $itunes->setOwnerEmail(ITUNES_OWNER_EMAIL);
-        
-        $itunes->addCategories(ITUNES_CATEGORIES);
-        
-        $podcast->setGenerator(GENERATOR);
-    }
-    
-    if(!defined('OUTPUT_FILE'))
-    {
-        $podcast->http_headers();
-        echo $podcast->generate();
-    }
-    else
-    {
-        echo "Writing RSS to: ". OUTPUT_FILE ."\n";
-        $fh = fopen(OUTPUT_FILE, "w");
-        fwrite($fh,$podcast->generate());
-        fclose($fh);
-    }
+    $dispatcher->uncache_if_forced(FORCE_PASSWORD, $_GET);
+    $dispatcher->uncache_if_output_file();
+    $dispatcher->update_mtime_if_dir2cast_or_settings_modified();
+    $dispatcher->init();
+    exit($dispatcher->output());
 }
 
 /* THE END *********************************************/
