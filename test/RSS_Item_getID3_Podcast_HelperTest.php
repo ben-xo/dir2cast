@@ -13,10 +13,15 @@ class RSS_Item_getID3_Podcast_HelperTest extends TestCase
         prepare_testing_dir();
     }
 
+    public function newHelper()
+    {
+        return new getID3_Podcast_Helper();
+    }
+
     public function test_empty_rss_item()
     {
         $mp = new MyPodcast();
-        $helper = new getID3_Podcast_Helper();
+        $helper = $this->newHelper();
         $mp->addHelper($helper);
 
         copy('../fixtures/empty.mp3', './empty.mp3');
@@ -36,7 +41,7 @@ class RSS_Item_getID3_Podcast_HelperTest extends TestCase
     public function test_id3v1_artist_album_title()
     {
         $mp = new MyPodcast();
-        $helper = new getID3_Podcast_Helper();
+        $helper = $this->newHelper();
         $mp->addHelper($helper);
 
         copy('../fixtures/id3v1_artist_album_title.mp3', './id3v1_artist_album_title.mp3');
@@ -56,7 +61,7 @@ class RSS_Item_getID3_Podcast_HelperTest extends TestCase
     public function test_id3v1_artist_title()
     {
         $mp = new MyPodcast();
-        $helper = new getID3_Podcast_Helper();
+        $helper = $this->newHelper();
         $mp->addHelper($helper);
 
         copy('../fixtures/id3v1_artist_title.mp3', './id3v1_artist_title.mp3');
@@ -76,7 +81,7 @@ class RSS_Item_getID3_Podcast_HelperTest extends TestCase
     public function test_id3v1_title()
     {
         $mp = new MyPodcast();
-        $helper = new getID3_Podcast_Helper();
+        $helper = $this->newHelper();
         $mp->addHelper($helper);
 
         copy('../fixtures/id3v1_title.mp3', './id3v1_title.mp3');
@@ -96,7 +101,7 @@ class RSS_Item_getID3_Podcast_HelperTest extends TestCase
     public function test_id3v1_comment()
     {
         $mp = new MyPodcast();
-        $helper = new getID3_Podcast_Helper();
+        $helper = $this->newHelper();
         $mp->addHelper($helper);
 
         copy('../fixtures/id3v1_comment.mp3', './id3v1_comment.mp3');
@@ -112,7 +117,7 @@ class RSS_Item_getID3_Podcast_HelperTest extends TestCase
     public function test_id3v2_artist_album_title()
     {
         $mp = new MyPodcast();
-        $helper = new getID3_Podcast_Helper();
+        $helper = $this->newHelper();
         $mp->addHelper($helper);
 
         copy('../fixtures/id3v2_artist_album_title.mp3', './id3v2_artist_album_title.mp3');
@@ -132,7 +137,7 @@ class RSS_Item_getID3_Podcast_HelperTest extends TestCase
     public function test_id3v2_artist_album_title_with_cover()
     {
         $mp = new MyPodcast();
-        $helper = new getID3_Podcast_Helper();
+        $helper = $this->newHelper();
         $mp->addHelper($helper);
 
         copy('../fixtures/id3v2_artist_album_title_cover.mp3', './id3v2_artist_album_title_cover.mp3');
@@ -149,7 +154,7 @@ class RSS_Item_getID3_Podcast_HelperTest extends TestCase
     public function test_id3v2_artist_title()
     {
         $mp = new MyPodcast();
-        $helper = new getID3_Podcast_Helper();
+        $helper = $this->newHelper();
         $mp->addHelper($helper);
 
         copy('../fixtures/id3v2_artist_title.mp3', './id3v2_artist_title.mp3');
@@ -169,7 +174,7 @@ class RSS_Item_getID3_Podcast_HelperTest extends TestCase
     public function test_id3v2_title()
     {
         $mp = new MyPodcast();
-        $helper = new getID3_Podcast_Helper();
+        $helper = $this->newHelper();
         $mp->addHelper($helper);
 
         copy('../fixtures/id3v2_title.mp3', './id3v2_title.mp3');
@@ -189,7 +194,7 @@ class RSS_Item_getID3_Podcast_HelperTest extends TestCase
     public function test_id3v2_comment()
     {
         $mp = new MyPodcast();
-        $helper = new getID3_Podcast_Helper();
+        $helper = $this->newHelper();
         $mp->addHelper($helper);
 
         copy('../fixtures/id3v2_comment.mp3', './id3v2_comment.mp3');
@@ -205,7 +210,7 @@ class RSS_Item_getID3_Podcast_HelperTest extends TestCase
     public function test_mp4_empty()
     {
         $mp = new MyPodcast();
-        $helper = new getID3_Podcast_Helper();
+        $helper = $this->newHelper();
         $mp->addHelper($helper);
 
         copy('../fixtures/empty.mp4', './empty.mp4');
@@ -225,7 +230,7 @@ class RSS_Item_getID3_Podcast_HelperTest extends TestCase
     public function test_mp4_tagged()
     {
         $mp = new MyPodcast();
-        $helper = new getID3_Podcast_Helper();
+        $helper = $this->newHelper();
         $mp->addHelper($helper);
 
         copy('../fixtures/tagged.mp4', './tagged.mp4');
@@ -246,7 +251,7 @@ class RSS_Item_getID3_Podcast_HelperTest extends TestCase
     public function test_mp4_tagged_cover()
     {
         $mp = new MyPodcast();
-        $helper = new getID3_Podcast_Helper();
+        $helper = $this->newHelper();
         $mp->addHelper($helper);
 
         copy('../fixtures/tagged_with_cover.mp4', './tagged_with_cover.mp4');
