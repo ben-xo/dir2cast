@@ -1075,6 +1075,7 @@ class Dir_Podcast extends Podcast
     static $EMPTY_PODCAST_IS_ERROR = false;
     static $RECURSIVE_DIRECTORY_ITERATOR = false;
     static $ITEM_COUNT = 10;
+    static $MIN_FILE_AGE = 0;
 
     protected $source_dir;
     protected $scanned = false;
@@ -1188,6 +1189,12 @@ class Dir_Podcast extends Podcast
         if(filesize($filename))
         {
             $filemtime = filemtime($filename);
+
+            if((self::$MIN_FILE_AGE > 0) && $filemtime > (time() - self::$MIN_FILE_AGE))
+            {
+                // don't add files which are so new that they may still be being uploaded
+                return;
+            }
 
             // one array per mtime, just in case several MP3s share the same mtime.
             $this->unsorted_items[$filemtime][] = $the_item;
@@ -1310,8 +1317,6 @@ class Cached_Dir_Podcast extends Dir_Podcast
             $most_recent_modification = filemtime($this->source_dir);
         }
 
-        // disregard changes that are so new that the file may still be being uploaded.
-        // Nobody wants an incomplete feed!
         return $cache_date < $most_recent_modification - self::$MIN_CACHE_TIME;
     }
 
@@ -1546,10 +1551,10 @@ class SettingsHandler
             define('INI_FILE', $ini_file_name);
         }
         
-        $cli_options = getopt('', array('help', 'media-dir::', 'media-url::', 'output::'));
+        $cli_options = getopt('', array('help', 'media-dir::', 'media-url::', 'output::', 'dont-uncache', 'min-file-age::'));
         if($cli_options) {
             if(isset($cli_options['help'])) {
-                print "Usage: php dir2cast.php [--help] [--media-dir=MP3_DIR] [--media-url=MP3_URL] [--output=OUTPUT_FILE]\n";
+                print "Usage: php dir2cast.php [--help] [--media-dir=MP3_DIR] [--media-url=MP3_URL] [--output=OUTPUT_FILE] [--dont-uncache] [--min-file-age]\n";
                 exit;
             }
             if(!defined('MP3_DIR') && !empty($cli_options['media-dir']))
@@ -1563,6 +1568,14 @@ class SettingsHandler
             if(!defined('OUTPUT_FILE') && !empty($cli_options['output']))
             {
                 define('OUTPUT_FILE', $cli_options['output']);
+            }
+            if(!defined('DONT_UNCACHE_IF_OUTPUT_FILE') && isset($cli_options['dont-uncache']))
+            {
+                define('DONT_UNCACHE_IF_OUTPUT_FILE', true);
+            }
+            if(!defined('MIN_FILE_AGE') && isset($cli_options['min-file-age']))
+            {
+                define('MIN_FILE_AGE', (int)$cli_options['min-file-age']);
             }
         }
 
@@ -1762,11 +1775,17 @@ class SettingsHandler
         if(!defined('AUTO_SAVE_COVER_ART'))
             define('AUTO_SAVE_COVER_ART', true);
 
+        if(!defined('DONT_UNCACHE_IF_OUTPUT_FILE'))
+            define('DONT_UNCACHE_IF_OUTPUT_FILE', false);
 
-        // Set up up factory settings for Podcast subclasses
+        if(!defined('MIN_FILE_AGE'))
+            define('MIN_FILE_AGE', 30);
+
+        // Set up factory settings for Podcast subclasses
         Dir_Podcast::$EMPTY_PODCAST_IS_ERROR = !CLI_ONLY;
         Dir_Podcast::$RECURSIVE_DIRECTORY_ITERATOR = RECURSIVE_DIRECTORY_ITERATOR;
         Dir_Podcast::$ITEM_COUNT = ITEM_COUNT;
+        Dir_Podcast::$MIN_FILE_AGE = MIN_FILE_AGE;
         Cached_Dir_Podcast::$MIN_CACHE_TIME = MIN_CACHE_TIME;
         getID3_Podcast_Helper::$AUTO_SAVE_COVER_ART = AUTO_SAVE_COVER_ART;
     }
@@ -1819,7 +1838,7 @@ class Dispatcher
 
     public function uncache_if_output_file()
     {
-        if(defined('OUTPUT_FILE'))
+        if(defined('OUTPUT_FILE') && !DONT_UNCACHE_IF_OUTPUT_FILE)
         {
             $this->podcast->uncache();
         }

@@ -13,8 +13,13 @@ final class CachingTest extends TestCase
     public static function setUpBeforeClass(): void
     {
         prepare_testing_dir();
-        exec('php dir2cast.php --output=out.xml', self::$output, self::$returncode);
+    }
+
+    public function setUp(): void
+    {
+        exec('php dir2cast.php --output=out.xml --min-file-age=0', self::$output, self::$returncode);
         self::$content = file_get_contents(self::$file);
+        clearstatcache();
     }
 
     public function test_default_empty_podcast_caches_output_in_default_folder(): void
@@ -33,18 +38,28 @@ final class CachingTest extends TestCase
 
     public function test_default_empty_podcast_obeys_minimum_cache_time(): void
     {
-        $this->markTestIncomplete('This test is known to fail');
-
-        // too new to bust the cache
+        // new enough to bust the cache, but cache is very new
         file_put_contents('empty.mp3', 'test');
-        touch('empty.mp3');
+        touch('empty.mp3', time()-3600);
+        touch('dir2cast.php', time()-86400);
 
-        exec('php dir2cast.php --output=out.xml', self::$output, self::$returncode);
+        exec('php dir2cast.php --output=out.xml --dont-uncache --min-file-age=0', self::$output, self::$returncode);
 
         $new_content = file_get_contents(self::$file);
         $this->assertEquals(self::$content, $new_content);
+    }
 
-        unlink('empty.mp3');
+    public function test_default_empty_podcast_uncaches_anyway(): void
+    {
+        // too new to bust the cache, but cli runner uncaches anyway
+        file_put_contents('empty.mp3', 'test');
+        touch('empty.mp3');
+        touch('dir2cast.php', time()-86400);
+
+        exec('php dir2cast.php --output=out.xml --min-file-age=0', self::$output, self::$returncode);
+
+        $new_content = file_get_contents(self::$file);
+        $this->assertNotEquals(self::$content, $new_content);
     }
 
     public function test_expired_podcast_is_regenerated(): void
@@ -54,6 +69,7 @@ final class CachingTest extends TestCase
             touch($file, time()-86400);
         }
         touch(self::$file, time()-86400);
+        touch('dir2cast.php', time()-86400);
 
         file_put_contents('empty.mp3', 'test');
         touch('empty.mp3', time()-3600);
@@ -61,25 +77,103 @@ final class CachingTest extends TestCase
         clearstatcache();
         $old_mtime = filemtime($cached_output_files[0]);
 
-        exec('php dir2cast.php --output=out.xml');
-        $new_content = file_get_contents(self::$file); // should have different publishDate
+        exec('php dir2cast.php --output=out.xml --dont-uncache --min-file-age=0');
+        $new_content = file_get_contents(self::$file); // should have empty.mp3
         $this->assertNotEquals(self::$content, $new_content);
 
         clearstatcache();
         $new_mtime = filemtime($cached_output_files[0]);
+        
+        // cache file should be refreshed
         $this->assertNotEquals($old_mtime, $new_mtime);
+    }
 
-        unlink('empty.mp3');
+    public function test_expired_podcast_is_not_regenerated_if_new_file_is_too_new(): void
+    {
+        // make cache files and output file a day old
+        $cached_output_files = glob('./temp/*.xml');
+        foreach ($cached_output_files as $file) {
+            touch($file, time()-86400);
+        }
+        touch(self::$file, time()-86400);
+        touch('dir2cast.php', time()-86400);
+
+        file_put_contents('empty.mp3', 'test');
+        touch('empty.mp3'); // too new to bust cache
+
+        clearstatcache();
+        $old_mtime = filemtime($cached_output_files[0]);
+
+        exec('php dir2cast.php --output=out.xml --dont-uncache --min-file-age=30');
+        $new_content = file_get_contents(self::$file); // should not have empty.mp3
+        $this->assertEquals(self::$content, $new_content);
+
+        clearstatcache();
+        $new_mtime = filemtime($cached_output_files[0]);
+
+        // cache file should be refreshed
+        $this->assertNotEquals($old_mtime, $new_mtime);
     }
 
     public function test_update_to_dir2cast_php_invalidates_cache(): void
     {
-        $this->markTestIncomplete('TODO');
+        // make cache files and output file a day old
+        $cached_output_files = glob('./temp/*.xml');
+        foreach ($cached_output_files as $file) {
+            touch($file, time()-86400);
+        }
+        touch(self::$file, time()-86400);
+        touch('dir2cast.php', time()-3600); // older than the minimum cache time, but newer than the cache files
+
+        file_put_contents('empty.mp3', 'test');
+        touch('empty.mp3', time()-86400);
+
+        clearstatcache();
+        $old_mtime = filemtime($cached_output_files[0]);
+
+        exec('php dir2cast.php --output=out.xml --dont-uncache --min-file-age=30');
+        $new_content = file_get_contents(self::$file); // should have empty.mp3
+        $this->assertNotEquals(self::$content, $new_content);
+
+        clearstatcache();
+        $new_mtime = filemtime($cached_output_files[0]);
+
+        // cache file should be refreshed
+        $this->assertNotEquals($old_mtime, $new_mtime);
     }
 
     public function test_update_to_dir2cast_ini_invalidates_cache(): void
     {
-        $this->markTestIncomplete('TODO');
+        // make cache files and output file a day old
+        $cached_output_files = glob('./temp/*.xml');
+        foreach ($cached_output_files as $file) {
+            touch($file, time()-86400);
+        }
+        touch(self::$file, time()-86400);
+        touch('dir2cast.php', time()-86400);
+        touch('dir2cast.ini', time()-3600);
+
+        file_put_contents('empty.mp3', 'test');
+        touch('empty.mp3', time()-86400);
+
+        clearstatcache();
+        $old_mtime = filemtime($cached_output_files[0]);
+
+        exec('php dir2cast.php --output=out.xml --dont-uncache --min-file-age=30');
+        $new_content = file_get_contents(self::$file); // should have empty.mp3
+        $this->assertNotEquals(self::$content, $new_content);
+
+        clearstatcache();
+        $new_mtime = filemtime($cached_output_files[0]);
+
+        // cache file should be refreshed
+        $this->assertNotEquals($old_mtime, $new_mtime);
+    }
+
+    public function tearDown(): void
+    {
+        file_exists('empty.mp3') && unlink('empty.mp3');
+        rmrf('temp');
     }
 
     public static function tearDownAfterClass(): void

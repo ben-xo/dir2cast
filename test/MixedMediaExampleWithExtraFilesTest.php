@@ -38,7 +38,7 @@ final class MixedMediaExampleWithExtraFilesTest extends MixedMediaExampleTest
         file_put_contents('2_subtitle.txt', 'Return Of The Episode');
 
         MixedMediaExampleTest::$output = '';
-        exec('php dir2cast.php --media-url=https://www.example.com/podcast/ --output=out.xml',
+        exec('php dir2cast.php --media-url=https://www.example.com/podcast/ --output=out.xml --min-file-age=0',
             MixedMediaExampleTest::$output,
             MixedMediaExampleTest::$returncode
         );

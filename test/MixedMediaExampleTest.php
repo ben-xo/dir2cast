@@ -27,7 +27,7 @@ class MixedMediaExampleTest extends TestCase
         self::$filemtime = $now;
 
         self::$output = '';
-        exec('php dir2cast.php --media-url=https://www.example.com/podcast/ --output=out.xml', self::$output, self::$returncode);
+        exec('php dir2cast.php --media-url=https://www.example.com/podcast/ --output=out.xml --min-file-age=0', self::$output, self::$returncode);
     }
 
     public function test_podcast_creates_output(): void
