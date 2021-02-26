@@ -1763,7 +1763,7 @@ class SettingsHandler
             define('AUTO_SAVE_COVER_ART', true);
 
 
-        // Set up up factory settings for Podcast subclasses
+        // Set up factory settings for Podcast subclasses
         Dir_Podcast::$EMPTY_PODCAST_IS_ERROR = !CLI_ONLY;
         Dir_Podcast::$RECURSIVE_DIRECTORY_ITERATOR = RECURSIVE_DIRECTORY_ITERATOR;
         Dir_Podcast::$ITEM_COUNT = ITEM_COUNT;
