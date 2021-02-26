@@ -241,6 +241,40 @@ class RSS_File_ItemTest extends RSS_ItemTest
         $this->assertEquals('PNG content', file_get_contents($expected_image_filename));
     }
 
+    public function test_saveImage_doesnt_replace_manual_image()
+    {
+        $expected_image_filename = $this->filename_base . '.jpg';
+        file_put_contents($expected_image_filename, 'bla');
+
+        $item = $this->newRSSItem();
+        $item->saveImage('image/jpeg', 'JFIF content');
+        $this->assertEquals('bla', file_get_contents($expected_image_filename));
+    }
+
+    public function test_saveImage_doesnt_replace_manual_image_of_alternate_type_jpg_png()
+    {
+        $expected_image_filename = $this->filename_base . '.jpg';
+        $unexpected_image_filename = $this->filename_base . '.png';
+        file_put_contents($expected_image_filename, 'bla');
+
+        $item = $this->newRSSItem();
+        $item->saveImage('image/png', 'PNG content');
+        $this->assertEquals('bla', file_get_contents($expected_image_filename));
+        $this->assertFalse(file_exists($unexpected_image_filename));
+    }
+
+    public function test_saveImage_doesnt_replace_manual_image_of_alternate_type_png_jpg()
+    {
+        $expected_image_filename = $this->filename_base . '.png';
+        $unexpected_image_filename = $this->filename_base . '.jpg';
+        file_put_contents($expected_image_filename, 'bla');
+
+        $item = $this->newRSSItem();
+        $item->saveImage('image/jpeg', 'JFIF content');
+        $this->assertEquals('bla', file_get_contents($expected_image_filename));
+        $this->assertFalse(file_exists($unexpected_image_filename));
+    }
+
     public function test_saveImage_anything_else()
     {
         $item = $this->newRSSItem();

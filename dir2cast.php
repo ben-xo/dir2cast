@@ -748,16 +748,22 @@ class RSS_File_Item extends RSS_Item {
 
     public function saveImage($mime_type, $data)
     {
+        if(file_exists($this->getImageFilename('jpg')) || file_exists($this->getImageFilename('png')))
+        {
+            // don't overwrite image which already exists, even if it's of the wrong type.
+            return;
+        }
+
         switch($mime_type) {
             case 'image/jpeg':
                 $filename = $this->getImageFilename('jpg');
-                if(!file_exists($filename) && is_writable(dirname($filename)))
+                if(is_writable(dirname($filename)))
                     file_put_contents($filename, $data);
                 break;
 
             case 'image/png':
                 $filename = $this->getImageFilename('png');
-                if(!file_exists($filename) && is_writable(dirname($filename)))
+                if(is_writable(dirname($filename)))
                     file_put_contents($filename, $data);
                 break;
         }
