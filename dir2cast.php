@@ -156,6 +156,8 @@ class QuicktimeImageHelper {
  *
  */
 class getID3_Podcast_Helper implements Podcast_Helper {
+
+    static $AUTO_SAVE_COVER_ART = false;
         
     public function appendToChannel(DOMElement $d, DOMDocument $doc) { /* nothing */ }
     public function addNamespaceTo(DOMElement $d, DOMDocument $doc) { /* nothing */ }
@@ -198,7 +200,7 @@ class getID3_Podcast_Helper implements Podcast_Helper {
                 if(!empty($info['comments']['comment'][0]))
                     $item->setID3Comment( $info['comments']['comment'][0] );
 
-                if(AUTO_SAVE_COVER_ART)
+                if(self::$AUTO_SAVE_COVER_ART)
                 {
                     // this works for MP3s
                     if(!empty($info['comments']['picture'][0]))
@@ -1760,6 +1762,7 @@ class SettingsHandler
         Dir_Podcast::$RECURSIVE_DIRECTORY_ITERATOR = RECURSIVE_DIRECTORY_ITERATOR;
         Dir_Podcast::$ITEM_COUNT = ITEM_COUNT;
         Cached_Dir_Podcast::$MIN_CACHE_TIME = MIN_CACHE_TIME;
+        getID3_Podcast_Helper::$AUTO_SAVE_COVER_ART = AUTO_SAVE_COVER_ART;
     }
     
     public static function load_from_ini($file)

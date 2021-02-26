@@ -2,12 +2,12 @@
 
 use PHPUnit\Framework\TestCase;
 
-final class RSS_Item_getID3_Podcast_HelperTest extends TestCase
+class RSS_Item_getID3_Podcast_HelperTest extends TestCase
 {
 
     public static function setUpBeforeClass(): void
     {
-        define('AUTO_SAVE_COVER_ART', false);
+        getID3_Podcast_Helper::$AUTO_SAVE_COVER_ART = false;
         RSS_File_Item::$FILES_URL = 'http://www.example.com/mp3/';
         RSS_File_Item::$FILES_DIR = getcwd();
         prepare_testing_dir();
@@ -129,6 +129,23 @@ final class RSS_Item_getID3_Podcast_HelperTest extends TestCase
         $this->assertEquals('', $item->getImage());
     }
 
+    public function test_id3v2_artist_album_title_with_cover()
+    {
+        $mp = new MyPodcast();
+        $helper = new getID3_Podcast_Helper();
+        $mp->addHelper($helper);
+
+        copy('../fixtures/id3v2_artist_album_title_cover.mp3', './id3v2_artist_album_title_cover.mp3');
+        $item = new Media_RSS_Item('id3v2_artist_album_title_cover.mp3');
+
+        $mp->addRssItem($item);
+
+        $content = $mp->generate();
+
+        $this->assertEquals('', $item->getImage());
+        $this->assertFalse(file_exists('id3v2_artist_album_title_cover.jpg'));
+    }    
+
     public function test_id3v2_artist_title()
     {
         $mp = new MyPodcast();
@@ -226,15 +243,36 @@ final class RSS_Item_getID3_Podcast_HelperTest extends TestCase
         $this->assertEquals('', $item->getImage());
     }
 
+    public function test_mp4_tagged_cover()
+    {
+        $mp = new MyPodcast();
+        $helper = new getID3_Podcast_Helper();
+        $mp->addHelper($helper);
+
+        copy('../fixtures/tagged_with_cover.mp4', './tagged_with_cover.mp4');
+        $item = new Media_RSS_Item('tagged_with_cover.mp4');
+
+        $mp->addRssItem($item);
+
+        $content = $mp->generate();
+
+        $this->assertEquals('', $item->getImage());
+        $this->assertFalse(file_exists('tagged_with_cover.jpg'));
+    }
+
     public function tearDown(): void
     {
         file_exists('empty.mp4') && unlink('empty.mp4');
         file_exists('tagged.mp4') && unlink('tagged.mp4');
+        file_exists('tagged_with_cover.mp4') && unlink('tagged_with_cover.mp4');
+        file_exists('tagged_with_cover.jpg') && unlink('tagged_with_cover.jpg');
         file_exists('empty.mp3') && unlink('empty.mp3');
         file_exists('id3v1_artist_album_title.mp3') && unlink('id3v1_artist_album_title.mp3');
         file_exists('id3v1_artist_title.mp3') && unlink('id3v1_artist_title.mp3');
         file_exists('id3v1_title.mp3') && unlink('id3v1_title.mp3');
         file_exists('id3v2_artist_album_title.mp3') && unlink('id3v2_artist_album_title.mp3');
+        file_exists('id3v2_artist_album_title_cover.mp3') && unlink('id3v2_artist_album_title_cover.mp3');
+        file_exists('id3v2_artist_album_title_cover.jpg') && unlink('id3v2_artist_album_title_cover.jpg');
         file_exists('id3v2_artist_title.mp3') && unlink('id3v2_artist_title.mp3');
         file_exists('id3v2_title.mp3') && unlink('id3v2_title.mp3');
         file_exists('id3v1_comment.mp3') && unlink('id3v1_comment.mp3');
