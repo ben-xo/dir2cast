@@ -1,12 +1,33 @@
 Changelog
 =========
 
+1.24 2021-02-26 Add a comprehensive unit test suite!
+
+                A bunch of changes designed for better code re-use, such as not 
+                 using defines inside classes, and allowing programmatic
+                 overriding of properties of RSS items.
+
+                Fixes to the generation of the media base URL.
+
+                Better handling of image URLs.
+
+                Don't save images from media files if one already exists but it's
+                 of a different type than the one in the media file.
+
+                Fix a bug when DESCRIPTION_SOURCE is summary and summary is the default
+                  (which is the description).
+
+                Allow generation of empty podcasts on the CLI (mostly for testing)
+
+                Upgrades to getID3 to fix a few other bugs I encountered during testing.
+
+
 1.23 2020-02-23 Use the filename of a media file as the default title instead
                 of (untitled). Suggestion by wesyah234
 
 1.22 2020-01-19 iTunes categories now use comma instead of pipe as a separator.
-				        Characters which are valid UTF-8 but invalid XML are removed.
-				        Most ini examples updated to use double quotes.
+                Characters which are valid UTF-8 but invalid XML are removed.
+                Most ini examples updated to use double quotes.
 
 1.21 2020-01-10 Uncache the podcast when the configuration changes, making it
                 quicker and easier to experiment with settings.
