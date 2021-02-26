@@ -1,4 +1,4 @@
-dir2cast by Ben XO v1.24 (2021-02-26)
+dir2cast by Ben XO v1.25 (2021-02-26)
 ================================================================================
 
 https://github.com/ben-xo/dir2cast/
@@ -176,7 +176,7 @@ is /dir2cast/dir2cast.php
 COPYRIGHT & LICENSE
 ================================================================================
 
-Copyright (c) 2008-2020, Ben XO (me@ben-xo.com).
+Copyright (c) 2008-2021, Ben XO (me@ben-xo.com).
 
 The software is released under the BSD License.
 
