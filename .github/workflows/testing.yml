@@ -20,4 +20,4 @@ jobs:
         env:
           fail-fast: true
       - name: Test with phpunit
-        run: ./test/run.sh --coverage-text
+        run: ./test/run.sh --coverage-text .
