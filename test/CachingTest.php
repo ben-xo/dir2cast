@@ -123,7 +123,7 @@ final class CachingTest extends TestCase
             touch($file, time()-86400);
         }
         touch(self::$file, time()-86400);
-        touch('dir2cast.php', time()-3600); // older than the minimum cache time, but newer than the cache files
+        touch('../../dir2cast.php', time()-3600); // older than the minimum cache time, but newer than the cache files
 
         file_put_contents('empty.mp3', 'test');
         touch('empty.mp3', time()-86400);
