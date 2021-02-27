@@ -1540,12 +1540,23 @@ class SettingsHandler
      */
     public static function bootstrap(array $SERVER, array $GET, array $argv)
     {
+
+        if(isset($argv) && isset($argv[0])) {
+            define('CLI_ONLY', true);
+        }
+
+        if(defined('CLI_ONLY') && CLI_ONLY) {
+            define('DIR2CAST_BASE', realpath(dirname($argv[0])));
+        } else {
+            define('DIR2CAST_BASE', dirname(__FILE__));
+        }
+
         // If an installation-wide config file exists, load it now.
         // Installation-wide config can contain TMP_DIR, MP3_DIR and MIN_CACHE_TIME.
         // Anything else it contains will be used as a fall-back if no dir-specific dir2cast.ini exists
-        if(file_exists( dirname(__FILE__) . '/dir2cast.ini' ))
+        if(file_exists( DIR2CAST_BASE . '/dir2cast.ini' ))
         {
-            $ini_file_name = dirname(__FILE__) . '/dir2cast.ini';
+            $ini_file_name = DIR2CAST_BASE . '/dir2cast.ini';
             self::load_from_ini( $ini_file_name );
             self::finalize(array('TMP_DIR', 'MP3_BASE', 'MP3_DIR', 'MIN_CACHE_TIME', 'FORCE_PASSWORD'));
             define('INI_FILE', $ini_file_name);
@@ -1578,16 +1589,23 @@ class SettingsHandler
                 define('MIN_FILE_AGE', (int)$cli_options['min-file-age']);
             }
         }
-
-        if(!defined('TMP_DIR'))
-            define('TMP_DIR', dirname(__FILE__) . '/temp');
+       
+        if(!defined('MIN_CACHE_TIME'))
+            define('MIN_CACHE_TIME', 5);
         
+        if(!defined('FORCE_PASSWORD'))
+            define('FORCE_PASSWORD', '');
+
+        if(!defined('TMP_DIR')) {
+            define('TMP_DIR', DIR2CAST_BASE . '/temp');
+        }
+
         if(!defined('MP3_BASE'))
         {
             if(!empty($SERVER['HTTP_HOST']))
                 define('MP3_BASE', dirname($SERVER['SCRIPT_FILENAME']));
             else
-                define('MP3_BASE', dirname(__FILE__));
+                define('MP3_BASE', DIR2CAST_BASE);
         }
             
         if(!defined('MP3_DIR'))
@@ -1598,14 +1616,6 @@ class SettingsHandler
                 define('MP3_DIR', MP3_BASE);
         }
 
-        if(!defined('MIN_CACHE_TIME'))
-            define('MIN_CACHE_TIME', 5);
-        
-        if(!defined('FORCE_PASSWORD'))
-            define('FORCE_PASSWORD', '');
-
-        if(isset($argv) && isset($argv[0]))
-            define('CLI_ONLY', true);
     }
     
     /**
@@ -1616,7 +1626,7 @@ class SettingsHandler
         // if an MP3_DIR specific config file exists, load it now, as long as it's not the same file as the global one!
         if( 
             file_exists( MP3_DIR . '/dir2cast.ini' ) and    
-            realpath(dirname(__FILE__) . '/dir2cast.ini') != realpath( MP3_DIR . '/dir2cast.ini' ) 
+            realpath(DIR2CAST_BASE . '/dir2cast.ini') != realpath( MP3_DIR . '/dir2cast.ini' ) 
         ) {
             self::load_from_ini( MP3_DIR . '/dir2cast.ini' );
         }
@@ -1668,8 +1678,8 @@ class SettingsHandler
         {
             if(file_exists(MP3_DIR . '/description.txt'))
                 define('DESCRIPTION', file_get_contents(MP3_DIR . '/description.txt'));
-            elseif(file_exists(dirname(__FILE__) . '/description.txt'))
-                define('DESCRIPTION', file_get_contents(dirname(__FILE__) . '/description.txt'));
+            elseif(file_exists(DIR2CAST_BASE . '/description.txt'))
+                define('DESCRIPTION', file_get_contents(DIR2CAST_BASE . '/description.txt'));
             else
                 define('DESCRIPTION', 'Podcast');
         }
@@ -1693,8 +1703,8 @@ class SettingsHandler
         {
             if(file_exists(MP3_DIR . '/itunes_subtitle.txt'))
                 define('ITUNES_SUBTITLE', file_get_contents(MP3_DIR . '/itunes_subtitle.txt'));
-            elseif(file_exists(dirname(__FILE__) . '/itunes_subtitle.txt'))
-                define('ITUNES_SUBTITLE', file_get_contents(dirname(__FILE__) . '/itunes_subtitle.txt'));
+            elseif(file_exists(DIR2CAST_BASE . '/itunes_subtitle.txt'))
+                define('ITUNES_SUBTITLE', file_get_contents(DIR2CAST_BASE . '/itunes_subtitle.txt'));
             else
                 define('ITUNES_SUBTITLE', DESCRIPTION);
         }
@@ -1703,8 +1713,8 @@ class SettingsHandler
         {
             if(file_exists(MP3_DIR . '/itunes_summary.txt'))
                 define('ITUNES_SUMMARY', file_get_contents(MP3_DIR . '/itunes_summary.txt'));
-            elseif(file_exists(dirname(__FILE__) . '/itunes_summary.txt'))
-                define('ITUNES_SUMMARY', file_get_contents(dirname(__FILE__) . '/itunes_summary.txt'));
+            elseif(file_exists(DIR2CAST_BASE . '/itunes_summary.txt'))
+                define('ITUNES_SUMMARY', file_get_contents(DIR2CAST_BASE . '/itunes_summary.txt'));
             else
                 define('ITUNES_SUMMARY', DESCRIPTION);
         }
@@ -1715,9 +1725,9 @@ class SettingsHandler
                 define('IMAGE', rtrim(MP3_URL, '/') . '/image.jpg');
             elseif(file_exists(rtrim(MP3_DIR, '/') . '/image.png'))
                 define('IMAGE', rtrim(MP3_URL, '/') . '/image.png');
-            elseif(file_exists(dirname(__FILE__) . '/image.jpg'))
+            elseif(file_exists(DIR2CAST_BASE . '/image.jpg'))
                 define('IMAGE', rtrim(MP3_URL, '/') . '/image.jpg');
-            elseif(file_exists(dirname(__FILE__) . '/image.png'))
+            elseif(file_exists(DIR2CAST_BASE . '/image.png'))
                 define('IMAGE', rtrim(MP3_URL, '/') . '/image.png');
             else
                 define('IMAGE', '');
@@ -1729,9 +1739,9 @@ class SettingsHandler
                 define('ITUNES_IMAGE', rtrim(MP3_URL, '/') . '/itunes_image.jpg');
             elseif(file_exists(rtrim(MP3_DIR, '/') . '/itunes_image.png'))
                 define('ITUNES_IMAGE', rtrim(MP3_URL, '/') . '/itunes_image.png');
-            elseif(file_exists(dirname(__FILE__) . '/itunes_image.jpg'))
+            elseif(file_exists(DIR2CAST_BASE . '/itunes_image.jpg'))
                 define('ITUNES_IMAGE', rtrim(MP3_URL, '/') . '/itunes_image.jpg');
-            elseif(file_exists(dirname(__FILE__) . '/itunes_image.png'))
+            elseif(file_exists(DIR2CAST_BASE . '/itunes_image.png'))
                 define('ITUNES_IMAGE', rtrim(MP3_URL, '/') . '/itunes_image.png');
             else
                 define('ITUNES_IMAGE', '');
