@@ -1541,7 +1541,7 @@ class SettingsHandler
     public static function bootstrap(array $SERVER, array $GET, array $argv)
     {
 
-        if(isset($argv) && isset($argv[0])) {
+        if(!defined('CLI_ONLY') && isset($argv) && isset($argv[0])) {
             define('CLI_ONLY', true);
         }
 
@@ -1912,7 +1912,10 @@ class Dispatcher
         $podcast = $this->podcast;
         if(!defined('OUTPUT_FILE'))
         {
-            $podcast->http_headers();
+            if(!CLI_ONLY)
+            {
+                $podcast->http_headers();
+            }
             echo $podcast->generate();
         }
         else
@@ -1976,12 +1979,12 @@ function utf8_for_xml($s)
 
 /* DISPATCH *********************************************/
 
-function main($argv)
+function main($args)
 {
     SettingsHandler::bootstrap(
         empty($_SERVER) ? array() : $_SERVER, 
         empty($_GET) ? array() : $_GET, 
-        empty($argv) ? array() : $argv 
+        empty($args) ? array() : $args 
     );
 
     SettingsHandler::defaults();
