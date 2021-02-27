@@ -1976,8 +1976,7 @@ function utf8_for_xml($s)
 
 /* DISPATCH *********************************************/
 
-// define NO_DISPATCHER in, say, your test harness
-if(!defined('NO_DISPATCHER'))
+function main($argv)
 {
     SettingsHandler::bootstrap(
         empty($_SERVER) ? array() : $_SERVER, 
@@ -1994,7 +1993,13 @@ if(!defined('NO_DISPATCHER'))
     $dispatcher->uncache_if_output_file();
     $dispatcher->update_mtime_if_dir2cast_or_settings_modified();
     $dispatcher->init();
-    exit($dispatcher->output());
+    return $dispatcher->output(); // returns exit code
+}
+
+// define NO_DISPATCHER in, say, your test harness
+if(!defined('NO_DISPATCHER'))
+{
+    exit(main($argv));
 }
 
 /* THE END *********************************************/
