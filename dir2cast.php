@@ -2002,6 +2002,10 @@ function main($args)
 // define NO_DISPATCHER in, say, your test harness
 if(!defined('NO_DISPATCHER'))
 {
+    $args = array();
+    if(isset($GLOBALS['argv'])) {
+        $args = $argv;
+    }
     exit(main($argv));
 }
 
