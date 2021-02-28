@@ -8,16 +8,18 @@ jobs:
         php-versions: ['7.4', '8.0']
     runs-on: ${{ matrix.operating-system }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Setup PHP and extensions with phpunit
+      - name: Setup PHP and extensions
         uses: shivammathur/setup-php@v2 #https://github.com/shivammathur/setup-php
         with:
           php-version: ${{ matrix.php-versions }}
           extensions: mbstring
-          coverage: xdebug #optional
-          tools: php-cs-fixer, phpunit
+          coverage: xdebug
+          tools: php-cs-fixer
         env:
           fail-fast: true
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Composer Install
+        uses: php-actions/composer@v5
       - name: Test with phpunit
-        run: ./test/run.sh --coverage-text --coverage-filter ../dir2cast.php .
+        run: ./test/run.sh --do-not-cache-result .

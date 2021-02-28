@@ -37,7 +37,7 @@ function rmrf($dir) {
         }
         rmdir($dir);
     }
-    elseif(file_exists($dir))
+    else
     {
         // base case: is not a dir, or is a dir but is a symlink
         unlink($dir);
@@ -48,15 +48,17 @@ function prepare_testing_dir()
 {
     is_dir('./testdir') && rmrf('./testdir');
     mkdir('./testdir');
-    symlink('../../dir2cast.php', './testdir/dir2cast.php');
+    symlink('../dir2castWithCoverage.php', './testdir/dir2cast.php');
+    // symlink('../../dir2cast.php', './testdir/dir2cast.php');
     symlink('../../getID3', './testdir/getID3');
-    chdir('./testdir');    
+    chdir('./testdir');
 }
 
+// chdir(dirname(__FILE__));
 define('NO_DISPATCHER', true);
 define('CLI_ONLY', true);
-require_once('../dir2cast.php');
 
+require_once('../dir2cast.php');
 
 // Test classes
 

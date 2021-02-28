@@ -10,5 +10,8 @@ if [[ "${tests[@]}" == "" ]]; then
 	tests=('.')
 fi
 
-phpunit --bootstrap bootstrap.php ${tests[@]}
-rm -rf testdir
+export XDEBUG_MODE=coverage
+rm -f /tmp/cov-*
+../vendor/bin/phpunit --bootstrap "$SCRIPT_DIR/bootstrap.php" --coverage-php /tmp/cov-main --coverage-filter ../dir2cast.php ${tests[@]}
+php combine_coverage.php
+rm -rf testdir /tmp/cov-*
