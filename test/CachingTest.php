@@ -88,7 +88,7 @@ final class CachingTest extends TestCase
         $this->assertNotEquals($old_mtime, $new_mtime);
     }
 
-    public function test_expired_podcast_is_not_regenerated_if_new_file_is_too_new(): void
+    public function test_too_new_file_not_included_in_podcast(): void
     {
         // make cache files and output file a day old
         $cached_output_files = glob('./temp/*.xml');
@@ -111,6 +111,7 @@ final class CachingTest extends TestCase
         # We can just not compare that part and the test is still essentially valid.
         $old_content = preg_replace('#<lastBuildDate>[^<]+</lastBuildDate>\n#', '', self::$content);
         $new_content = preg_replace('#<lastBuildDate>[^<]+</lastBuildDate>\n#', '', $new_content);
+        # TODO: improve this so that it actually serves the cached content instead of regenerating
 
         $this->assertEquals($old_content, $new_content);
 
