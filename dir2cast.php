@@ -1945,7 +1945,11 @@ class Dispatcher
  */
 function magic_stripslashes($s) 
 { 
-    return get_magic_quotes_gpc() ? stripslashes($s) : $s;
+    if(function_exists('get_magic_quotes_gpc'))
+    {
+        return get_magic_quotes_gpc() ? stripslashes($s) : $s;
+    }
+    return $s;
 }
 
 /**
