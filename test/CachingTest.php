@@ -106,7 +106,13 @@ final class CachingTest extends TestCase
 
         exec('php dir2cast.php --output=out.xml --dont-uncache --min-file-age=30');
         $new_content = file_get_contents(self::$file); // should not have empty.mp3
-        $this->assertEquals(self::$content, $new_content);
+
+        # Because the code coverage harness is slow, the build date might be one second out.
+        # We can just not compare that part and the test is still essentially valid.
+        $old_content = preg_replace('#<lastBuildDate>[^<]+</lastBuildDate>\n#', '', self::$content);
+        $new_content = preg_replace('#<lastBuildDate>[^<]+</lastBuildDate>\n#', '', $new_content);
+
+        $this->assertEquals($old_content, $new_content);
 
         clearstatcache();
         $new_mtime = filemtime($cached_output_files[0]);
