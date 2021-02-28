@@ -154,6 +154,4 @@ final class iTunes_Podcast_HelperTest extends TestCase
         $this->assertChannelHasElementWithAttribute('image', 'href', 'itunes_image.jpg', $data->channel);
 
     }
-
-    // TODO: tests that assert that things are added to the individual RSS Items
 }
