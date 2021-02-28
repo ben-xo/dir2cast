@@ -1,6 +1,8 @@
 Changelog
 =========
 
+1.27 2021-02-28 Fix other blocker bugs ($argv / CLI_ONLY related)
+
 1.26 2021-02-28 Fix #47 Undefined variable $argv
 
 1.25 2021-02-26 Prevent scanning of files which are still being uploaded, and
