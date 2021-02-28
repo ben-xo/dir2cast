@@ -1792,7 +1792,7 @@ class SettingsHandler
             define('MIN_FILE_AGE', 30);
 
         // Set up factory settings for Podcast subclasses
-        Dir_Podcast::$EMPTY_PODCAST_IS_ERROR = !CLI_ONLY;
+        Dir_Podcast::$EMPTY_PODCAST_IS_ERROR = !defined('CLI_ONLY') || !CLI_ONLY;
         Dir_Podcast::$RECURSIVE_DIRECTORY_ITERATOR = RECURSIVE_DIRECTORY_ITERATOR;
         Dir_Podcast::$ITEM_COUNT = ITEM_COUNT;
         Dir_Podcast::$MIN_FILE_AGE = MIN_FILE_AGE;
@@ -1912,7 +1912,7 @@ class Dispatcher
         $podcast = $this->podcast;
         if(!defined('OUTPUT_FILE'))
         {
-            if(!CLI_ONLY)
+            if(!defined('CLI_ONLY') || !CLI_ONLY)
             {
                 $podcast->http_headers();
             }
@@ -2010,7 +2010,7 @@ if(!defined('NO_DISPATCHER'))
     if(isset($GLOBALS['argv'])) {
         $args = $argv;
     }
-    exit(main($argv));
+    exit(main($args));
 }
 
 /* THE END *********************************************/
