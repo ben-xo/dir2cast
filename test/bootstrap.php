@@ -27,24 +27,29 @@
 error_reporting(E_ALL | E_STRICT);
 
 function rmrf($dir) {
-    // from https://www.php.net/manual/en/function.rmdir.php
-    $files = array_diff(scandir($dir), array('.','..'));
-    foreach ($files as $file) {
-      (is_dir("$dir/$file")) ? rmrf("$dir/$file") : unlink("$dir/$file");
+    // modified from https://www.php.net/manual/en/function.rmdir.php
+    if(is_dir($dir) && !is_link($dir)) 
+    {
+        $files = array_diff(scandir($dir), array('.','..'));
+        foreach ($files as $file) 
+        {
+          rmrf("$dir/$file");
+        }
+        rmdir($dir);
     }
-    return rmdir($dir);
+    elseif(file_exists($dir))
+    {
+        // base case: is not a dir, or is a dir but is a symlink
+        unlink($dir);
+    }
 }
 
 function prepare_testing_dir()
 {
     is_dir('./testdir') && rmrf('./testdir');
     mkdir('./testdir');
-    mkdir('./testdir/getID3');
-    copy('../dir2cast.php', './testdir/dir2cast.php');
-    foreach(glob('../getID3/*.php') as $file)
-    {
-        copy($file, './testdir/getID3/' . basename($file));
-    }
+    symlink('../../dir2cast.php', './testdir/dir2cast.php');
+    symlink('../../getID3', './testdir/getID3');
     chdir('./testdir');    
 }
 

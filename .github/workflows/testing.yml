@@ -1,0 +1,23 @@
+name: Testing dir2cast
+on: [push, pull_request]
+jobs:
+  build:
+    strategy:
+      matrix:
+        operating-system: [ubuntu-latest]
+        php-versions: ['7.4', '8.0']
+    runs-on: ${{ matrix.operating-system }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup PHP and extensions with phpunit
+        uses: shivammathur/setup-php@v2 #https://github.com/shivammathur/setup-php
+        with:
+          php-version: ${{ matrix.php-versions }}
+          extensions: mbstring
+          coverage: xdebug #optional
+          tools: php-cs-fixer, phpunit
+        env:
+          fail-fast: true
+      - name: Test with phpunit
+        run: ./test/run.sh --coverage-text --coverage-filter ../dir2cast.php .
