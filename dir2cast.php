@@ -1167,8 +1167,10 @@ class Dir_Podcast extends Podcast
 
     public function updateMaxMtime($date)
     {
-        if($date > $this->max_mtime)
+        if($date > $this->max_mtime) 
+        {
             $this->max_mtime = $date;
+        }
     }
 
     public function getMaxMtime()
@@ -1274,8 +1276,10 @@ class Cached_Dir_Podcast extends Dir_Podcast
      */
     public function init()
     { 
-        if($this->isCached()) // this call sets $this->serve_from_cache
+        if($this->isCached())
         {
+            $this->serve_from_cache = true;
+
             $cache_date = filemtime($this->temp_file);
 
             // if the cache file is quite new, don't bother regenerating.
@@ -1311,12 +1315,6 @@ class Cached_Dir_Podcast extends Dir_Podcast
      */
     protected function cache_is_stale($cache_date, $most_recent_modification)
     {
-        if($most_recent_modification == 0)
-        {
-            // there may be no media yet, but let's check using the time of the folder anyway
-            $most_recent_modification = filemtime($this->source_dir);
-        }
-
         return $cache_date < $most_recent_modification - self::$MIN_CACHE_TIME;
     }
 
@@ -1355,23 +1353,19 @@ class Cached_Dir_Podcast extends Dir_Podcast
             
         return $output;
     }
+   
+    public function isCached()
+    {
+        return file_exists($this->temp_file) && filesize($this->temp_file);
+    }
 
     public function getLastBuildDate()
     {
-        if(isset($this->cache_date))
-            return date('r', $this->cache_date);
-        else
-            return $this->__call('getLastBuildDate', array());
+       if($this->isCached())
+           return date('r', filemtime($this->temp_file));
+       else
+           return $this->__call('getLastBuildDate', array());
     }
-    
-    public function isCached()
-    {
-        if(!isset($this->serve_from_cache))
-            $this->serve_from_cache = file_exists($this->temp_file) && filesize($this->temp_file);
-            
-        return $this->serve_from_cache;
-    }
-
 }
 
 class Locking_Cached_Dir_Podcast extends Cached_Dir_Podcast
@@ -1404,7 +1398,8 @@ class Locking_Cached_Dir_Podcast extends Cached_Dir_Podcast
      */
     protected function releaseLock()
     {
-        if(!$this->serve_from_cache)
+        clearstatcache();
+        if(file_exists($this->temp_file) && !filesize($this->temp_file))
             unlink($this->temp_file);
         
         // this releases the lock implicitly
