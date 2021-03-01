@@ -102,7 +102,7 @@ class Cached_Dir_PodcastTest extends Dir_PodcastTest
         foreach(glob('temp/*.xml') as $filename)
         {
             // cache file should have been refreshed
-            $this->assertGreaterThan(time() - 1, filemtime($filename));
+            $this->assertGreaterThan(time() - 3, filemtime($filename));
         }
     }
 
