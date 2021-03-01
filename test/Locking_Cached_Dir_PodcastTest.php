@@ -43,7 +43,7 @@ class Locking_Cached_Dir_PodcastTest extends Cached_Dir_PodcastTest
         }
     }
 
-    public function test_temporary_lockfile_is_deleted_if_not_user()
+    public function test_temporary_lockfile_is_deleted_if_not_used()
     {
         $this->assertEmpty(glob('temp/*'));
         $mp = $this->newPodcast();
