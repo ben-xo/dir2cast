@@ -44,6 +44,22 @@ function rmrf($dir) {
     }
 }
 
+function age_dir_by($dir, $seconds)
+{
+    if(is_dir($dir) && !is_link($dir)) 
+    {
+        $files = array_diff(scandir($dir), array('.','..'));
+        foreach ($files as $file) 
+        {
+          age_dir_by("$dir/$file", $seconds);
+        }
+    }
+
+    // base case: is not a dir, or is a dir but is a symlink
+    touch($dir, filemtime($dir) - $seconds);
+    clearstatcache();
+}
+
 function prepare_testing_dir()
 {
     is_dir('./testdir') && rmrf('./testdir');
@@ -53,6 +69,7 @@ function prepare_testing_dir()
     symlink('../../getID3', './testdir/getID3');
     chdir('./testdir');
 }
+
 
 // chdir(dirname(__FILE__));
 define('NO_DISPATCHER', true);
