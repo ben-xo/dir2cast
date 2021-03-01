@@ -1,6 +1,11 @@
 Changelog
 =========
 
+1.28 2021-03-01 * Fixes for caching so it properly ignores files which are still
+                  mid-upload
+                * Now sends Content-length header
+                * Fix for Last-modified header when podcast was cached
+
 1.27 2021-02-28 Fix other blocker bugs ($argv / CLI_ONLY related)
 
 1.26 2021-02-28 Fix #47 Undefined variable $argv
