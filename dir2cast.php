@@ -56,7 +56,7 @@
 /* DEFAULTS *********************************************/
 
 // error handler needs these, so let's set them now.
-define('VERSION', '1.28');
+define('VERSION', '1.29');
 define('DIR2CAST_HOMEPAGE', 'https://github.com/ben-xo/dir2cast/');
 define('GENERATOR', 'dir2cast ' . VERSION . ' by Ben XO (' . DIR2CAST_HOMEPAGE . ')');
 
@@ -1344,6 +1344,17 @@ class Cached_Dir_Podcast extends Dir_Podcast
                 throw new RuntimeException("serve_from_cache set, but cache file not found");
 
             $output = file_get_contents($this->temp_file); // serve cached copy
+
+            // extract lastBuiltDate from the cache file. We can't simply use filemtime() of the cache file as
+            // the mtime is refreshed (to stop us continually rescanning for new content) Also, we don't want to
+            // parse the whole file, so it's okay to carefully extract it with a regex here, even though that's
+            // not usually recommended. The regex is chosen to ensure the captured text can't lead to header injection.
+
+            preg_match('#<lastBuildDate>([0-9a-zA-Z,:+ ]{1,64})</lastBuildDate>#', $output, $matches);
+            if(isset($matches[1]))
+            {
+                $this->setLastBuildDate($matches[1]);
+            }
         }
         else
         {
@@ -1358,14 +1369,6 @@ class Cached_Dir_Podcast extends Dir_Podcast
     public function isCached()
     {
         return file_exists($this->temp_file) && filesize($this->temp_file);
-    }
-
-    public function getLastBuildDate()
-    {
-       if($this->isCached())
-           return date('r', filemtime($this->temp_file));
-       else
-           return $this->__call('getLastBuildDate', array());
     }
 }
 

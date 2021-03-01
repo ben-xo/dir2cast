@@ -132,6 +132,16 @@ class Cached_Dir_PodcastTest extends Dir_PodcastTest
         $this->assertTrue($mp2->isCached());
 
         $this->assertEquals($lastBuildDate, $mp2->getLastBuildDate());
+        unset($mp2);
+
+        clearstatcache();
+        age_dir_by('.', 3600);
+        sleep(1); // not much choice here!
+        $mp3 = $this->newPodcast();
+        $mp3->generate();
+
+        clearstatcache();
+        $this->assertEquals($lastBuildDate, $mp3->getLastBuildDate());
     }
 
     public function tearDown(): void

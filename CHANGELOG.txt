@@ -1,6 +1,9 @@
 Changelog
 =========
 
+1.29 2021-03-01 * Proper fix for Last-modified header to use the date within
+                  the cached podcast.
+
 1.28 2021-03-01 * Fixes for caching so it properly ignores files which are still
                   mid-upload
                 * Now sends Content-length header
