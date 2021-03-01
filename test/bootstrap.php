@@ -57,6 +57,7 @@ function age_dir_by($dir, $seconds)
 
     // base case: is not a dir, or is a dir but is a symlink
     touch($dir, filemtime($dir) - $seconds);
+    clearstatcache();
 }
 
 function prepare_testing_dir()
