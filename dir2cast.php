@@ -951,11 +951,12 @@ abstract class Podcast extends GetterSetter
 //        return 'http://backend.userland.com/RSS2';
 //    }
     
-    public function http_headers()
+    public function http_headers($content_length)
     {
         // The correct content type is application/rss+xml; however, the de-facto standard is now text/xml. 
         // See https://stackoverflow.com/questions/595616/what-is-the-correct-mime-type-to-use-for-an-rss-feed
         header('Content-type: text/xml; charset=UTF-8');
+        header('Content-length: ' . $content_length);
         header('Last-modified: ' . $this->getLastBuildDate());
     }
     
@@ -1907,11 +1908,12 @@ class Dispatcher
         $podcast = $this->podcast;
         if(!defined('OUTPUT_FILE'))
         {
+            $output = $podcast->generate();
             if(!defined('CLI_ONLY') || !CLI_ONLY)
             {
-                $podcast->http_headers();
+                $podcast->http_headers(strlen($output));
             }
-            echo $podcast->generate();
+            echo $output;
         }
         else
         {
