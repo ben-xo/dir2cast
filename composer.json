@@ -1,6 +1,6 @@
 {
     "name": "dir2cast/dir2cast",
     "require-dev": {
-        "phpunit/phpunit": "^8"
+        "phpunit/phpunit": "*"
     }
 }
