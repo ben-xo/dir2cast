@@ -1925,7 +1925,8 @@ class Dispatcher
             fwrite($fh,$podcast->generate());
             fclose($fh);
 
-            if(empty($podcast->getItems()))
+            $items = $podcast->getItems();
+            if(empty($items))
             {
                 echo "** Warning: generated podcast found no episodes.\n";
                 return -1;
