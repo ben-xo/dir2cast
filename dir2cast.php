@@ -56,7 +56,7 @@
 /* DEFAULTS *********************************************/
 
 // error handler needs these, so let's set them now.
-define('VERSION', '1.29');
+define('VERSION', '1.30');
 define('DIR2CAST_HOMEPAGE', 'https://github.com/ben-xo/dir2cast/');
 define('GENERATOR', 'dir2cast ' . VERSION . ' by Ben XO (' . DIR2CAST_HOMEPAGE . ')');
 
@@ -1797,6 +1797,12 @@ class SettingsHandler
         Dir_Podcast::$MIN_FILE_AGE = MIN_FILE_AGE;
         Cached_Dir_Podcast::$MIN_CACHE_TIME = MIN_CACHE_TIME;
         getID3_Podcast_Helper::$AUTO_SAVE_COVER_ART = AUTO_SAVE_COVER_ART;
+
+        // Set up up factory settings for RSS Items
+        RSS_File_Item::$FILES_URL = MP3_URL; // TODO: rename this to MEDIA_URL
+        RSS_File_Item::$FILES_DIR = MP3_DIR; // TODO: rename this to MEDIA_DIR
+        Media_RSS_Item::$LONG_TITLES = LONG_TITLES;
+        Media_RSS_Item::$DESCRIPTION_SOURCE = DESCRIPTION_SOURCE;
     }
     
     public static function load_from_ini($file)
@@ -1873,12 +1879,6 @@ class Dispatcher
             $getid3 = $podcast->addHelper(new Caching_getID3_Podcast_Helper(TMP_DIR, new getID3_Podcast_Helper()));
             $atom   = $podcast->addHelper(new Atom_Podcast_Helper());
             $itunes = $podcast->addHelper(new iTunes_Podcast_Helper());
-
-            // Set up up factory settings for RSS Items
-            RSS_File_Item::$FILES_URL = MP3_URL; // TODO: rename this to MEDIA_URL
-            RSS_File_Item::$FILES_DIR = MP3_DIR; // TODO: rename this to MEDIA_DIR
-            Media_RSS_Item::$LONG_TITLES = LONG_TITLES;
-            Media_RSS_Item::$DESCRIPTION_SOURCE = DESCRIPTION_SOURCE;
 
             $podcast->setTitle(TITLE);
             $podcast->setLink(LINK);
