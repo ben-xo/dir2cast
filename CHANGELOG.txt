@@ -1,6 +1,12 @@
 Changelog
 =========
 
+1.30 2021-03-17 * Fix nasty bug when refreshing podcasts due to a newly
+                  uploaded file removing all the links and replacing them
+                  with file paths.
+
+                * Compatibility fix with PHP 5.3
+
 1.29 2021-03-01 * Proper fix for Last-modified header to use the date within
                   the cached podcast.
 
