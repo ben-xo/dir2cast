@@ -107,7 +107,7 @@ class PodcastTest extends TestCase
     {
         $mp = $this->newPodcast();
 
-        $mp->setTitle('<<<');
+        $mp->setTitle("<\x06<\x07<\x08");
         $mp->setDescription('⛄️');
         $mp->setWebMaster('>>>');
         $mp->setGenerator('&amp;');
