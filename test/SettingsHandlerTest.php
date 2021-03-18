@@ -59,7 +59,7 @@ class SettingsHandlerTest extends TestCase
             /* $GET */ array(),
             /* $argv */ array()
         );
-        SettingsHandler::defaults();
+        SettingsHandler::defaults(array());
         
         foreach(self::$DEFINE_LIST as $define_name)
         {
@@ -84,7 +84,7 @@ class SettingsHandlerTest extends TestCase
         }
         
         SettingsHandler::bootstrap(array(), array(), array());
-        SettingsHandler::defaults();
+        SettingsHandler::defaults(array());
         
         foreach(self::$DEFINE_LIST as $define_name)
         {
@@ -128,11 +128,12 @@ class SettingsHandlerTest extends TestCase
      */
     public function test_when_SERVER_HTTP_HOST_then_MP3_BASE_defaults_to_same_dir()
     {
+        $SERVER = array(
+            'HTTP_HOST' => 'www.example.com',
+            'SCRIPT_FILENAME' => '/var/www/dir2cast.php',
+        );
         SettingsHandler::bootstrap(
-            /* $SERVER */ array(
-                'HTTP_HOST' => 'www.example.com',
-                'SCRIPT_FILENAME' => '/var/www/dir2cast.php',
-            ),
+            $SERVER,
             /* $GET */ array(),
             /* $argv */ array()
         );
@@ -151,7 +152,7 @@ class SettingsHandlerTest extends TestCase
     public function test_sensible_defaults($argv0)
     {
         SettingsHandler::bootstrap(array(), array(), array($argv0));
-        SettingsHandler::defaults();
+        SettingsHandler::defaults(array());
         
         $this->assertEquals(DESCRIPTION, 'Podcast');
         $this->assertEquals(ATOM_TYPE, 'application/rss+xml');
@@ -181,7 +182,7 @@ class SettingsHandlerTest extends TestCase
     public function test_CLI_ONLY_sensible_defaults()
     {
         SettingsHandler::bootstrap(array(), array(), array('dir2cast.php'));
-        SettingsHandler::defaults();
+        SettingsHandler::defaults(array());
         
         $this->assertEquals(MP3_URL, 'file://' . getcwd());
         $this->assertEquals(LINK, 'http://www.example.com/');
@@ -195,18 +196,25 @@ class SettingsHandlerTest extends TestCase
      */
     public function test_HTTP_HOST_sensible_defaults()
     {
+        $SERVER = array(
+            'HTTP_HOST' => 'www.example.com',
+            'SCRIPT_FILENAME' => '/var/www/dir2cast.php',
+            'PHP_SELF' => '/var/www/dir2cast.php',
+            'DOCUMENT_ROOT' => '/var/www/',
+        );
         SettingsHandler::bootstrap(
-            /* $SERVER */ array(
-                'HTTP_HOST' => 'www.example.com',
-                'SCRIPT_FILENAME' => '/var/www/dir2cast.php',
-                'DOCUMENT_ROOT' => '/var/www/',
-            ),
+            $SERVER,
             /* $GET */ array(),
             /* $argv */ array()
         );
-        SettingsHandler::defaults();
+        SettingsHandler::defaults(
+            $SERVER
+        );
+        
+        // note that with HTTP_HOST we trust SCRIPT_FILENAME over dirname(__FILE__)
+        // because it could be a symlink or a mapping inside the web server config.
 
-//         $this->assertEquals(MP3_URL, 'http://www.example.com/' . getcwd());
+        $this->assertEquals(MP3_URL, 'http://www.example.com/');
 //         $this->assertEquals(LINK, 'http://www.example.com/');
 //         $this->assertEquals(RSS_LINK, 'http://www.example.com/rss');
         $this->assertEquals(TITLE, 'www'); // name of fodler from SCRIPT_FILENAME
