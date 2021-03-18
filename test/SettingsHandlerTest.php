@@ -61,5 +61,21 @@ class SettingsHandlerTest extends TestCase
             $this->assertTrue(defined($define_name));
         }
     }
+
+    public function test_behaves_if_anything_is_already_defined()
+    {
+        foreach(self::$DEFINE_LIST as $define_name)
+        {
+            define($define_name, $define_name);
+        }
+        
+        SettingsHandler::bootstrap(array(), array(), array());
+        SettingsHandler::defaults();
+        
+        foreach(self::$DEFINE_LIST as $define_name)
+        {
+            $this->assertEquals($define_name, constant($define_name));
+        }
+    }
     
 }
