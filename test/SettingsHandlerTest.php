@@ -68,6 +68,7 @@ class SettingsHandlerTest extends TestCase
         
         // should not be defined as $argv was empty
         $this->assertFalse(defined('CLI_ONLY'));
+        $this->assertEquals(DIR2CAST_BASE, realpath('..')); // from bootstrap.php
     }
 
     /**
@@ -93,7 +94,7 @@ class SettingsHandlerTest extends TestCase
     }
     
     /**
-     * @preserveGlobalState disabled
+     * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
     public function test_defines_CLI_ONLY_if_argv0()
@@ -102,6 +103,89 @@ class SettingsHandlerTest extends TestCase
         $this->assertFalse(defined('CLI_ONLY'));
         SettingsHandler::bootstrap(array(), array(), array('dir2cast.php'));
         $this->assertTrue(defined('CLI_ONLY'));
+        $this->assertEquals(DIR2CAST_BASE, getcwd()); // from fake $argv
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     * @testWith [null]
+     *           ["dir2cast.php"]
+     */
+    public function test_bootstrap_sets_sensible_global_defaults_for_entire_installation($argv0)
+    {
+        SettingsHandler::bootstrap(array(), array(), array($argv0));
+        $this->assertEquals(MIN_CACHE_TIME, 5);
+        $this->assertEquals(FORCE_PASSWORD, '');
+        $this->assertEquals(TMP_DIR, DIR2CAST_BASE . '/temp');
+        $this->assertEquals(MP3_BASE, DIR2CAST_BASE);
+        $this->assertEquals(MP3_DIR, DIR2CAST_BASE);
     }
     
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_when_SERVER_HTTP_HOST_then_MP3_BASE_defaults_to_same_dir()
+    {
+        SettingsHandler::bootstrap(
+            /* $SERVER */ array(
+                'HTTP_HOST' => 'www.example.com',
+                'SCRIPT_FILENAME' => '/var/www/dir2cast.php',
+            ),
+            /* $GET */ array(),
+            /* $argv */ array()
+        );
+        $this->assertEquals(MP3_BASE, '/var/www');
+        $this->assertEquals(MP3_DIR, '/var/www');
+    }
+    
+    // TODO: test HTTP_HOST + GET dir
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     * @testWith [null]
+     *           ["dir2cast.php"]
+     */
+    public function test_sensible_defaults($argv0)
+    {
+        SettingsHandler::bootstrap(array(), array(), array($argv0));
+        SettingsHandler::defaults();
+        
+        $this->assertEquals(ATOM_TYPE, 'application/rss+xml');
+        $this->assertEquals(LANGUAGE, 'en-us');
+        $this->assertEquals(COPYRIGHT, date('Y'));
+        $this->assertEquals(TTL, 60);
+        $this->assertEquals(ITEM_COUNT, 10);
+        $this->assertEquals(ITUNES_OWNER_NAME, '');
+        $this->assertEquals(ITUNES_OWNER_EMAIL, '');
+        $this->assertEquals(WEBMASTER, '');
+        $this->assertEquals(ITUNES_AUTHOR, '');
+        $this->assertEquals(ITUNES_CATEGORIES, '');
+        $this->assertEquals(ITUNES_EXPLICIT, '');
+        $this->assertEquals(LONG_TITLES, false);
+        $this->assertEquals(ITUNES_SUBTITLE_SUFFIX, '');
+        $this->assertEquals(DESCRIPTION_SOURCE, 'comment');
+        $this->assertEquals(RECURSIVE_DIRECTORY_ITERATOR, false);
+        $this->assertEquals(AUTO_SAVE_COVER_ART, true);
+        $this->assertEquals(DONT_UNCACHE_IF_OUTPUT_FILE, false);
+        $this->assertEquals(MIN_FILE_AGE, 30);
+    }
+    
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_CLI_ONLY_sensible_defaults()
+    {
+        SettingsHandler::bootstrap(array(), array(), array('dir2cast.php'));
+        SettingsHandler::defaults();
+        
+        $this->assertEquals(MP3_URL, 'file://' . getcwd());
+        $this->assertEquals(TITLE, 'test'); // name of this folder
+        $this->assertEquals(LINK, 'http://www.example.com/');
+        $this->assertEquals(RSS_LINK, 'http://www.example.com/rss');
+        $this->assertEquals(DESCRIPTION, 'Podcast');
+    }
 }
