@@ -153,6 +153,7 @@ class SettingsHandlerTest extends TestCase
         SettingsHandler::bootstrap(array(), array(), array($argv0));
         SettingsHandler::defaults();
         
+        $this->assertEquals(DESCRIPTION, 'Podcast');
         $this->assertEquals(ATOM_TYPE, 'application/rss+xml');
         $this->assertEquals(LANGUAGE, 'en-us');
         $this->assertEquals(COPYRIGHT, date('Y'));
@@ -183,9 +184,31 @@ class SettingsHandlerTest extends TestCase
         SettingsHandler::defaults();
         
         $this->assertEquals(MP3_URL, 'file://' . getcwd());
-        $this->assertEquals(TITLE, 'test'); // name of this folder
         $this->assertEquals(LINK, 'http://www.example.com/');
         $this->assertEquals(RSS_LINK, 'http://www.example.com/rss');
-        $this->assertEquals(DESCRIPTION, 'Podcast');
+        $this->assertEquals(TITLE, 'test'); // name of this folder
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_HTTP_HOST_sensible_defaults()
+    {
+        SettingsHandler::bootstrap(
+            /* $SERVER */ array(
+                'HTTP_HOST' => 'www.example.com',
+                'SCRIPT_FILENAME' => '/var/www/dir2cast.php',
+                'DOCUMENT_ROOT' => '/var/www/',
+            ),
+            /* $GET */ array(),
+            /* $argv */ array()
+        );
+        SettingsHandler::defaults();
+
+//         $this->assertEquals(MP3_URL, 'http://www.example.com/' . getcwd());
+//         $this->assertEquals(LINK, 'http://www.example.com/');
+//         $this->assertEquals(RSS_LINK, 'http://www.example.com/rss');
+        $this->assertEquals(TITLE, 'www'); // name of fodler from SCRIPT_FILENAME
     }
 }
