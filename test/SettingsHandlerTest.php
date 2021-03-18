@@ -198,9 +198,9 @@ class SettingsHandlerTest extends TestCase
     {
         $SERVER = array(
             'HTTP_HOST' => 'www.example.com',
-            'SCRIPT_FILENAME' => '/var/www/dir2cast.php',
-            'PHP_SELF' => '/var/www/dir2cast.php',
-            'DOCUMENT_ROOT' => '/var/www/',
+            'SCRIPT_FILENAME' => realpath('..') . '/dir2cast.php',
+            'PHP_SELF' => '/dir2cast.php',
+            'DOCUMENT_ROOT' => realpath('..'),
         );
         SettingsHandler::bootstrap(
             $SERVER,
@@ -213,10 +213,9 @@ class SettingsHandlerTest extends TestCase
         
         // note that with HTTP_HOST we trust SCRIPT_FILENAME over dirname(__FILE__)
         // because it could be a symlink or a mapping inside the web server config.
-
-        $this->assertEquals(MP3_URL, 'http://www.example.com/');
-//         $this->assertEquals(LINK, 'http://www.example.com/');
+        $this->assertEquals('http://www.example.com/', MP3_URL);
+        $this->assertEquals('http://www.example.com/dir2cast.php', LINK);
 //         $this->assertEquals(RSS_LINK, 'http://www.example.com/rss');
-        $this->assertEquals(TITLE, 'www'); // name of fodler from SCRIPT_FILENAME
+        $this->assertEquals(TITLE, basename(realpath('..'))); // name of fodler from SCRIPT_FILENAME
     }
 }
