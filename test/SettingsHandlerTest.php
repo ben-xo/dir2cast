@@ -48,7 +48,18 @@ class SettingsHandlerTest extends TestCase
      * @preserveGlobalState disabled
      */
     public function test_default_defines_set()
-    {       
+    {
+        $this->assertFalse(Dir_Podcast::$EMPTY_PODCAST_IS_ERROR);
+        $this->assertFalse(Dir_Podcast::$RECURSIVE_DIRECTORY_ITERATOR);
+        $this->assertEquals(10, Dir_Podcast::$ITEM_COUNT);
+        $this->assertEquals(0, Dir_Podcast::$MIN_FILE_AGE);
+        $this->assertEquals(5, Cached_Dir_Podcast::$MIN_CACHE_TIME);
+        $this->assertFalse(getID3_Podcast_Helper::$AUTO_SAVE_COVER_ART);
+        $this->assertNull(RSS_File_Item::$FILES_URL);
+        $this->assertNull(RSS_File_Item::$FILES_DIR);
+        $this->assertFalse(Media_RSS_Item::$LONG_TITLES);
+        $this->assertEquals('comment', Media_RSS_Item::$DESCRIPTION_SOURCE);
+        
         foreach(self::$DEFINE_LIST as $define_name)
         {
             $this->assertFalse(defined($define_name));
@@ -173,6 +184,17 @@ class SettingsHandlerTest extends TestCase
         $this->assertEquals(AUTO_SAVE_COVER_ART, true);
         $this->assertEquals(DONT_UNCACHE_IF_OUTPUT_FILE, false);
         $this->assertEquals(MIN_FILE_AGE, 30);
+        
+        $this->assertSame(Dir_Podcast::$EMPTY_PODCAST_IS_ERROR, empty($argv0));
+        $this->assertSame(Dir_Podcast::$RECURSIVE_DIRECTORY_ITERATOR, RECURSIVE_DIRECTORY_ITERATOR);
+        $this->assertSame(Dir_Podcast::$ITEM_COUNT, ITEM_COUNT);
+        $this->assertSame(Dir_Podcast::$MIN_FILE_AGE, MIN_FILE_AGE);
+        $this->assertSame(Cached_Dir_Podcast::$MIN_CACHE_TIME, MIN_CACHE_TIME);
+        $this->assertSame(getID3_Podcast_Helper::$AUTO_SAVE_COVER_ART, AUTO_SAVE_COVER_ART);
+        $this->assertSame(RSS_File_Item::$FILES_URL, MP3_URL);
+        $this->assertSame(RSS_File_Item::$FILES_DIR, MP3_DIR);
+        $this->assertSame(Media_RSS_Item::$LONG_TITLES, LONG_TITLES);
+        $this->assertSame(Media_RSS_Item::$DESCRIPTION_SOURCE, DESCRIPTION_SOURCE);
     }
 
     /**
