@@ -174,6 +174,23 @@ class SettingsHandlerTest extends TestCase
         $this->assertEquals(DONT_UNCACHE_IF_OUTPUT_FILE, false);
         $this->assertEquals(MIN_FILE_AGE, 30);
     }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     * @testWith [null]
+     *           ["dir2cast.php"]
+     */
+    public function test_webmaster_default_if_itunes_author($argv0)
+    {
+        define('ITUNES_OWNER_NAME', 'Ben');
+        define('ITUNES_OWNER_EMAIL', 'test@example.com');
+        
+        SettingsHandler::bootstrap(array(), array(), array($argv0));
+        SettingsHandler::defaults(array());
+        
+        $this->assertEquals('test@example.com (Ben)', WEBMASTER);
+    }
     
     /**
      * @runInSeparateProcess
@@ -216,7 +233,7 @@ class SettingsHandlerTest extends TestCase
         $this->assertEquals('http://www.example.com/', MP3_URL);
         $this->assertEquals('http://www.example.com/dir2cast.php', LINK);
         $this->assertEquals('http://www.example.com/dir2cast.php', RSS_LINK);
-        $this->assertEquals(TITLE, basename(realpath('..'))); // name of fodler from SCRIPT_FILENAME
+        $this->assertEquals(basename(realpath('..')), TITLE); // name of fodler from SCRIPT_FILENAME
     }
 
     /**
