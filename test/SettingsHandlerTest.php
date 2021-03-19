@@ -218,4 +218,78 @@ class SettingsHandlerTest extends TestCase
         $this->assertEquals('http://www.example.com/dir2cast.php', RSS_LINK);
         $this->assertEquals(TITLE, basename(realpath('..'))); // name of fodler from SCRIPT_FILENAME
     }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_picks_up_feed_text_files_if_they_exist()
+    {
+        file_put_contents('description.txt', 'test description');
+        file_put_contents('itunes_subtitle.txt', 'test itunes subtitle');
+        file_put_contents('itunes_summary.txt', 'test itunes summary');
+        touch('image.jpg');
+        touch('itunes_image.jpg');
+        $SERVER = array(
+            'HTTP_HOST' => 'www.example.com',
+            'SCRIPT_FILENAME' => realpath('.') . '/dir2cast.php',
+            'PHP_SELF' => '/dir2cast.php',
+            'DOCUMENT_ROOT' => realpath('.'),
+        );
+        SettingsHandler::bootstrap(
+            $SERVER,
+            /* $GET */ array(),
+            /* $argv */ array()
+        );
+        SettingsHandler::defaults(
+            $SERVER
+        );
+        
+        $this->assertEquals('test description', DESCRIPTION);
+        $this->assertEquals('test itunes subtitle', ITUNES_SUBTITLE);
+        $this->assertEquals('test itunes summary', ITUNES_SUMMARY);
+        $this->assertEquals('http://www.example.com/image.jpg', IMAGE);
+        $this->assertEquals('http://www.example.com/itunes_image.jpg', ITUNES_IMAGE);
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_HTTPS_URLs_exist()
+    {
+        touch('image.jpg');
+        touch('itunes_image.jpg');
+        $SERVER = array(
+            'HTTP_HOST' => 'www.example.com',
+            'SCRIPT_FILENAME' => realpath('.') . '/dir2cast.php',
+            'PHP_SELF' => '/dir2cast.php',
+            'DOCUMENT_ROOT' => realpath('.'),
+            'HTTPS' => 1,
+        );
+        SettingsHandler::bootstrap(
+            $SERVER,
+            /* $GET */ array(),
+            /* $argv */ array()
+        );
+        SettingsHandler::defaults(
+            $SERVER
+        );
+        
+        $this->assertEquals('https://www.example.com/', MP3_URL);
+        $this->assertEquals('https://www.example.com/dir2cast.php', LINK);
+        $this->assertEquals('https://www.example.com/dir2cast.php', RSS_LINK);
+        $this->assertEquals('https://www.example.com/image.jpg', IMAGE);
+        $this->assertEquals('https://www.example.com/itunes_image.jpg', ITUNES_IMAGE);
+    }
+
+    public function tearDown(): void
+    {
+        file_exists('description.txt') && unlink('description.txt');
+        file_exists('itunes_subtitle.txt') && unlink('itunes_subtitle.txt');
+        file_exists('itunes_summary.txt') && unlink('itunes_summary.txt');
+        file_exists('image.jpg') && unlink('image.jpg');
+        file_exists('itunes_image.jpg') && unlink('itunes_image.jpg');
+    }
 }
+
