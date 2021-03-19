@@ -215,7 +215,7 @@ class SettingsHandlerTest extends TestCase
         // because it could be a symlink or a mapping inside the web server config.
         $this->assertEquals('http://www.example.com/', MP3_URL);
         $this->assertEquals('http://www.example.com/dir2cast.php', LINK);
-//         $this->assertEquals(RSS_LINK, 'http://www.example.com/rss');
+        $this->assertEquals('http://www.example.com/dir2cast.php', RSS_LINK);
         $this->assertEquals(TITLE, basename(realpath('..'))); // name of fodler from SCRIPT_FILENAME
     }
 }
