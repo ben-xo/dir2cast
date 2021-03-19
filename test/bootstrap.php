@@ -71,9 +71,7 @@ function prepare_testing_dir()
 }
 
 
-// chdir(dirname(__FILE__));
 define('NO_DISPATCHER', true);
-define('CLI_ONLY', true);
 
 require_once('../dir2cast.php');
 

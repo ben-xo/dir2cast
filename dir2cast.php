@@ -1620,7 +1620,7 @@ class SettingsHandler
     /**
      * This method sets up all fall-back default instance settings AFTER all .ini files have been loaded.
      */
-    public static function defaults()
+    public static function defaults(array $SERVER)
     {
         // if an MP3_DIR specific config file exists, load it now, as long as it's not the same file as the global one!
         if( 
@@ -1639,11 +1639,11 @@ class SettingsHandler
             # This may fail if MP3_DIR, or one of its parents under DOCUMENT_ROOT, is a symlink. In that case you will have
             # to set this manually.
             
-            if(!empty($_SERVER['HTTP_HOST']))
+            if(!empty($SERVER['HTTP_HOST']))
             {
-                $path_part = substr(MP3_DIR, strlen($_SERVER['DOCUMENT_ROOT']));
+                $path_part = substr(MP3_DIR, strlen($SERVER['DOCUMENT_ROOT']));
                 define('MP3_URL', 
-                    'http' . (!empty($_SERVER['HTTPS']) ? 's' : '') . '://' . $_SERVER['HTTP_HOST'] . '/' . ltrim( rtrim( $path_part, '/' ) . '/', '/' ));
+                    'http' . (!empty($SERVER['HTTPS']) ? 's' : '') . '://' . $SERVER['HTTP_HOST'] . '/' . ltrim( rtrim( $path_part, '/' ) . '/', '/' ));
             }
             else
                 define('MP3_URL', 'file://' . MP3_DIR );
@@ -1659,16 +1659,16 @@ class SettingsHandler
         
         if(!defined('LINK'))
         {
-            if(!empty($_SERVER['HTTP_HOST']))
-                define('LINK', 'http' . (empty($_SERVER['HTTPS']) ? '' : 's') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF']);
+            if(!empty($SERVER['HTTP_HOST']))
+                define('LINK', 'http' . (empty($SERVER['HTTPS']) ? '' : 's') . '://' . $SERVER['HTTP_HOST'] . $SERVER['PHP_SELF']);
             else
                 define('LINK', 'http://www.example.com/');
         }
 
         if(!defined('RSS_LINK'))
         {
-            if(!empty($_SERVER['HTTP_HOST']))
-                define('RSS_LINK', 'http' . (empty($_SERVER['HTTPS']) ? '' : 's') . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF']);
+            if(!empty($SERVER['HTTP_HOST']))
+                define('RSS_LINK', 'http' . (empty($SERVER['HTTPS']) ? '' : 's') . '://' . $SERVER['HTTP_HOST'] . $SERVER['PHP_SELF']);
             else
                 define('RSS_LINK', 'http://www.example.com/rss');
         }
@@ -1992,7 +1992,9 @@ function main($args)
         empty($args) ? array() : $args 
     );
 
-    SettingsHandler::defaults();
+    SettingsHandler::defaults(
+        empty($_SERVER) ? array() : $_SERVER
+    );
     
     $podcast = new Locking_Cached_Dir_Podcast(MP3_DIR, TMP_DIR);
     $dispatcher = new Dispatcher($podcast);
