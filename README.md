@@ -175,6 +175,16 @@ This assumes the URL you want is /dir2cast/rss, and that the URL of dir2cast.php
 is /dir2cast/dir2cast.php
 
 
+TESTING
+================================================================================
+
+To run the unit tests:
+1. make sure you have xdebug installed. (pecl install xdebug)
+2. make sure you have composer installed. (brew install composer # (or similar)
+3. composer install
+3. ./test/run.sh
+
+
 COPYRIGHT & LICENSE
 ================================================================================
 
