@@ -182,7 +182,7 @@ To run the unit tests:
 1. make sure you have xdebug installed. (pecl install xdebug)
 2. make sure you have composer installed. (brew install composer # (or similar)
 3. composer install
-3. ./test/run.sh
+4. ./test/run.sh
 
 
 COPYRIGHT & LICENSE
