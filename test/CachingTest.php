@@ -47,6 +47,46 @@ final class CachingTest extends TestCase
         );
     }
 
+    public function test_default_empty_podcast_doesnt_regenerate_in_first_MIN_CACHE_TIME(): void
+    {
+        $cached_output_files = glob('./temp/*.xml');
+        age_dir_by('.', 7);
+
+        touch($cached_output_files[0], time());
+
+        clearstatcache();
+        $cached_mtime_before = filemtime($cached_output_files[0]);
+
+        exec('php dir2cast.php --output=out.xml', $this->output, $this->returncode);
+
+        clearstatcache();
+        $cached_mtime_after = filemtime($cached_output_files[0]);
+
+        $this->assertSame(
+            $cached_mtime_before,
+            $cached_mtime_after
+        );
+    }
+
+    public function test_default_empty_podcast_does_regenerate_after_MIN_CACHE_TIME(): void
+    {
+        $cached_output_files = glob('./temp/*.xml');
+        age_dir_by('.', 7);
+
+        clearstatcache();
+        $cached_mtime_before = filemtime($cached_output_files[0]);
+
+        exec('php dir2cast.php --output=out.xml', $this->output, $this->returncode);
+
+        clearstatcache();
+        $cached_mtime_after = filemtime($cached_output_files[0]);
+
+        $this->assertNotSame(
+            $cached_mtime_before,
+            $cached_mtime_after
+        );
+    }
+
     public function test_default_empty_podcast_obeys_minimum_cache_time_not_elapsed(): void
     {
         age_dir_by('.', 2);
