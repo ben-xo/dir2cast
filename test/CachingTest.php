@@ -273,11 +273,16 @@ final class CachingTest extends TestCase
     public function test_update_to_dir2cast_php_invalidates_cache(): void
     {
         file_put_contents('empty.mp3', 'test');
+
+        unlink('dir2cast.php');
+        copy('../../dir2cast.php', 'dir2cast.php');
+        copy('../../dir2cast.ini', 'dir2cast.ini');
+
         age_dir_by('.', 86400);
 
         $cached_output_files = glob('./temp/*.xml');
 
-        touch('../../dir2cast.php', time()-3600); // older than the minimum cache time, but newer than the cache files
+        touch('dir2cast.php', time()-3600); // older than the minimum cache time, but newer than the cache files
 
         clearstatcache();
         $old_mtime = filemtime($cached_output_files[0]);
@@ -297,6 +302,11 @@ final class CachingTest extends TestCase
     public function test_update_to_dir2cast_ini_invalidates_cache(): void
     {
         file_put_contents('empty.mp3', 'test');
+
+        unlink('dir2cast.php');
+        copy('../../dir2cast.php', 'dir2cast.php');
+        copy('../../dir2cast.ini', 'dir2cast.ini');
+
         age_dir_by('.', 86400);
 
         $cached_output_files = glob('./temp/*.xml');
