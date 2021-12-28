@@ -110,6 +110,7 @@ the media content, and of `dir2cast.php` and `dir2cast.ini`.
   appears in the folder, as long as the media file was not updated in the last
   30 seconds (`MIN_FILE_AGE`). This is so that it doesn't accidentally include 
   files which are still being uploaded.
+* Empty media files are ignored (nobody enjoys listening to them anyway)
 * The feed will update `dir2cast.php` or `dir2cast.ini` are newer than the cache
   file as a convenience when upgrading.
 
