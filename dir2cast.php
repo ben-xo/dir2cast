@@ -1316,7 +1316,7 @@ class Cached_Dir_Podcast extends Dir_Podcast
      */
     protected function cache_is_stale($cache_date, $most_recent_modification)
     {
-        return $cache_date < $most_recent_modification - self::$MIN_CACHE_TIME;
+        return $cache_date < $most_recent_modification;
     }
 
     /**

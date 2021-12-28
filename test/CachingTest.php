@@ -13,7 +13,7 @@ final class CachingTest extends TestCase
     public function setUp(): void
     {
         prepare_testing_dir();
-        exec('php dir2cast.php --output=out.xml --min-file-age=0', $this->output, $this->returncode);
+        exec('php dir2cast.php --output=out.xml', $this->output, $this->returncode);
         $this->content = file_get_contents($this->file);
         clearstatcache();
     }
