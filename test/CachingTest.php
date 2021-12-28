@@ -13,7 +13,7 @@ final class CachingTest extends TestCase
     public function setUp(): void
     {
         prepare_testing_dir();
-        exec('php dir2cast.php --output=out.xml', $this->output, $this->returncode);
+        exec('php dir2cast.php --output=out.xml --dont-uncache', $this->output, $this->returncode);
         $this->content = file_get_contents($this->file);
         clearstatcache();
     }
@@ -52,12 +52,13 @@ final class CachingTest extends TestCase
         $cached_output_files = glob('./temp/*.xml');
         age_dir_by('.', 7);
 
+        // bring cache within last 5 seconds
         touch($cached_output_files[0], time());
 
         clearstatcache();
         $cached_mtime_before = filemtime($cached_output_files[0]);
 
-        exec('php dir2cast.php', $this->output, $this->returncode);
+        exec('php dir2cast.php', $new_output, $this->returncode);
 
         clearstatcache();
         $cached_mtime_after = filemtime($cached_output_files[0]);
@@ -66,17 +67,24 @@ final class CachingTest extends TestCase
             $cached_mtime_before,
             $cached_mtime_after
         );
+
+        $this->assertSame(
+            trim($this->content),
+            implode("\n", $new_output)
+        );
     }
 
-    public function test_default_empty_podcast_does_regenerate_after_MIN_CACHE_TIME(): void
+    public function test_default_empty_podcast_renews_cache_file_mtime_after_MIN_CACHE_TIME(): void
     {
         $cached_output_files = glob('./temp/*.xml');
         age_dir_by('.', 7);
 
+        // leave cache file 7 seconds ago (default threshold is 5 seconds)
+
         clearstatcache();
         $cached_mtime_before = filemtime($cached_output_files[0]);
 
-        exec('php dir2cast.php', $this->output, $this->returncode);
+        exec('php dir2cast.php', $new_output, $this->returncode);
 
         clearstatcache();
         $cached_mtime_after = filemtime($cached_output_files[0]);
@@ -84,6 +92,41 @@ final class CachingTest extends TestCase
         $this->assertNotSame(
             $cached_mtime_before,
             $cached_mtime_after
+        );
+
+        $this->assertSame(
+            trim($this->content),
+            implode("\n", $new_output)
+        );
+    }
+
+    public function test_default_empty_podcast_regenerates_after_MIN_CACHE_TIME_with_a_change(): void
+    {
+        $cached_output_files = glob('./temp/*.xml');
+        age_dir_by('.', 90);
+
+        // newer than the cache file, but older than MIN_CACHE_TIME
+        file_put_contents('empty.mp3', 'test');
+        touch('empty.mp3', time() - 35);
+
+        // leave cache file 7 seconds ago (default threshold is 5 seconds)
+
+        clearstatcache();
+        $cached_mtime_before = filemtime($cached_output_files[0]);
+
+        exec('php dir2cast.php', $new_output, $this->returncode);
+
+        clearstatcache();
+        $cached_mtime_after = filemtime($cached_output_files[0]);
+
+        $this->assertNotSame(
+            $cached_mtime_before,
+            $cached_mtime_after
+        );
+
+        $this->assertNotSame(
+            trim($this->content),
+            implode("\n", $new_output)
         );
     }
 
