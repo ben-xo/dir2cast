@@ -100,16 +100,47 @@ final class CachingTest extends TestCase
         );
     }
 
+    public function test_default_empty_podcast_doesnt_regenerate_before_MIN_CACHE_TIME_with_a_change(): void
+    {
+        $cached_output_files = glob('./temp/*.xml');
+        age_dir_by('.', 7);
+
+        // bring cache within last 5 seconds
+        touch($cached_output_files[0], time());
+
+        // newer than the cache file, but older than MIN_CACHE_TIME
+        file_put_contents('empty.mp3', 'test');
+        touch('empty.mp3', time()); // NOOP, but here for symmetry
+
+        clearstatcache();
+        $cached_mtime_before = filemtime($cached_output_files[0]);
+
+        exec('php dir2cast.php', $new_output, $this->returncode);
+
+        clearstatcache();
+        $cached_mtime_after = filemtime($cached_output_files[0]);
+
+        $this->assertSame(
+            $cached_mtime_before,
+            $cached_mtime_after
+        );
+
+        $this->assertSame(
+            trim($this->content),
+            implode("\n", $new_output)
+        );
+    }    
+
     public function test_default_empty_podcast_regenerates_after_MIN_CACHE_TIME_with_a_change(): void
     {
         $cached_output_files = glob('./temp/*.xml');
         age_dir_by('.', 90);
 
+        // leave cache file 7 seconds ago (default threshold is 5 seconds)
+
         // newer than the cache file, but older than MIN_CACHE_TIME
         file_put_contents('empty.mp3', 'test');
         touch('empty.mp3', time() - 35);
-
-        // leave cache file 7 seconds ago (default threshold is 5 seconds)
 
         clearstatcache();
         $cached_mtime_before = filemtime($cached_output_files[0]);
