@@ -125,10 +125,13 @@ final class CachingTest extends TestCase
             $cached_mtime_after
         );
 
+        $new_content = implode("\n", $new_output);
         $this->assertSame(
             trim($this->content),
-            implode("\n", $new_output)
+            $new_content
         );
+
+        $this->assertEquals(0, preg_match('/empty\.mp3/', $new_content));
     }    
 
     public function test_default_empty_podcast_regenerates_after_MIN_CACHE_TIME_with_a_change(): void
@@ -155,10 +158,14 @@ final class CachingTest extends TestCase
             $cached_mtime_after
         );
 
+        $new_content = implode("\n", $new_output);
         $this->assertNotSame(
             trim($this->content),
-            implode("\n", $new_output)
+            $new_content
         );
+
+        $this->assertEquals(1, preg_match('/empty\.mp3/', $new_content));
+
     }
 
     public function test_default_empty_podcast_obeys_minimum_cache_time_not_elapsed(): void
