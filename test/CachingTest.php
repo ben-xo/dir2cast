@@ -57,7 +57,7 @@ final class CachingTest extends TestCase
         clearstatcache();
         $cached_mtime_before = filemtime($cached_output_files[0]);
 
-        exec('php dir2cast.php --output=out.xml', $this->output, $this->returncode);
+        exec('php dir2cast.php', $this->output, $this->returncode);
 
         clearstatcache();
         $cached_mtime_after = filemtime($cached_output_files[0]);
@@ -76,7 +76,7 @@ final class CachingTest extends TestCase
         clearstatcache();
         $cached_mtime_before = filemtime($cached_output_files[0]);
 
-        exec('php dir2cast.php --output=out.xml', $this->output, $this->returncode);
+        exec('php dir2cast.php', $this->output, $this->returncode);
 
         clearstatcache();
         $cached_mtime_after = filemtime($cached_output_files[0]);
