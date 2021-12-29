@@ -250,10 +250,12 @@ final class CachingTest extends TestCase
         $old_mtime = filemtime($cached_output_files[0]);
 
         file_put_contents('empty.mp3', 'test');
-        touch('empty.mp3'); // too new to be included because of min-file-age, but still busts cache
-        // FIXME: its presence busts the cache anyway, which is not how it's supposed to work
+        touch('empty.mp3'); // too new to be included because of min-file-age
 
+        // this sleep guarantees that the Last Modified will be different IF the feed is regenerated
+        // (which it shouldn't be!)
         sleep(1);
+
         exec('php dir2cast.php --output=out.xml --dont-uncache --min-file-age=30 --ignore-dir2cast-mtime');
 
         $new_content = file_get_contents($this->file); // should not have empty.mp3
