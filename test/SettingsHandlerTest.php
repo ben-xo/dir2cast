@@ -55,8 +55,8 @@ class SettingsHandlerTest extends TestCase
         $this->assertEquals(0, Dir_Podcast::$MIN_FILE_AGE);
         $this->assertEquals(5, Cached_Dir_Podcast::$MIN_CACHE_TIME);
         $this->assertFalse(getID3_Podcast_Helper::$AUTO_SAVE_COVER_ART);
-        $this->assertNull(RSS_File_Item::$FILES_URL);
-        $this->assertNull(RSS_File_Item::$FILES_DIR);
+        $this->assertEmpty(RSS_File_Item::$FILES_URL);
+        $this->assertEmpty(RSS_File_Item::$FILES_DIR);
         $this->assertFalse(Media_RSS_Item::$LONG_TITLES);
         $this->assertEquals('comment', Media_RSS_Item::$DESCRIPTION_SOURCE);
         

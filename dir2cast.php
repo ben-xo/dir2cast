@@ -557,7 +557,7 @@ class RSS_Item extends GetterSetter {
         {
             if($name == 'description')
                 if(!defined('DESCRIPTION_HTML'))
-                    $val = htmlspecialchars($val);
+                    $val = htmlspecialchars((string)$val);
                     
             $item_element->appendChild( new DOMElement($name) )
                 ->appendChild( $doc->createCDATASection(
@@ -589,8 +589,8 @@ class RSS_Item extends GetterSetter {
 
 class RSS_File_Item extends RSS_Item {
     
-    static $FILES_URL;
-    static $FILES_DIR;
+    static $FILES_URL = '';
+    static $FILES_DIR = '';
 
     public function __construct($filename)
     {
@@ -994,7 +994,7 @@ abstract class Podcast extends GetterSetter
             'description' => $this->getDescription(),
             'lastBuildDate' => $this->getLastBuildDate(),
             'language' => $this->getLanguage(),
-            'copyright' => str_replace('%YEAR%', date('Y'), $this->getCopyright()),
+            'copyright' => str_replace('%YEAR%', date('Y'), (string)$this->getCopyright()),
             'generator' => $this->getGenerator(),
             'webMaster' => $this->getWebMaster(),
             'ttl' => $this->getTtl()
@@ -1003,7 +1003,7 @@ abstract class Podcast extends GetterSetter
         foreach($channel_elements as $name => $val)
         {
             $channel->appendChild( new DOMElement($name) )
-                ->appendChild(new DOMText($val));
+                ->appendChild(new DOMText((string)$val));
         }
         
         $this->appendImage($channel);
@@ -1053,7 +1053,7 @@ abstract class Podcast extends GetterSetter
     protected function appendImage(DOMElement $channel)
     {
         $image_url = $this->getImage();
-        if(strlen($image_url))
+        if(strlen((string)$image_url))
         {
             $image = $channel->appendChild( new DOMElement('image'));
             $image->appendChild( new DOMElement('url') )
