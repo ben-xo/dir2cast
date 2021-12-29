@@ -1,9 +1,7 @@
 {
     "name": "dir2cast/dir2cast",
     "require-dev": {
-        "phpunit/phpunit": "^9"
-    },
-    "require-dev": {
+        "phpunit/phpunit": "^9",
         "symfony/filesystem": "^6.0"
     }
 }
