@@ -1408,7 +1408,8 @@ class Locking_Cached_Dir_Podcast extends Cached_Dir_Podcast
             unlink($this->temp_file);
         
         // this releases the lock implicitly
-        fclose($this->file_handle);    
+        if($this->file_handle)
+            fclose($this->file_handle);
     }
     
     public function __destruct()
