@@ -1120,7 +1120,8 @@ class Dir_Podcast extends Podcast
             $item_count = 0;
             foreach($di as $file)
             {
-                $item_count = $this->addItem($file->getPath() . '/' . $file->getFileName());
+                $filepath = $file->getPath() . '/' . $file->getFileName();
+                $item_count = $this->addItem($filepath);
             }
             
             if(self::$EMPTY_PODCAST_IS_ERROR && 0 == $item_count)

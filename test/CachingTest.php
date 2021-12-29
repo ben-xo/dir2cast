@@ -58,7 +58,7 @@ final class CachingTest extends TestCase
         clearstatcache();
         $cached_mtime_before = filemtime($cached_output_files[0]);
 
-        exec('php dir2cast.php', $new_output, $this->returncode);
+        exec('php dir2cast.php --output=out.xml --dont-uncache', $new_output, $this->returncode);
 
         clearstatcache();
         $cached_mtime_after = filemtime($cached_output_files[0]);
@@ -68,9 +68,10 @@ final class CachingTest extends TestCase
             $cached_mtime_after
         );
 
+        $new_content = file_get_contents($this->file);
         $this->assertSame(
-            trim($this->content),
-            implode("\n", $new_output)
+            $this->content,
+            $new_content
         );
     }
 
@@ -84,7 +85,7 @@ final class CachingTest extends TestCase
         clearstatcache();
         $cached_mtime_before = filemtime($cached_output_files[0]);
 
-        exec('php dir2cast.php', $new_output, $this->returncode);
+        exec('php dir2cast.php --output=out.xml --dont-uncache', $new_output, $this->returncode);
 
         clearstatcache();
         $cached_mtime_after = filemtime($cached_output_files[0]);
@@ -94,9 +95,10 @@ final class CachingTest extends TestCase
             $cached_mtime_after
         );
 
+        $new_content = file_get_contents($this->file);
         $this->assertSame(
-            trim($this->content),
-            implode("\n", $new_output)
+            $this->content,
+            $new_content
         );
     }
 
@@ -115,7 +117,7 @@ final class CachingTest extends TestCase
         clearstatcache();
         $cached_mtime_before = filemtime($cached_output_files[0]);
 
-        exec('php dir2cast.php', $new_output, $this->returncode);
+        exec('php dir2cast.php --output=out.xml --dont-uncache', $new_output, $this->returncode);
 
         clearstatcache();
         $cached_mtime_after = filemtime($cached_output_files[0]);
@@ -125,9 +127,9 @@ final class CachingTest extends TestCase
             $cached_mtime_after
         );
 
-        $new_content = implode("\n", $new_output);
+        $new_content = file_get_contents($this->file);
         $this->assertSame(
-            trim($this->content),
+            $this->content,
             $new_content
         );
 
@@ -148,7 +150,7 @@ final class CachingTest extends TestCase
         clearstatcache();
         $cached_mtime_before = filemtime($cached_output_files[0]);
 
-        exec('php dir2cast.php', $new_output, $this->returncode);
+        exec('php dir2cast.php --output=out.xml --dont-uncache', $new_output, $this->returncode);
 
         clearstatcache();
         $cached_mtime_after = filemtime($cached_output_files[0]);
@@ -158,13 +160,13 @@ final class CachingTest extends TestCase
             $cached_mtime_after
         );
 
-        $new_content = implode("\n", $new_output);
+        $new_content = file_get_contents($this->file);
         $this->assertNotSame(
-            trim($this->content),
+            $this->content,
             $new_content
         );
 
-        $this->assertEquals(1, preg_match('/empty\.mp3/', $new_content));
+        $this->assertEquals(1, preg_match('/empty\.mp3/', file_get_contents($this->file)));
 
     }
 
@@ -256,11 +258,11 @@ final class CachingTest extends TestCase
 
         # Because the code coverage harness is slow, the build date might be one second out.
         # We can just not compare that part and the test is still essentially valid.
-        $old_content = preg_replace('#<lastBuildDate>[^<]+</lastBuildDate>#', '', $this->content);
-        $new_content = preg_replace('#<lastBuildDate>[^<]+</lastBuildDate>#', '', $new_content);
+        // $old_content = preg_replace('#<lastBuildDate>[^<]+</lastBuildDate>#', '', $this->content);
+        // $new_content = preg_replace('#<lastBuildDate>[^<]+</lastBuildDate>#', '', $new_content);
         # TODO: improve this so that it actually serves the cached content instead of regenerating
 
-        $this->assertEquals($old_content, $new_content);
+        $this->assertEquals($this->content, $new_content);
         $this->assertEquals(0, preg_match('/empty\.mp3/', $new_content));
 
         clearstatcache();
