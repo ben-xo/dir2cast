@@ -63,8 +63,14 @@ function prepare_testing_dir()
 {
     is_dir('./testdir') && rmrf('./testdir');
     mkdir('./testdir');
-    symlink('../dir2castWithCoverage.php', './testdir/dir2cast.php');
-    // symlink('../../dir2cast.php', './testdir/dir2cast.php');
+    if(isset($_ENV['XDEBUG_MODE']))
+    {
+        symlink('../dir2castWithCoverage.php', './testdir/dir2cast.php');
+    }
+    else
+    {
+        symlink('../../dir2cast.php', './testdir/dir2cast.php');
+    }
     symlink('../../getID3', './testdir/getID3');
     chdir('./testdir');
 }
