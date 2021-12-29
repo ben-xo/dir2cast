@@ -35,7 +35,7 @@ class Caching_updates_to_feed_metadataTest extends TestCase
 
     protected function _update_feed()
     {
-        $cached_output_files = glob('./temp/*.xml');
+        $cached_output_files = glob(temp_xml_glob());
 
         clearstatcache();
         $old_mtime = filemtime($cached_output_files[0]);
@@ -44,7 +44,7 @@ class Caching_updates_to_feed_metadataTest extends TestCase
         // print(implode("\n", $debug_out));
 
         clearstatcache();
-        $cached_output_files = glob('./temp/*.xml');
+        $cached_output_files = glob(temp_xml_glob());
         $new_mtime = filemtime($cached_output_files[0]);
 
         // cache file should be refreshed

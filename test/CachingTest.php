@@ -22,7 +22,7 @@ class CachingTest extends TestCase
     {
         // caches the output in the default temp folder
         $this->assertTrue(is_dir('./temp'));
-        $cached_output_files = glob('./temp/*.xml');
+        $cached_output_files = glob(temp_xml_glob());
         $this->assertCount(1, $cached_output_files);
 
         // caches what was generated
@@ -34,7 +34,7 @@ class CachingTest extends TestCase
 
     public function test_default_empty_podcast_doesnt_regenerate_in_first_MIN_CACHE_TIME(): void
     {
-        $cached_output_files = glob('./temp/*.xml');
+        $cached_output_files = glob(temp_xml_glob());
         age_dir_by('.', 7);
 
         // bring cache within last 5 seconds
@@ -46,7 +46,7 @@ class CachingTest extends TestCase
         exec('php dir2cast.php --output=out.xml --dont-uncache --ignore-dir2cast-mtime', $new_output, $this->returncode);
 
         clearstatcache();
-        $cached_output_files = glob('./temp/*.xml');
+        $cached_output_files = glob(temp_xml_glob());
         $cached_mtime_after = filemtime($cached_output_files[0]);
 
         $this->assertSame(
@@ -63,7 +63,7 @@ class CachingTest extends TestCase
 
     public function test_default_empty_podcast_renews_cache_file_mtime_after_MIN_CACHE_TIME(): void
     {
-        $cached_output_files = glob('./temp/*.xml');
+        $cached_output_files = glob(temp_xml_glob());
         age_dir_by('.', 7);
 
         // leave cache file 7 seconds ago (default threshold is 5 seconds)
@@ -74,7 +74,7 @@ class CachingTest extends TestCase
         exec('php dir2cast.php --output=out.xml --dont-uncache --ignore-dir2cast-mtime', $new_output, $this->returncode);
 
         clearstatcache();
-        $cached_output_files = glob('./temp/*.xml');
+        $cached_output_files = glob(temp_xml_glob());
         $cached_mtime_after = filemtime($cached_output_files[0]);
 
         $this->assertGreaterThan(
@@ -91,7 +91,7 @@ class CachingTest extends TestCase
 
     public function test_default_empty_podcast_doesnt_regenerate_before_MIN_CACHE_TIME_with_a_change(): void
     {
-        $cached_output_files = glob('./temp/*.xml');
+        $cached_output_files = glob(temp_xml_glob());
         age_dir_by('.', 7);
 
         // bring cache within last 5 seconds
@@ -107,7 +107,7 @@ class CachingTest extends TestCase
         exec('php dir2cast.php --output=out.xml --dont-uncache --ignore-dir2cast-mtime', $new_output, $this->returncode);
 
         clearstatcache();
-        $cached_output_files = glob('./temp/*.xml');
+        $cached_output_files = glob(temp_xml_glob());
         $cached_mtime_after = filemtime($cached_output_files[0]);
 
         $this->assertSame(
@@ -126,7 +126,7 @@ class CachingTest extends TestCase
 
     public function test_default_empty_podcast_regenerates_after_MIN_CACHE_TIME_with_a_change(): void
     {
-        $cached_output_files = glob('./temp/*.xml');
+        $cached_output_files = glob(temp_xml_glob());
         age_dir_by('.', 90);
 
         // leave cache file 7 seconds ago (default threshold is 5 seconds)
@@ -141,7 +141,7 @@ class CachingTest extends TestCase
         exec('php dir2cast.php --output=out.xml --dont-uncache --ignore-dir2cast-mtime', $new_output, $this->returncode);
 
         clearstatcache();
-        $cached_output_files = glob('./temp/*.xml');
+        $cached_output_files = glob(temp_xml_glob());
         $cached_mtime_after = filemtime($cached_output_files[0]);
 
         $this->assertGreaterThan(
@@ -209,7 +209,7 @@ class CachingTest extends TestCase
     {
         age_dir_by('.', 86400);
 
-        $cached_output_files = glob('./temp/*.xml');
+        $cached_output_files = glob(temp_xml_glob());
 
         clearstatcache();
         $old_mtime = filemtime($cached_output_files[0]);
@@ -223,7 +223,7 @@ class CachingTest extends TestCase
         $this->assertEquals(1, preg_match('/empty\.mp3/', $new_content));
 
         clearstatcache();
-        $cached_output_files = glob('./temp/*.xml');
+        $cached_output_files = glob(temp_xml_glob());
         $new_mtime = filemtime($cached_output_files[0]);
         
         // cache file should be refreshed
@@ -234,7 +234,7 @@ class CachingTest extends TestCase
     {
         age_dir_by('.', 86400);
 
-        $cached_output_files = glob('./temp/*.xml');
+        $cached_output_files = glob(temp_xml_glob());
 
         clearstatcache();
         $old_mtime = filemtime($cached_output_files[0]);
@@ -254,7 +254,7 @@ class CachingTest extends TestCase
         $this->assertEquals(0, preg_match('/empty\.mp3/', $new_content));
 
         clearstatcache();
-        $cached_output_files = glob('./temp/*.xml');
+        $cached_output_files = glob(temp_xml_glob());
         $new_mtime = filemtime($cached_output_files[0]);
 
         // cache file should be refreshed

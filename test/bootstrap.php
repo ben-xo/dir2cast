@@ -79,6 +79,11 @@ function prepare_testing_dir()
     }
 }
 
+function temp_xml_glob()
+{
+    return '.' . DIRECTORY_SEPARATOR . 'temp' . DIRECTORY_SEPARATOR . '*.xml';
+}
+
 
 define('NO_DISPATCHER', true);
 

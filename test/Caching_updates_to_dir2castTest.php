@@ -10,6 +10,11 @@ class Caching_updates_to_dir2castTest extends TestCase
 
     public $content = '';
 
+    public function temp_xml_glob()
+    {
+        return '.' . DIRECTORY_SEPARATOR . 'temp' . DIRECTORY_SEPARATOR . '*.xml';
+    }
+
     public function setUp(): void
     {
         prepare_testing_dir();
@@ -37,7 +42,7 @@ class Caching_updates_to_dir2castTest extends TestCase
     {
         file_put_contents('empty.mp3', 'test');
 
-        $cached_output_files = glob('./temp/*.xml');
+        $cached_output_files = glob(temp_xml_glob());
 
         touch('dir2cast.php', time()-3600); // older than the minimum cache time, but newer than the cache files
 
@@ -51,7 +56,7 @@ class Caching_updates_to_dir2castTest extends TestCase
         // passthru('ls -laR');
 
         clearstatcache();
-        $cached_output_files = glob('./temp/*.xml');
+        $cached_output_files = glob(temp_xml_glob());
         $new_mtime = filemtime($cached_output_files[0]);
 
         // cache file should be refreshed
@@ -70,7 +75,7 @@ class Caching_updates_to_dir2castTest extends TestCase
 
         copy('../../dir2cast.ini', 'dir2cast.ini');
 
-        $cached_output_files = glob('./temp/*.xml');
+        $cached_output_files = glob(temp_xml_glob());
 
         touch('dir2cast.ini', time()-3600); // older than the minimum cache time, but newer than the cache files
 
@@ -82,7 +87,7 @@ class Caching_updates_to_dir2castTest extends TestCase
         // print(implode("\n", $debug_out));
 
         clearstatcache();
-        $cached_output_files = glob('./temp/*.xml');
+        $cached_output_files = glob(temp_xml_glob());
         $new_mtime = filemtime($cached_output_files[0]);
 
         // cache file should be refreshed

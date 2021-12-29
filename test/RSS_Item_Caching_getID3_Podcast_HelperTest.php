@@ -61,9 +61,9 @@ class RSS_Item_Caching_getID3_Podcast_HelperTest extends RSS_Item_getID3_Podcast
 
     public function test_empty_rss_item()
     {
-        $this->assertCount(0, glob('temp/*'));
+        $this->assertCount(0, glob('temp' . DIRECTORY_SEPARATOR . '*'));
         parent::test_empty_rss_item();
-        $this->assertCount(1, glob('temp/*'));
+        $this->assertCount(1, glob('temp' . DIRECTORY_SEPARATOR . '*'));
 
         // now do it again, from the cache
         $mp = new MyPodcast();
@@ -88,9 +88,9 @@ class RSS_Item_Caching_getID3_Podcast_HelperTest extends RSS_Item_getID3_Podcast
 
     public function test_id3v1_artist_album_title()
     {
-        $this->assertCount(0, glob('temp/*'));
+        $this->assertCount(0, glob('temp' . DIRECTORY_SEPARATOR . '*'));
         parent::test_id3v1_artist_album_title();
-        $this->assertCount(1, glob('temp/*'));
+        $this->assertCount(1, glob('temp' . DIRECTORY_SEPARATOR . '*'));
 
         $mp = new MyPodcast();
         $mock = $this->getid3_helper_mock();
