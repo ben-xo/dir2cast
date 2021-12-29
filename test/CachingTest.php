@@ -227,7 +227,7 @@ class CachingTest extends TestCase
         $new_mtime = filemtime($cached_output_files[0]);
         
         // cache file should be refreshed
-        $this->assertNotEquals($old_mtime, $new_mtime);
+        $this->assertGreaterThan($old_mtime, $new_mtime);
     }
 
     public function test_too_new_file_not_included_in_podcast(): void
@@ -258,72 +258,12 @@ class CachingTest extends TestCase
         $new_mtime = filemtime($cached_output_files[0]);
 
         // cache file should be refreshed
-        $this->assertNotEquals($old_mtime, $new_mtime);
-    }
-
-    public function test_update_to_dir2cast_php_invalidates_cache(): void
-    {
-        file_put_contents('empty.mp3', 'test');
-
-        $source_file = readlink('dir2cast.php');
-        unlink('dir2cast.php');
-        copy($source_file, 'dir2cast.php');
-
-        age_dir_by('.', 86400);
-
-        $cached_output_files = glob('./temp/*.xml');
-
-        touch('dir2cast.php', time()-3600); // older than the minimum cache time, but newer than the cache files
-
-        clearstatcache();
-        $old_mtime = filemtime($cached_output_files[0]);
-
-        exec('php dir2cast.php --output=out.xml --dont-uncache --min-file-age=30');
-        $new_content = file_get_contents($this->file); // should have empty.mp3
-        $this->assertNotEquals($this->content, $new_content);
-        $this->assertEquals(1, preg_match('/empty\.mp3/', $new_content));
-
-        clearstatcache();
-        $cached_output_files = glob('./temp/*.xml');
-        $new_mtime = filemtime($cached_output_files[0]);
-
-        // cache file should be refreshed
-        $this->assertNotEquals($old_mtime, $new_mtime);
-    }
-
-    public function test_update_to_dir2cast_ini_invalidates_cache(): void
-    {
-        file_put_contents('empty.mp3', 'test');
-
-        $source_file = readlink('dir2cast.php');
-        unlink('dir2cast.php');
-        copy($source_file, 'dir2cast.php');
-        copy('../../dir2cast.ini', 'dir2cast.ini');
-
-        age_dir_by('.', 86400);
-
-        $cached_output_files = glob('./temp/*.xml');
-
-        touch('dir2cast.ini', time()-3600); // older than the minimum cache time, but newer than the cache files
-
-        clearstatcache();
-        $old_mtime = filemtime($cached_output_files[0]);
-
-        exec('php dir2cast.php --output=out.xml --dont-uncache --min-file-age=30');
-        $new_content = file_get_contents($this->file); // should have empty.mp3
-        $this->assertNotEquals($this->content, $new_content);
-        $this->assertEquals(1, preg_match('/empty\.mp3/', $new_content));
-
-        clearstatcache();
-        $cached_output_files = glob('./temp/*.xml');
-        $new_mtime = filemtime($cached_output_files[0]);
-
-        // cache file should be refreshed
-        $this->assertNotEquals($old_mtime, $new_mtime);
+        $this->assertGreaterThan($old_mtime, $new_mtime);
     }
 
     public function tearDown(): void
     {
+        unlink($this->file);
         chdir('..');
     }
 }
