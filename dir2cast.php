@@ -1314,7 +1314,7 @@ class Cached_Dir_Podcast extends Dir_Podcast
                 }
                 else
                 {
-                    self::$DEBUG && print("Cache is not stale. Renewing\n");
+                    self::$DEBUG && print("Cache is not stale (cache file mtime: $cache_date, max mtime: {$this->max_mtime}). Renewing\n");
                     $this->renew();
                 }
             }
