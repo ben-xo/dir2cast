@@ -20,6 +20,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Composer Install
-        uses: php-actions/composer@v5
+        uses: php-actions/composer@v6
       - name: Test with phpunit
         run: ./test/run.sh --do-not-cache-result .
