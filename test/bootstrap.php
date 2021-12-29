@@ -61,18 +61,22 @@ function age_dir_by($dir, $seconds)
 
 function prepare_testing_dir()
 {
+    chdir(dirname(__FILE__));
     is_dir('./testdir') && rmrf('./testdir');
     mkdir('./testdir');
-    if(isset($_ENV['XDEBUG_MODE']))
+    chdir('./testdir');
+    if(getenv('XDEBUG_MODE'))
     {
-        symlink('../dir2castWithCoverage.php', './testdir/dir2cast.php');
+        symlink('../dir2castWithCoverage.php', './dir2cast.php');
+        symlink('../../getID3', './getID3');
     }
     else
     {
-        symlink('../../dir2cast.php', './testdir/dir2cast.php');
+        copy('../../dir2cast.php', './dir2cast.php');
+        copy('../../dir2cast.ini', './dir2cast.ini');
+        $fileSystem = new Symfony\Component\Filesystem\Filesystem();
+        $fileSystem->mirror('../../getID3', './getID3');
     }
-    symlink('../../getID3', './testdir/getID3');
-    chdir('./testdir');
 }
 
 
