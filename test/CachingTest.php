@@ -46,6 +46,7 @@ class CachingTest extends TestCase
         exec('php dir2cast.php --output=out.xml --dont-uncache --ignore-dir2cast-mtime', $new_output, $this->returncode);
 
         clearstatcache();
+        $cached_output_files = glob('./temp/*.xml');
         $cached_mtime_after = filemtime($cached_output_files[0]);
 
         $this->assertSame(
@@ -73,9 +74,10 @@ class CachingTest extends TestCase
         exec('php dir2cast.php --output=out.xml --dont-uncache --ignore-dir2cast-mtime', $new_output, $this->returncode);
 
         clearstatcache();
+        $cached_output_files = glob('./temp/*.xml');
         $cached_mtime_after = filemtime($cached_output_files[0]);
 
-        $this->assertNotSame(
+        $this->assertGreaterThan(
             $cached_mtime_before,
             $cached_mtime_after
         );
@@ -105,6 +107,7 @@ class CachingTest extends TestCase
         exec('php dir2cast.php --output=out.xml --dont-uncache --ignore-dir2cast-mtime', $new_output, $this->returncode);
 
         clearstatcache();
+        $cached_output_files = glob('./temp/*.xml');
         $cached_mtime_after = filemtime($cached_output_files[0]);
 
         $this->assertSame(
@@ -138,9 +141,10 @@ class CachingTest extends TestCase
         exec('php dir2cast.php --output=out.xml --dont-uncache --ignore-dir2cast-mtime', $new_output, $this->returncode);
 
         clearstatcache();
+        $cached_output_files = glob('./temp/*.xml');
         $cached_mtime_after = filemtime($cached_output_files[0]);
 
-        $this->assertNotSame(
+        $this->assertGreaterThan(
             $cached_mtime_before,
             $cached_mtime_after
         );
@@ -219,6 +223,7 @@ class CachingTest extends TestCase
         $this->assertEquals(1, preg_match('/empty\.mp3/', $new_content));
 
         clearstatcache();
+        $cached_output_files = glob('./temp/*.xml');
         $new_mtime = filemtime($cached_output_files[0]);
         
         // cache file should be refreshed
@@ -249,6 +254,7 @@ class CachingTest extends TestCase
         $this->assertEquals(0, preg_match('/empty\.mp3/', $new_content));
 
         clearstatcache();
+        $cached_output_files = glob('./temp/*.xml');
         $new_mtime = filemtime($cached_output_files[0]);
 
         // cache file should be refreshed
@@ -278,6 +284,7 @@ class CachingTest extends TestCase
         $this->assertEquals(1, preg_match('/empty\.mp3/', $new_content));
 
         clearstatcache();
+        $cached_output_files = glob('./temp/*.xml');
         $new_mtime = filemtime($cached_output_files[0]);
 
         // cache file should be refreshed
@@ -308,6 +315,7 @@ class CachingTest extends TestCase
         $this->assertEquals(1, preg_match('/empty\.mp3/', $new_content));
 
         clearstatcache();
+        $cached_output_files = glob('./temp/*.xml');
         $new_mtime = filemtime($cached_output_files[0]);
 
         // cache file should be refreshed
