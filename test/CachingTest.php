@@ -119,7 +119,7 @@ class CachingTest extends TestCase
         );
 
         $this->assertEquals(0, preg_match('/empty\.mp3/', $new_content));
-    }    
+    }
 
     public function test_default_empty_podcast_regenerates_after_MIN_CACHE_TIME_with_a_change(): void
     {

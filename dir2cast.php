@@ -1127,18 +1127,18 @@ class Dir_Podcast extends Podcast
                 self::$DEBUG && print("Considering ${filepath}…\n");
                 $item_count = $this->addItem($filepath);
             }
-    
+
             self::$DEBUG && print("$item_count items added.\n");
-            
+
             if(self::$EMPTY_PODCAST_IS_ERROR && 0 == $item_count)
                 throw new Exception("No Items found in {$this->source_dir}");
-                    
+
             $this->scanned = true;
             $this->post_scan();
             $this->sort();
        }
     }
-    
+
     /**
      * Adds file to ->unsorted_items, and updates ->max_mtime, if it is of a supported type
      *
@@ -1223,7 +1223,7 @@ class Dir_Podcast extends Podcast
             foreach($this->items as $the_item)
                 $the_item->addHelper($helper);
     }
-    
+
     protected function sort() { 
         krsort($this->unsorted_items); // newest first
         $this->items = array();
@@ -1241,9 +1241,9 @@ class Dir_Podcast extends Podcast
 
         unset($this->unsorted_items);        
     }
-        
+
     protected function pre_scan() { }
-    
+
     protected function post_scan() { }
 }
 
@@ -1339,7 +1339,7 @@ class Cached_Dir_Podcast extends Dir_Podcast
     {
         touch($this->temp_file); // renew cache file life expectancy        
     }
-    
+
     public function uncache()
     {
         if($this->isCached())
@@ -1348,7 +1348,7 @@ class Cached_Dir_Podcast extends Dir_Podcast
             $this->serve_from_cache = false;
         }
     }
-    
+
     public function generate()
     {
         if($this->serve_from_cache)
@@ -1375,10 +1375,10 @@ class Cached_Dir_Podcast extends Dir_Podcast
             file_put_contents($this->temp_file, $output); // save cached copy
             $this->serve_from_cache = true;
         }
-            
+
         return $output;
     }
-   
+
     public function isCached()
     {
         return file_exists($this->temp_file) && filesize($this->temp_file);
@@ -1580,7 +1580,7 @@ class SettingsHandler
             if(isset($cli_options['help'])) {
                 print "Usage: php dir2cast.php [--help] [--media-dir=MP3_DIR] [--media-url=MP3_URL] [--output=OUTPUT_FILE]\n";
 
-                // extra debugging / test harness options: 
+                // extra debugging / test harness options:
                 // [--dont-uncache]
                 // [--min-file-age=MIN_FILE_AGE]
                 // [--debug]

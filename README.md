@@ -24,11 +24,11 @@ Features:
 
 * supports MP3, MP4, and M4A files
 
-* dir2cast will automatically use the ID3 fields from your files for the Author, 
+* dir2cast will automatically use the ID3 fields from your files for the Author,
   Title, etc. ID3v2 is supported, as are the regular tags found in MP4 and M4A
   files. (Uses getID3, which is bundled with dir2cast.)
 
-* dir2cast will automatically use the cover art embedded in your file as well. 
+* dir2cast will automatically use the cover art embedded in your file as well.
 
 * The generated feed is cached (in the supplied 'temp' folder, or anywhere else
   that you want) and only updated if something in the directory changes - so
@@ -108,7 +108,7 @@ the media content, and of `dir2cast.php` and `dir2cast.ini`.
   This is to prevent high load if the feed is hammered by clients.
 * The feed will be updated when a media file that is newer than the cache file
   appears in the folder, as long as the media file was not updated in the last
-  30 seconds (`MIN_FILE_AGE`). This is so that it doesn't accidentally include 
+  30 seconds (`MIN_FILE_AGE`). This is so that it doesn't accidentally include
   files which are still being uploaded.
 * Empty media files are ignored (nobody enjoys listening to them anyway)
 * The feed will update `dir2cast.php` or `dir2cast.ini` are newer than the cache
@@ -133,20 +133,20 @@ TIPS
 CASTING SEVERAL FOLDERS FROM ONE DIR2CAST.PHP
 --------------------------------------------------------------------------------
 
-If you have more than one folder of MP3s that you are casting, you can serve 
-them all from a single install of dir2cast.php, and customise dir2cast.ini for 
+If you have more than one folder of MP3s that you are casting, you can serve
+them all from a single install of dir2cast.php, and customise dir2cast.ini for
 each individual folder.
 
 Assuming the following:
 * your web root folder is called `htdocs/` and this maps to http://www.mysite.com/
-* you installed dir2cast to the folder `htdocs/dir2cast` 
-* you have two podcasts, and the MP3s live in `htdocs/dir2cast/cast1` and 
+* you installed dir2cast to the folder `htdocs/dir2cast`
+* you have two podcasts, and the MP3s live in `htdocs/dir2cast/cast1` and
   `htdocs/dir2cast/cast2`
 
-Step 1: Make 2 extra copies of `dir2cast.ini` (one for each cast), and then edit 
-        to taste. (Any settings not specified will be taken from the main 
+Step 1: Make 2 extra copies of `dir2cast.ini` (one for each cast), and then edit
+        to taste. (Any settings not specified will be taken from the main
         `dir2cast.ini` - the one that is in the same folder as `dir2cast.php`).
-Step 2: Upload these additional dir2cast.ini files to the `htdocs/dir2cast/cast1/` 
+Step 2: Upload these additional dir2cast.ini files to the `htdocs/dir2cast/cast1/`
         and `htdocs/dir2cast/cast2/` folders, respectively.
 
 The podcast URLs will now be:
@@ -172,17 +172,17 @@ From the example above, your podcast URL will be:
 
     http://www.mysite.com/dir2cast/cast1/rss
 
-To achieve this, you must configure apache with a rewrite rule such as: 
+To achieve this, you must configure apache with a rewrite rule such as:
 
   RewriteEngine on
   RewriteRule (.+)/rss$ dir2cast.php?dir=$1 [L]
 
-Put this in your `VHOST` configuration (inside a `<Location>` block) or in a 
+Put this in your `VHOST` configuration (inside a `<Location>` block) or in a
 `.htaccess` file alongside `dir2cast.php` .
 
 PLEASE NOTE: just to check that you understand this section... 
 * If you use the `RewriteRule` supplied, `dir2cast.php` must be in the folder above
-  the MP3 folders. (If this is not the case, you will have to set MP3_BASE in 
+  the MP3 folders. (If this is not the case, you will have to set MP3_BASE in
   the ini file, and change the rule for your circumstance.)
 
 
@@ -226,9 +226,9 @@ All rights reserved.
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
-  * Redistributions of source code must retain the above copyright notice, 
+  * Redistributions of source code must retain the above copyright notice,
     this list of conditions and the following disclaimer.
-  * Redistributions in binary form must reproduce the above copyright notice, 
+  * Redistributions in binary form must reproduce the above copyright notice,
     this list of conditions and the following disclaimer in the documentation
     and/or other materials provided with the distribution.
   * Neither the name of dir2cast nor the names of its contributors
