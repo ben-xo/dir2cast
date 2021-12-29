@@ -874,7 +874,7 @@ class Media_RSS_Item extends RSS_File_Item implements Serializable {
      */
     const SERIAL_VERSION = 1;
 
-    public function serialize()
+    public function __serialize()
     {
         $this->setSerialVersion(self::SERIAL_VERSION);
         $serialized_parameters = $this->parameters;
@@ -886,18 +886,27 @@ class Media_RSS_Item extends RSS_File_Item implements Serializable {
         unset($serialized_parameters['extension']);
         unset($serialized_parameters['link']);
 
-        return serialize($serialized_parameters);
+        return $serialized_parameters;
     }
 
-    public function unserialize($serialized)
+    public function serialize()
     {
-        $serialized_parameters = unserialize($serialized);
-        if($serialized_parameters['serialVersion'] != self::SERIAL_VERSION)
+        return serialize($this->__serialize());
+    }
+
+    public function __unserialize($serialized)
+    {
+        if($serialized['serialVersion'] != self::SERIAL_VERSION)
             throw new SerializationException("Wrong serialized version");
         
         // keep properties we've already set. This should make cache files transferable 
         // whilst still gaining a speed-up over ID3-reading.
-        $this->parameters = array_merge($serialized_parameters, $this->parameters);
+        $this->parameters = array_merge($serialized, $this->parameters);
+    }
+
+    public function unserialize($serialized)
+    {
+        $this->__unserialize(unserialize($serialized));
     }
 }
 
