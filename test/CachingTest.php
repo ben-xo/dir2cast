@@ -13,7 +13,7 @@ final class CachingTest extends TestCase
     public function setUp(): void
     {
         prepare_testing_dir();
-        exec('php dir2cast.php --output=out.xml --dont-uncache', $this->output, $this->returncode);
+        exec('php dir2cast.php --output=out.xml --dont-uncache --ignore-dir2cast-mtime', $this->output, $this->returncode);
         $this->content = file_get_contents($this->file);
         clearstatcache();
     }
@@ -58,7 +58,7 @@ final class CachingTest extends TestCase
         clearstatcache();
         $cached_mtime_before = filemtime($cached_output_files[0]);
 
-        exec('php dir2cast.php --output=out.xml --dont-uncache', $new_output, $this->returncode);
+        exec('php dir2cast.php --output=out.xml --dont-uncache --ignore-dir2cast-mtime', $new_output, $this->returncode);
 
         clearstatcache();
         $cached_mtime_after = filemtime($cached_output_files[0]);
@@ -85,7 +85,7 @@ final class CachingTest extends TestCase
         clearstatcache();
         $cached_mtime_before = filemtime($cached_output_files[0]);
 
-        exec('php dir2cast.php --output=out.xml --dont-uncache', $new_output, $this->returncode);
+        exec('php dir2cast.php --output=out.xml --dont-uncache --ignore-dir2cast-mtime', $new_output, $this->returncode);
 
         clearstatcache();
         $cached_mtime_after = filemtime($cached_output_files[0]);
@@ -117,7 +117,7 @@ final class CachingTest extends TestCase
         clearstatcache();
         $cached_mtime_before = filemtime($cached_output_files[0]);
 
-        exec('php dir2cast.php --output=out.xml --dont-uncache', $new_output, $this->returncode);
+        exec('php dir2cast.php --output=out.xml --dont-uncache --ignore-dir2cast-mtime', $new_output, $this->returncode);
 
         clearstatcache();
         $cached_mtime_after = filemtime($cached_output_files[0]);
@@ -150,7 +150,7 @@ final class CachingTest extends TestCase
         clearstatcache();
         $cached_mtime_before = filemtime($cached_output_files[0]);
 
-        exec('php dir2cast.php --output=out.xml --dont-uncache', $new_output, $this->returncode);
+        exec('php dir2cast.php --output=out.xml --dont-uncache --ignore-dir2cast-mtime', $new_output, $this->returncode);
 
         clearstatcache();
         $cached_mtime_after = filemtime($cached_output_files[0]);
@@ -179,7 +179,7 @@ final class CachingTest extends TestCase
 
         // --dont-uncache: tells dir2cast not use the default caching rules, not ignore them due to CLI
         // --min-file-age=0 : tells dir2cast to include files that are brand new
-        exec('php dir2cast.php --output=out.xml --dont-uncache --min-file-age=0', $this->output, $this->returncode);
+        exec('php dir2cast.php --output=out.xml --dont-uncache --min-file-age=0 --ignore-dir2cast-mtime', $this->output, $this->returncode);
 
         $new_content = file_get_contents($this->file);
         $this->assertEquals($this->content, $new_content);
@@ -195,7 +195,7 @@ final class CachingTest extends TestCase
 
         // --dont-uncache: tells dir2cast not use the default caching rules, not ignore them due to CLI
         // --min-file-age=0 : tells dir2cast to include files that are brand new
-        exec('php dir2cast.php --output=out.xml --dont-uncache --min-file-age=0', $this->output, $this->returncode);
+        exec('php dir2cast.php --output=out.xml --dont-uncache --min-file-age=0 --ignore-dir2cast-mtime', $this->output, $this->returncode);
 
         $new_content = file_get_contents($this->file);
         $this->assertNotEquals($this->content, $new_content);
@@ -209,7 +209,7 @@ final class CachingTest extends TestCase
         // too new to bust the cache, but cli runner uncaches anyway
         file_put_contents('empty.mp3', 'test');
 
-        exec('php dir2cast.php --output=out.xml --min-file-age=0', $this->output, $this->returncode);
+        exec('php dir2cast.php --output=out.xml --min-file-age=0 --ignore-dir2cast-mtime', $this->output, $this->returncode);
 
         $new_content = file_get_contents($this->file);
         $this->assertNotEquals($this->content, $new_content);
@@ -228,7 +228,7 @@ final class CachingTest extends TestCase
         file_put_contents('empty.mp3', 'test');
         touch('empty.mp3', time()-3600); // busts cache as older than min-file-age
 
-        exec('php dir2cast.php --output=out.xml --dont-uncache --min-file-age=30');
+        exec('php dir2cast.php --output=out.xml --dont-uncache --min-file-age=30 --ignore-dir2cast-mtime');
         $new_content = file_get_contents($this->file); // should have empty.mp3
         $this->assertNotEquals($this->content, $new_content);
         $this->assertEquals(1, preg_match('/empty\.mp3/', $new_content));
@@ -253,14 +253,10 @@ final class CachingTest extends TestCase
         touch('empty.mp3'); // too new to be included because of min-file-age, but still busts cache
         // FIXME: its presence busts the cache anyway, which is not how it's supposed to work
 
-        exec('php dir2cast.php --output=out.xml --dont-uncache --min-file-age=30');
-        $new_content = file_get_contents($this->file); // should not have empty.mp3
+        sleep(1);
+        exec('php dir2cast.php --output=out.xml --dont-uncache --min-file-age=30 --ignore-dir2cast-mtime');
 
-        # Because the code coverage harness is slow, the build date might be one second out.
-        # We can just not compare that part and the test is still essentially valid.
-        // $old_content = preg_replace('#<lastBuildDate>[^<]+</lastBuildDate>#', '', $this->content);
-        // $new_content = preg_replace('#<lastBuildDate>[^<]+</lastBuildDate>#', '', $new_content);
-        # TODO: improve this so that it actually serves the cached content instead of regenerating
+        $new_content = file_get_contents($this->file); // should not have empty.mp3
 
         $this->assertEquals($this->content, $new_content);
         $this->assertEquals(0, preg_match('/empty\.mp3/', $new_content));
@@ -276,9 +272,9 @@ final class CachingTest extends TestCase
     {
         file_put_contents('empty.mp3', 'test');
 
+        $source_file = readlink('dir2cast.php');
         unlink('dir2cast.php');
-        copy('../../dir2cast.php', 'dir2cast.php');
-        copy('../../dir2cast.ini', 'dir2cast.ini');
+        copy($source_file, 'dir2cast.php');
 
         age_dir_by('.', 86400);
 
@@ -305,8 +301,9 @@ final class CachingTest extends TestCase
     {
         file_put_contents('empty.mp3', 'test');
 
+        $source_file = readlink('dir2cast.php');
         unlink('dir2cast.php');
-        copy('../../dir2cast.php', 'dir2cast.php');
+        copy($source_file, 'dir2cast.php');
         copy('../../dir2cast.ini', 'dir2cast.ini');
 
         age_dir_by('.', 86400);

@@ -1077,6 +1077,7 @@ class Dir_Podcast extends Podcast
     static $RECURSIVE_DIRECTORY_ITERATOR = false;
     static $ITEM_COUNT = 10;
     static $MIN_FILE_AGE = 0;
+    static $DEBUG = false;
 
     protected $source_dir;
     protected $scanned = false;
@@ -1098,9 +1099,11 @@ class Dir_Podcast extends Podcast
      * tracking the most recently modified date in ->max_mtime 
      */
     protected function scan()
-    {        
+    {
         if(!$this->scanned)
         {
+            self::$DEBUG && print("Scanning…\n");
+
             $this->pre_scan();
             
             // scan the dir
@@ -1121,8 +1124,11 @@ class Dir_Podcast extends Podcast
             foreach($di as $file)
             {
                 $filepath = $file->getPath() . '/' . $file->getFileName();
+                self::$DEBUG && print("Considering ${filepath}…\n");
                 $item_count = $this->addItem($filepath);
             }
+    
+            self::$DEBUG && print("$item_count items added.\n");
             
             if(self::$EMPTY_PODCAST_IS_ERROR && 0 == $item_count)
                 throw new Exception("No Items found in {$this->source_dir}");
@@ -1167,10 +1173,11 @@ class Dir_Podcast extends Podcast
         return count($this->unsorted_items);
     }
 
-    public function updateMaxMtime($date)
+    public function updateMaxMtime($date, $filename)
     {
         if($date > $this->max_mtime) 
         {
+            self::$DEBUG && print("mtime ceiling {$this->max_mtime} ➡ ${date} (now: " . time() . ") from $filename\n");
             $this->max_mtime = $date;
         }
     }
@@ -1202,7 +1209,7 @@ class Dir_Podcast extends Podcast
 
             // one array per mtime, just in case several MP3s share the same mtime.
             $this->unsorted_items[$filemtime][] = $the_item;
-            $this->updateMaxMtime($filemtime);
+            $this->updateMaxMtime($filemtime, $filename);
         }
     }
 
@@ -1280,6 +1287,7 @@ class Cached_Dir_Podcast extends Dir_Podcast
     { 
         if($this->isCached())
         {
+            self::$DEBUG && print("Found cache file\n");
             $this->serve_from_cache = true;
 
             $cache_date = filemtime($this->temp_file);
@@ -1287,13 +1295,17 @@ class Cached_Dir_Podcast extends Dir_Podcast
             // if the cache file is quite new, don't bother regenerating.
             if( $cache_date < time() - self::$MIN_CACHE_TIME ) 
             {
+                self::$DEBUG && print("Cache file is older than " . self::$MIN_CACHE_TIME . " seconds\n");
+
                 $this->scan(); // sets $this->max_mtime
                 if( $this->cache_is_stale($cache_date, $this->max_mtime) )
                 {
+                    self::$DEBUG && print("Cache is stale (cache file mtime: $cache_date, max mtime: {$this->max_mtime}). Uncaching\n");
                     $this->uncache();
                 }
                 else
                 {
+                    self::$DEBUG && print("Cache is not stale. Renewing\n");
                     $this->renew();
                 }
             }
@@ -1563,10 +1575,17 @@ class SettingsHandler
             define('INI_FILE', $ini_file_name);
         }
         
-        $cli_options = getopt('', array('help', 'media-dir::', 'media-url::', 'output::', 'dont-uncache', 'min-file-age::'));
+        $cli_options = getopt('', array('help', 'media-dir::', 'media-url::', 'output::', 'dont-uncache', 'min-file-age::', 'debug', 'ignore-dir2cast-mtime'));
         if($cli_options) {
             if(isset($cli_options['help'])) {
-                print "Usage: php dir2cast.php [--help] [--media-dir=MP3_DIR] [--media-url=MP3_URL] [--output=OUTPUT_FILE] [--dont-uncache] [--min-file-age]\n";
+                print "Usage: php dir2cast.php [--help] [--media-dir=MP3_DIR] [--media-url=MP3_URL] [--output=OUTPUT_FILE]\n";
+
+                // extra debugging / test harness options: 
+                // [--dont-uncache]
+                // [--min-file-age=MIN_FILE_AGE]
+                // [--debug]
+                // [--ignore-dir2cast-mtime]
+
                 exit;
             }
             if(!defined('MP3_DIR') && !empty($cli_options['media-dir']))
@@ -1588,6 +1607,14 @@ class SettingsHandler
             if(!defined('MIN_FILE_AGE') && isset($cli_options['min-file-age']))
             {
                 define('MIN_FILE_AGE', (int)$cli_options['min-file-age']);
+            }
+            if(!defined('DEBUG') && isset($cli_options['debug']))
+            {
+                define('DEBUG', true);
+            }
+            if(!defined('IGNORE_DIR2CAST_MTIME') && isset($cli_options['ignore-dir2cast-mtime']))
+            {
+                define('IGNORE_DIR2CAST_MTIME', true);
             }
         }
        
@@ -1792,11 +1819,15 @@ class SettingsHandler
         if(!defined('MIN_FILE_AGE'))
             define('MIN_FILE_AGE', 30);
 
+        if(!defined('DEBUG'))
+            define('DEBUG', false);
+
         // Set up factory settings for Podcast subclasses
         Dir_Podcast::$EMPTY_PODCAST_IS_ERROR = !defined('CLI_ONLY') || !CLI_ONLY;
         Dir_Podcast::$RECURSIVE_DIRECTORY_ITERATOR = RECURSIVE_DIRECTORY_ITERATOR;
         Dir_Podcast::$ITEM_COUNT = ITEM_COUNT;
         Dir_Podcast::$MIN_FILE_AGE = MIN_FILE_AGE;
+        Dir_Podcast::$DEBUG = DEBUG;
         Cached_Dir_Podcast::$MIN_CACHE_TIME = MIN_CACHE_TIME;
         getID3_Podcast_Helper::$AUTO_SAVE_COVER_ART = AUTO_SAVE_COVER_ART;
 
@@ -1865,9 +1896,9 @@ class Dispatcher
     {
         // Ensure that the cache is invalidated if we have updated dir2cast.php or dir2cast.ini
         // n.b. this doesn't uncache individual media file caches, but also they have a versioning mechanism.
-        $this->podcast->updateMaxMtime(filemtime(__FILE__));
+        $this->podcast->updateMaxMtime(filemtime(__FILE__), __FILE__);
         if(defined('INI_FILE'))
-            $this->podcast->updateMaxMtime(filemtime(INI_FILE));
+            $this->podcast->updateMaxMtime(filemtime(INI_FILE), INI_FILE);
     }
 
     public function init()
@@ -2003,7 +2034,8 @@ function main($args)
 
     $dispatcher->uncache_if_forced(FORCE_PASSWORD, $_GET);
     $dispatcher->uncache_if_output_file();
-    $dispatcher->update_mtime_if_dir2cast_or_settings_modified();
+    if(!defined('IGNORE_DIR2CAST_MTIME'))
+        $dispatcher->update_mtime_if_dir2cast_or_settings_modified();
     $dispatcher->init();
     return $dispatcher->output(); // returns exit code
 }
