@@ -1910,6 +1910,34 @@ class Dispatcher
             $this->podcast->updateMaxMtime(filemtime(INI_FILE), INI_FILE);
     }
 
+    public function update_mtime_if_metadata_files_modified()
+    {
+        // Ensure that the cache is invalidated if we have updated any of non-episode files used for feed metadata
+        $metadata_files = array(
+            'description.txt',
+            'itunes_summary.txt',
+            'itunes_subtitle.txt',
+            'image.jpg',
+            'image.png',
+            'itunes_image.jpg',
+            'itunes_image.png',
+        );
+        foreach($metadata_files as $file)
+        {
+            $filepath = rtrim(MP3_DIR, '/') . '/' . $file;
+            if(!file_exists($filepath))
+            {
+                $filepath = DIR2CAST_BASE . '/' . $file;
+            }
+            if(!file_exists($filepath))
+            {
+                continue;
+            }
+
+            $this->podcast->updateMaxMtime(filemtime($filepath), $filepath);
+        }
+    }
+
     public function init()
     {
         $podcast = $this->podcast;
@@ -2045,6 +2073,7 @@ function main($args)
     $dispatcher->uncache_if_output_file();
     if(!defined('IGNORE_DIR2CAST_MTIME'))
         $dispatcher->update_mtime_if_dir2cast_or_settings_modified();
+    $dispatcher->update_mtime_if_metadata_files_modified();
     $dispatcher->init();
     return $dispatcher->output(); // returns exit code
 }
