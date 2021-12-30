@@ -271,11 +271,11 @@ class Caching_getID3_Podcast_Helper implements Podcast_Helper {
         return $cache_dir . '/' . md5($item->getFilename()) . '__' . basename($item->getFilename()) . '__data';
     }
 
-    protected function loadFromCache($filename, Serializable $item) {
+    protected function loadFromCache($filename, Media_RSS_Item $item) {
         if(!file_exists($filename) || !is_readable($filename))
             return false; // no or unreadable cache file
 
-        if(filemtime($filename) < filemtime($item->getFilename()))
+        if(filemtime($filename) < $item->getModificationTime())
             return false; // cache file is older than file, so probably stale
 
         try
@@ -769,11 +769,22 @@ class RSS_File_Item extends RSS_Item {
         }
     }
 
+    public function getFileSize()
+    {
+        return filesize($this->getFilename());
+    }
+
+    public function getFileTimestamp()
+    {
+        return filemtime($this->getFilename());
+    }
+
     public function getModificationTime()
     {
         $mtimes = array(
-            filemtime($this->getFilename())
+            $this->getFileTimestamp()
         );
+
         $common_prefix = dirname($this->getFilename()) . '/' . basename($this->getFilename(), '.' . $this->getExtension());
 
         foreach(array(
@@ -799,17 +810,17 @@ class Media_RSS_Item extends RSS_File_Item implements Serializable {
 
     public function __construct($filename)
     {
-        $this->setFromMediaFile($filename);
         parent::__construct($filename);
+        $this->setFromMediaFile();
     }
 
-    public function setFromMediaFile($file)
+    public function setFromMediaFile()
     { 
         // don't do any heavy-lifting here as this is called by the constructor, which 
         // is called once for every media file in the dir (not just the ITEM_COUNT in the cast)
         // TODO: this will go slightly faster if we don't do these syscalls here
-        $this->setLength(filesize($file));
-        $this->setPubDate(date('r', filemtime($file)));
+        $this->setLength($this->getFileSize());
+        $this->setPubDate(date('r', $this->getFileTimestamp()));
     }
 
     /**
@@ -1225,22 +1236,21 @@ class Dir_Podcast extends Podcast
      */
     protected function addRssFileItem(RSS_File_Item $the_item)
     {
-        $filename = $the_item->getFilename();
-
         // skip 0-length files. getID3 chokes on them and listeners dislike them
-        if(filesize($filename))
+        if($the_item->getFileSize())
         {
-            $filemtime = $the_item->getModificationTime();
+            $filemtime_media_only = $the_item->getFileTimestamp();
+            $filemtime_inclusive = $the_item->getModificationTime();
 
-            if((self::$MIN_FILE_AGE > 0) && $filemtime > (time() - self::$MIN_FILE_AGE))
+            if((self::$MIN_FILE_AGE > 0) && $filemtime_media_only > (time() - self::$MIN_FILE_AGE))
             {
                 // don't add files which are so new that they may still be being uploaded
                 return;
             }
 
             // one array per mtime, just in case several MP3s share the same mtime.
-            $this->unsorted_items[$filemtime][] = $the_item;
-            $this->updateMaxMtime($filemtime, $filename);
+            $this->unsorted_items[$filemtime_media_only][] = $the_item;
+            $this->updateMaxMtime($filemtime_inclusive, $the_item->getFilename());
         }
     }
 

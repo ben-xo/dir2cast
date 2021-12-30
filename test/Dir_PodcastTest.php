@@ -110,8 +110,10 @@ class Dir_PodcastTest extends PodcastTest
 
     public function test_regenerates_if_metadata_files_added()
     {
+        Dir_Podcast::$DEBUG = false;
+        Media_RSS_Item::$DESCRIPTION_SOURCE = 'summary';
         $filemtime = $this->createTestItems();
-        age_dir_by('.', 3000);
+        age_dir_by('.', 200);
 
         $mp = $this->newPodcast();
         $before = $mp->generate();
@@ -120,19 +122,19 @@ class Dir_PodcastTest extends PodcastTest
         $this->assertInstanceOf(MP3_RSS_Item::class, $items[0]);
         $this->assertInstanceOf(MP4_RSS_Item::class, $items[1]);
         $this->assertInstanceOf(M4A_RSS_Item::class, $items[2]);
-        $this->assertEquals($filemtime+50 - 3000, $mp->getMaxMtime());
-
-        $this->assertEquals(0, preg_match('/🎉/', $before));
-
-        age_dir_by('.', 100); // whizz past min cache time
-
-        $now = time();
-        file_put_contents('test2_subtitle.txt', '🎉');
-        touch('test2_subtitle.txt', $now);
-
-        age_dir_by('.', 100); // whizz past min file age
+        $this->assertEquals($filemtime+50 - 200, $mp->getMaxMtime());
 
         unset($mp); // releases locks
+
+        $this->assertEquals(0, preg_match('/party123/', $before));
+
+        $now = time();
+        age_dir_by('.', 500); // whizz past min cache time
+
+        file_put_contents('test2.txt', 'party123');
+        touch('test2.txt', $now);
+
+        age_dir_by('.', 500); // whizz past min file age
 
         $mp = $this->newPodcast();
         $after = $mp->generate(); // generate again
@@ -142,10 +144,11 @@ class Dir_PodcastTest extends PodcastTest
         $this->assertInstanceOf(MP3_RSS_Item::class, $items[0]);
         $this->assertInstanceOf(MP4_RSS_Item::class, $items[1]);
         $this->assertInstanceOf(M4A_RSS_Item::class, $items[2]);
-        $this->assertEquals($now-100, $mp->getMaxMtime());
-        $this->assertEquals('🎉', $items[1]->getSubtitle());
+        $this->assertEquals($now-500, $mp->getMaxMtime());
+        $this->assertEquals('party123', $items[1]->getSummary());
 
-        $this->assertEquals(1, preg_match('/🎉/', $after));
+        $this->assertEquals(1, preg_match('/party123/', $after));
+        unset($mp);
     }
 
     public function test_helpers_added_to_found_items()
@@ -196,11 +199,13 @@ class Dir_PodcastTest extends PodcastTest
         file_exists('test2.mp4') && unlink('test2.mp4');
         file_exists('test3.m4a') && unlink('test3.m4a');
         file_exists('test4.other') && unlink('test4.other');
-        file_exists('test2_subtitle.txt') && unlink('test2_subtitle.txt');
+        file_exists('test2.txt') && unlink('test2.txt');
     }
 
     public function tearDown(): void
     {
+        Dir_Podcast::$DEBUG = false;
+        Media_RSS_Item::$DESCRIPTION_SOURCE = 'comment';
         $this->delete_test_files();
         parent::tearDown();
     }
