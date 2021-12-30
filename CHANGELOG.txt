@@ -1,6 +1,13 @@
 Changelog
 =========
 
+1.31 2021-12-30 * Some fixes for future deprecation warnings as we approach PHP 8.2
+                * Debugging options and more tests
+                * Podcast will now refresh if you update any of the feed metadata 
+                  files (description.txt, image.jpg etc) even if you don't update 
+                  any of the media files.
+
+
 1.30 2021-03-17 * Fix nasty bug when refreshing podcasts due to a newly
                   uploaded file removing all the links and replacing them
                   with file paths.
