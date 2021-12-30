@@ -108,6 +108,46 @@ class Dir_PodcastTest extends PodcastTest
         $this->assertEquals($filemtime+50, $mp->getMaxMtime());
     }
 
+    public function test_regenerates_if_metadata_files_added()
+    {
+        $filemtime = $this->createTestItems();
+        age_dir_by('.', 3000);
+
+        $mp = $this->newPodcast();
+        $before = $mp->generate();
+
+        $items = $mp->getItems();
+        $this->assertInstanceOf(MP3_RSS_Item::class, $items[0]);
+        $this->assertInstanceOf(MP4_RSS_Item::class, $items[1]);
+        $this->assertInstanceOf(M4A_RSS_Item::class, $items[2]);
+        $this->assertEquals($filemtime+50 - 3000, $mp->getMaxMtime());
+
+        $this->assertEquals(0, preg_match('/🎉/', $before));
+
+        age_dir_by('.', 100); // whizz past min cache time
+
+        $now = time();
+        file_put_contents('test2_subtitle.txt', '🎉');
+        touch('test2_subtitle.txt', $now);
+
+        age_dir_by('.', 100); // whizz past min file age
+
+        unset($mp); // releases locks
+
+        $mp = $this->newPodcast();
+        $after = $mp->generate(); // generate again
+
+        $items = $mp->getItems();
+        // ordering should be preserved
+        $this->assertInstanceOf(MP3_RSS_Item::class, $items[0]);
+        $this->assertInstanceOf(MP4_RSS_Item::class, $items[1]);
+        $this->assertInstanceOf(M4A_RSS_Item::class, $items[2]);
+        $this->assertEquals($now-100, $mp->getMaxMtime());
+        $this->assertEquals('🎉', $items[1]->getSubtitle());
+
+        $this->assertEquals(1, preg_match('/🎉/', $after));
+    }
+
     public function test_helpers_added_to_found_items()
     {
         $filemtime = $this->createTestItems();
@@ -156,6 +196,7 @@ class Dir_PodcastTest extends PodcastTest
         file_exists('test2.mp4') && unlink('test2.mp4');
         file_exists('test3.m4a') && unlink('test3.m4a');
         file_exists('test4.other') && unlink('test4.other');
+        file_exists('test2_subtitle.txt') && unlink('test2_subtitle.txt');
     }
 
     public function tearDown(): void
