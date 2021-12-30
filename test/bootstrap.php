@@ -44,10 +44,11 @@ function rmrf($dir) {
     }
 }
 
-function age_dir_by($dir, $seconds)
+function age_dir_by($dir_or_file, $seconds)
 {
-    if(is_dir($dir) && !is_link($dir)) 
+    if(is_dir($dir_or_file) && !is_link($dir_or_file))
     {
+        $dir = $dir_or_file;
         $files = array_diff(scandir($dir), array('.','..'));
         foreach ($files as $file) 
         {
@@ -55,19 +56,33 @@ function age_dir_by($dir, $seconds)
         }
     }
 
-    // base case: is not a dir, or is a dir but is a symlink
-    touch($dir, filemtime($dir) - $seconds);
+    touch($dir_or_file, filemtime($dir_or_file) - $seconds);
     clearstatcache();
 }
 
 function prepare_testing_dir()
 {
+    chdir(dirname(__FILE__));
     is_dir('./testdir') && rmrf('./testdir');
     mkdir('./testdir');
-    symlink('../dir2castWithCoverage.php', './testdir/dir2cast.php');
-    // symlink('../../dir2cast.php', './testdir/dir2cast.php');
-    symlink('../../getID3', './testdir/getID3');
     chdir('./testdir');
+    if(getenv('XDEBUG_MODE'))
+    {
+        symlink('../dir2castWithCoverage.php', './dir2cast.php');
+        symlink('../../getID3', './getID3');
+    }
+    else
+    {
+        copy('../../dir2cast.php', './dir2cast.php');
+        copy('../../dir2cast.ini', './dir2cast.ini');
+        $fileSystem = new Symfony\Component\Filesystem\Filesystem();
+        $fileSystem->mirror('../../getID3', './getID3');
+    }
+}
+
+function temp_xml_glob()
+{
+    return '.' . DIRECTORY_SEPARATOR . 'temp' . DIRECTORY_SEPARATOR . '*.xml';
 }
 
 

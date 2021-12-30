@@ -24,11 +24,11 @@ Features:
 
 * supports MP3, MP4, and M4A files
 
-* dir2cast will automatically use the ID3 fields from your files for the Author, 
+* dir2cast will automatically use the ID3 fields from your files for the Author,
   Title, etc. ID3v2 is supported, as are the regular tags found in MP4 and M4A
   files. (Uses getID3, which is bundled with dir2cast.)
 
-* dir2cast will automatically use the cover art embedded in your file as well. 
+* dir2cast will automatically use the cover art embedded in your file as well.
 
 * The generated feed is cached (in the supplied 'temp' folder, or anywhere else
   that you want) and only updated if something in the directory changes - so
@@ -77,24 +77,53 @@ http://getid3.sourceforge.net/ .
 INSTALLATION
 ================================================================================
 
-Please note: the config file will make more sense if you read all of this README
+Please note: the config file will make more sense if you read all of this `README`
 before trying the installation instructions.
 
 dir2cast is quite flexible but the general idea is that you add cover art and
 tags to your media files - mp3, mp4 or m4a currently supported - and then the
 podcast that it generates uses the tags from your files.
 
-Step 1. Edit dir2cast.ini to your taste.
-Step 2. Upload dir2cast.php and dir2cast.ini to the web server.
-Step 3. Upload getID3 to a folder called 'getID3'. (You can download getID3 from
+Step 1. Edit `dir2cast.ini` to your taste.
+Step 2. Upload `dir2cast.php` and `dir2cast.ini` to the web server.
+Step 3. Upload `getID3` to a folder called '`getID3`'. (You can download getID3 from
         the same place as dir2cast.)
-Step 4. Upload a media file to the same folder as dir2cast.php
-Step 5. Go to the URL for dir2cast.php - e.g. http://example.com/dir2cast.php
+Step 4. Upload a media file to the same folder as `dir2cast.php`
+Step 5. Go to the URL for `dir2cast.php `- e.g. http://example.com/dir2cast.php
 Step 6. This is your podcast! Check it's valid at https://podba.se/validate/
         You may need to edit dir2cast.ini some more to get the text you want.
         The generated feed is cached. It will regenerate if you add a new media
         file, but if you want to force a regeneration delete the files from 
-        the "temp" folder that is created.
+        the "`temp`" folder that is created.
+
+
+UNDERSTANDING HOW THE CACHING WORKS
+================================================================================
+
+dir2cast caches the feed so that it only has to renegerate the content when
+something changes. It does this by looking at the file-modification times of
+the media content, and of `dir2cast.php` and `dir2cast.ini`.
+
+* The feed will be updated no more than once every 5 seconds (`MIN_CACHE_TIME`)
+  This is to prevent high load if the feed is hammered by clients.
+* The feed will be updated when a media file that is newer than the cache file
+  appears in the folder, as long as the media file was not updated in the last
+  30 seconds (`MIN_FILE_AGE`). This is so that it doesn't accidentally include
+  files which are still being uploaded.
+* Empty media files are ignored (nobody enjoys listening to them anyway)
+* The feed will update `dir2cast.php` or `dir2cast.ini` are newer than the cache
+  file as a convenience when upgrading.
+
+**Notes**:
+* Files in the feed appear in order of their modification times (most recent
+  first). This is usually the order in which you copy them into the folder, but
+  some methods of copying preserve the original times from your upload source.
+  If you aren't seeing what you expect, check that these times are in the right
+  order. On Linux, you can use the command `touch` to update the modification
+  time of a file.
+* Extra files (such as the images and .txt descriptions) are NOT checked. If you
+  modify these and need to refresh the feed, either delete the cache folder or
+  use the `?force=<password>` URL (see `dir2cast.ini` `FORCE_PASSWORD`)
 
 
 TIPS
@@ -104,21 +133,21 @@ TIPS
 CASTING SEVERAL FOLDERS FROM ONE DIR2CAST.PHP
 --------------------------------------------------------------------------------
 
-If you have more than one folder of MP3s that you are casting, you can serve 
-them all from a single install of dir2cast.php, and customise dir2cast.ini for 
+If you have more than one folder of MP3s that you are casting, you can serve
+them all from a single install of dir2cast.php, and customise dir2cast.ini for
 each individual folder.
 
 Assuming the following:
-* your web root folder is called htdocs/ and this maps to http://www.mysite.com/
-* you installed dir2cast to the folder htdocs/dir2cast 
-* you have two podcasts, and the MP3s live in htdocs/dir2cast/cast1 and 
-  htdocs/dir2cast/cast2
+* your web root folder is called `htdocs/` and this maps to http://www.mysite.com/
+* you installed dir2cast to the folder `htdocs/dir2cast`
+* you have two podcasts, and the MP3s live in `htdocs/dir2cast/cast1` and
+  `htdocs/dir2cast/cast2`
 
-Step 1: Make 2 extra copies of dir2cast.ini (one for each cast), and then edit 
-        to taste. (Any settings not specified will be taken from the main 
-        dir2cast.ini - the one that is in the same folder as dir2cast.php).
-Step 2: Upload these additional dir2cast.ini files to the htdocs/dir2cast/cast1/ 
-        and htdocs/dir2cast/cast2/ folders, respectively.
+Step 1: Make 2 extra copies of `dir2cast.ini` (one for each cast), and then edit
+        to taste. (Any settings not specified will be taken from the main
+        `dir2cast.ini` - the one that is in the same folder as `dir2cast.php`).
+Step 2: Upload these additional dir2cast.ini files to the `htdocs/dir2cast/cast1/`
+        and `htdocs/dir2cast/cast2/` folders, respectively.
 
 The podcast URLs will now be:
 
@@ -133,7 +162,7 @@ http://www.mysite.com/dir2cast/dir2cast.php?dir=cast2 .
 
 I assume you already have PHP working with Apache.
 
-This hint requires your web server to be Apache with 'mod_rewrite' enabled.
+This hint requires your web server to be Apache with '`mod_rewrite`' enabled.
 
 From the example above, your podcast URL will be:
 
@@ -143,17 +172,17 @@ From the example above, your podcast URL will be:
 
     http://www.mysite.com/dir2cast/cast1/rss
 
-To achieve this, you must configure apache with a rewrite rule such as: 
+To achieve this, you must configure apache with a rewrite rule such as:
 
   RewriteEngine on
   RewriteRule (.+)/rss$ dir2cast.php?dir=$1 [L]
 
-Put this in your VHOST configuration (inside a <Location> block) or in a 
-.htaccess file alongside dir2cast.php .
+Put this in your `VHOST` configuration (inside a `<Location>` block) or in a
+`.htaccess` file alongside `dir2cast.php` .
 
 PLEASE NOTE: just to check that you understand this section... 
-* If you use the RewriteRule supplied, dir2cast.php must be in the folder above
-  the MP3 folders. (If this is not the case, you will have to set MP3_BASE in 
+* If you use the `RewriteRule` supplied, `dir2cast.php` must be in the folder above
+  the MP3 folders. (If this is not the case, you will have to set MP3_BASE in
   the ini file, and change the rule for your circumstance.)
 
 
@@ -179,10 +208,10 @@ TESTING
 ================================================================================
 
 To run the unit tests:
-1. make sure you have xdebug installed. (pecl install xdebug)
-2. make sure you have composer installed. (brew install composer # (or similar)
-3. composer install
-3. ./test/run.sh
+1. make sure you have xdebug installed. (`pecl install xdebug`)
+2. make sure you have composer installed. (`brew install composer # (or similar)`)
+3. `composer install`
+4. `./test/run.sh`
 
 
 COPYRIGHT & LICENSE
@@ -197,9 +226,9 @@ All rights reserved.
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
 
-  * Redistributions of source code must retain the above copyright notice, 
+  * Redistributions of source code must retain the above copyright notice,
     this list of conditions and the following disclaimer.
-  * Redistributions in binary form must reproduce the above copyright notice, 
+  * Redistributions in binary form must reproduce the above copyright notice,
     this list of conditions and the following disclaimer in the documentation
     and/or other materials provided with the distribution.
   * Neither the name of dir2cast nor the names of its contributors

@@ -29,10 +29,10 @@ class Cached_Dir_PodcastTest extends Dir_PodcastTest
         $this->createTestItems();
         age_dir_by('.', 3600);
 
-        $this->assertEmpty(glob('temp/*'));
+        $this->assertEmpty(glob('temp' . DIRECTORY_SEPARATOR . '*'));
         $mp = $this->newPodcast();
         $content = $mp->generate();
-        $this->assertNotEmpty(glob('temp/*'));
+        $this->assertNotEmpty(glob('temp' . DIRECTORY_SEPARATOR . '*'));
     }
 
     public function test_uses_generated_cache_file_if_min_time_not_elapsed_yet()
@@ -99,7 +99,7 @@ class Cached_Dir_PodcastTest extends Dir_PodcastTest
         $this->assertEquals($content, $content2);
 
         clearstatcache();
-        foreach(glob('temp/*.xml') as $filename)
+        foreach(glob(temp_xml_glob()) as $filename)
         {
             // cache file should have been refreshed
             $this->assertGreaterThan(time() - 3, filemtime($filename));

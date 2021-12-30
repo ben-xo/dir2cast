@@ -56,7 +56,7 @@
 /* DEFAULTS *********************************************/
 
 // error handler needs these, so let's set them now.
-define('VERSION', '1.30');
+define('VERSION', '1.31');
 define('DIR2CAST_HOMEPAGE', 'https://github.com/ben-xo/dir2cast/');
 define('GENERATOR', 'dir2cast ' . VERSION . ' by Ben XO (' . DIR2CAST_HOMEPAGE . ')');
 
@@ -271,11 +271,11 @@ class Caching_getID3_Podcast_Helper implements Podcast_Helper {
         return $cache_dir . '/' . md5($item->getFilename()) . '__' . basename($item->getFilename()) . '__data';
     }
 
-    protected function loadFromCache($filename, Serializable $item) {
+    protected function loadFromCache($filename, Media_RSS_Item $item) {
         if(!file_exists($filename) || !is_readable($filename))
             return false; // no or unreadable cache file
 
-        if(filemtime($filename) < filemtime($item->getFilename()))
+        if(filemtime($filename) < $item->getModificationTime())
             return false; // cache file is older than file, so probably stale
 
         try
@@ -557,7 +557,7 @@ class RSS_Item extends GetterSetter {
         {
             if($name == 'description')
                 if(!defined('DESCRIPTION_HTML'))
-                    $val = htmlspecialchars($val);
+                    $val = htmlspecialchars((string)$val);
                     
             $item_element->appendChild( new DOMElement($name) )
                 ->appendChild( $doc->createCDATASection(
@@ -589,8 +589,8 @@ class RSS_Item extends GetterSetter {
 
 class RSS_File_Item extends RSS_Item {
     
-    static $FILES_URL;
-    static $FILES_DIR;
+    static $FILES_URL = '';
+    static $FILES_DIR = '';
 
     public function __construct($filename)
     {
@@ -625,7 +625,7 @@ class RSS_File_Item extends RSS_Item {
 
     protected function stripBasePath($filename)
     {
-        if(strpos($filename, self::$FILES_DIR) === 0)
+        if(strlen(self::$FILES_DIR) && strpos($filename, self::$FILES_DIR) === 0)
         {
             return ltrim(substr($filename, strlen(self::$FILES_DIR)), '/');
         }
@@ -768,6 +768,39 @@ class RSS_File_Item extends RSS_Item {
                 break;
         }
     }
+
+    public function getFileSize()
+    {
+        return filesize($this->getFilename());
+    }
+
+    public function getFileTimestamp()
+    {
+        return filemtime($this->getFilename());
+    }
+
+    public function getModificationTime()
+    {
+        $mtimes = array(
+            $this->getFileTimestamp()
+        );
+
+        $common_prefix = dirname($this->getFilename()) . '/' . basename($this->getFilename(), '.' . $this->getExtension());
+
+        foreach(array(
+            $this->getImageFilename('jpg'),
+            $this->getImageFilename('png'),
+            $common_prefix . '.txt',
+            $common_prefix . '_subtitle.txt'
+        ) as $f)
+        {
+            if(file_exists($f))
+            {
+                $mtimes[] = filemtime($f);
+            }
+        }
+        return max($mtimes);
+    }
 }
 
 class Media_RSS_Item extends RSS_File_Item implements Serializable {
@@ -777,17 +810,17 @@ class Media_RSS_Item extends RSS_File_Item implements Serializable {
 
     public function __construct($filename)
     {
-        $this->setFromMediaFile($filename);
         parent::__construct($filename);
+        $this->setFromMediaFile();
     }
 
-    public function setFromMediaFile($file)
+    public function setFromMediaFile()
     { 
         // don't do any heavy-lifting here as this is called by the constructor, which 
         // is called once for every media file in the dir (not just the ITEM_COUNT in the cast)
         // TODO: this will go slightly faster if we don't do these syscalls here
-        $this->setLength(filesize($file));
-        $this->setPubDate(date('r', filemtime($file)));
+        $this->setLength($this->getFileSize());
+        $this->setPubDate(date('r', $this->getFileTimestamp()));
     }
 
     /**
@@ -874,7 +907,7 @@ class Media_RSS_Item extends RSS_File_Item implements Serializable {
      */
     const SERIAL_VERSION = 1;
 
-    public function serialize()
+    public function __serialize()
     {
         $this->setSerialVersion(self::SERIAL_VERSION);
         $serialized_parameters = $this->parameters;
@@ -886,18 +919,27 @@ class Media_RSS_Item extends RSS_File_Item implements Serializable {
         unset($serialized_parameters['extension']);
         unset($serialized_parameters['link']);
 
-        return serialize($serialized_parameters);
+        return $serialized_parameters;
     }
 
-    public function unserialize($serialized)
+    public function serialize()
     {
-        $serialized_parameters = unserialize($serialized);
-        if($serialized_parameters['serialVersion'] != self::SERIAL_VERSION)
+        return serialize($this->__serialize());
+    }
+
+    public function __unserialize($serialized)
+    {
+        if($serialized['serialVersion'] != self::SERIAL_VERSION)
             throw new SerializationException("Wrong serialized version");
         
         // keep properties we've already set. This should make cache files transferable 
         // whilst still gaining a speed-up over ID3-reading.
-        $this->parameters = array_merge($serialized_parameters, $this->parameters);
+        $this->parameters = array_merge($serialized, $this->parameters);
+    }
+
+    public function unserialize($serialized)
+    {
+        $this->__unserialize(unserialize($serialized));
     }
 }
 
@@ -994,7 +1036,7 @@ abstract class Podcast extends GetterSetter
             'description' => $this->getDescription(),
             'lastBuildDate' => $this->getLastBuildDate(),
             'language' => $this->getLanguage(),
-            'copyright' => str_replace('%YEAR%', date('Y'), $this->getCopyright()),
+            'copyright' => str_replace('%YEAR%', date('Y'), (string)$this->getCopyright()),
             'generator' => $this->getGenerator(),
             'webMaster' => $this->getWebMaster(),
             'ttl' => $this->getTtl()
@@ -1003,7 +1045,7 @@ abstract class Podcast extends GetterSetter
         foreach($channel_elements as $name => $val)
         {
             $channel->appendChild( new DOMElement($name) )
-                ->appendChild(new DOMText($val));
+                ->appendChild(new DOMText((string)$val));
         }
         
         $this->appendImage($channel);
@@ -1053,7 +1095,7 @@ abstract class Podcast extends GetterSetter
     protected function appendImage(DOMElement $channel)
     {
         $image_url = $this->getImage();
-        if(strlen($image_url))
+        if(strlen((string)$image_url))
         {
             $image = $channel->appendChild( new DOMElement('image'));
             $image->appendChild( new DOMElement('url') )
@@ -1077,6 +1119,7 @@ class Dir_Podcast extends Podcast
     static $RECURSIVE_DIRECTORY_ITERATOR = false;
     static $ITEM_COUNT = 10;
     static $MIN_FILE_AGE = 0;
+    static $DEBUG = false;
 
     protected $source_dir;
     protected $scanned = false;
@@ -1098,9 +1141,11 @@ class Dir_Podcast extends Podcast
      * tracking the most recently modified date in ->max_mtime 
      */
     protected function scan()
-    {        
+    {
         if(!$this->scanned)
         {
+            self::$DEBUG && print("Scanning…\n");
+
             $this->pre_scan();
             
             // scan the dir
@@ -1120,18 +1165,22 @@ class Dir_Podcast extends Podcast
             $item_count = 0;
             foreach($di as $file)
             {
-                $item_count = $this->addItem($file->getPath() . '/' . $file->getFileName());
+                $filepath = $file->getPath() . '/' . $file->getFileName();
+                self::$DEBUG && print("Considering ${filepath}…\n");
+                $item_count = $this->addItem($filepath);
             }
-            
+
+            self::$DEBUG && print("$item_count items added.\n");
+
             if(self::$EMPTY_PODCAST_IS_ERROR && 0 == $item_count)
                 throw new Exception("No Items found in {$this->source_dir}");
-                    
+
             $this->scanned = true;
             $this->post_scan();
             $this->sort();
        }
     }
-    
+
     /**
      * Adds file to ->unsorted_items, and updates ->max_mtime, if it is of a supported type
      *
@@ -1166,10 +1215,11 @@ class Dir_Podcast extends Podcast
         return count($this->unsorted_items);
     }
 
-    public function updateMaxMtime($date)
+    public function updateMaxMtime($date, $filename)
     {
         if($date > $this->max_mtime) 
         {
+            self::$DEBUG && print("mtime ceiling {$this->max_mtime} ➡ ${date} (now: " . time() . ") from $filename\n");
             $this->max_mtime = $date;
         }
     }
@@ -1186,22 +1236,21 @@ class Dir_Podcast extends Podcast
      */
     protected function addRssFileItem(RSS_File_Item $the_item)
     {
-        $filename = $the_item->getFilename();
-
         // skip 0-length files. getID3 chokes on them and listeners dislike them
-        if(filesize($filename))
+        if($the_item->getFileSize())
         {
-            $filemtime = filemtime($filename);
+            $filemtime_media_only = $the_item->getFileTimestamp();
+            $filemtime_inclusive = $the_item->getModificationTime();
 
-            if((self::$MIN_FILE_AGE > 0) && $filemtime > (time() - self::$MIN_FILE_AGE))
+            if((self::$MIN_FILE_AGE > 0) && $filemtime_media_only > (time() - self::$MIN_FILE_AGE))
             {
                 // don't add files which are so new that they may still be being uploaded
                 return;
             }
 
             // one array per mtime, just in case several MP3s share the same mtime.
-            $this->unsorted_items[$filemtime][] = $the_item;
-            $this->updateMaxMtime($filemtime);
+            $this->unsorted_items[$filemtime_media_only][] = $the_item;
+            $this->updateMaxMtime($filemtime_inclusive, $the_item->getFilename());
         }
     }
 
@@ -1215,7 +1264,7 @@ class Dir_Podcast extends Podcast
             foreach($this->items as $the_item)
                 $the_item->addHelper($helper);
     }
-    
+
     protected function sort() { 
         krsort($this->unsorted_items); // newest first
         $this->items = array();
@@ -1233,9 +1282,9 @@ class Dir_Podcast extends Podcast
 
         unset($this->unsorted_items);        
     }
-        
+
     protected function pre_scan() { }
-    
+
     protected function post_scan() { }
 }
 
@@ -1279,6 +1328,7 @@ class Cached_Dir_Podcast extends Dir_Podcast
     { 
         if($this->isCached())
         {
+            self::$DEBUG && print("Found cache file\n");
             $this->serve_from_cache = true;
 
             $cache_date = filemtime($this->temp_file);
@@ -1286,13 +1336,17 @@ class Cached_Dir_Podcast extends Dir_Podcast
             // if the cache file is quite new, don't bother regenerating.
             if( $cache_date < time() - self::$MIN_CACHE_TIME ) 
             {
+                self::$DEBUG && print("Cache file is older than " . self::$MIN_CACHE_TIME . " seconds\n");
+
                 $this->scan(); // sets $this->max_mtime
                 if( $this->cache_is_stale($cache_date, $this->max_mtime) )
                 {
+                    self::$DEBUG && print("Cache is stale (cache file mtime: $cache_date, max mtime: {$this->max_mtime}). Uncaching\n");
                     $this->uncache();
                 }
                 else
                 {
+                    self::$DEBUG && print("Cache is not stale (cache file mtime: $cache_date, max mtime: {$this->max_mtime}). Renewing\n");
                     $this->renew();
                 }
             }
@@ -1316,7 +1370,7 @@ class Cached_Dir_Podcast extends Dir_Podcast
      */
     protected function cache_is_stale($cache_date, $most_recent_modification)
     {
-        return $cache_date < $most_recent_modification - self::$MIN_CACHE_TIME;
+        return $cache_date < $most_recent_modification;
     }
 
     /**
@@ -1326,7 +1380,7 @@ class Cached_Dir_Podcast extends Dir_Podcast
     {
         touch($this->temp_file); // renew cache file life expectancy        
     }
-    
+
     public function uncache()
     {
         if($this->isCached())
@@ -1335,7 +1389,7 @@ class Cached_Dir_Podcast extends Dir_Podcast
             $this->serve_from_cache = false;
         }
     }
-    
+
     public function generate()
     {
         if($this->serve_from_cache)
@@ -1362,10 +1416,10 @@ class Cached_Dir_Podcast extends Dir_Podcast
             file_put_contents($this->temp_file, $output); // save cached copy
             $this->serve_from_cache = true;
         }
-            
+
         return $output;
     }
-   
+
     public function isCached()
     {
         return file_exists($this->temp_file) && filesize($this->temp_file);
@@ -1407,7 +1461,8 @@ class Locking_Cached_Dir_Podcast extends Cached_Dir_Podcast
             unlink($this->temp_file);
         
         // this releases the lock implicitly
-        fclose($this->file_handle);    
+        if($this->file_handle)
+            fclose($this->file_handle);
     }
     
     public function __destruct()
@@ -1561,10 +1616,17 @@ class SettingsHandler
             define('INI_FILE', $ini_file_name);
         }
         
-        $cli_options = getopt('', array('help', 'media-dir::', 'media-url::', 'output::', 'dont-uncache', 'min-file-age::'));
+        $cli_options = getopt('', array('help', 'media-dir::', 'media-url::', 'output::', 'dont-uncache', 'min-file-age::', 'debug', 'ignore-dir2cast-mtime'));
         if($cli_options) {
             if(isset($cli_options['help'])) {
-                print "Usage: php dir2cast.php [--help] [--media-dir=MP3_DIR] [--media-url=MP3_URL] [--output=OUTPUT_FILE] [--dont-uncache] [--min-file-age]\n";
+                print "Usage: php dir2cast.php [--help] [--media-dir=MP3_DIR] [--media-url=MP3_URL] [--output=OUTPUT_FILE]\n";
+
+                // extra debugging / test harness options:
+                // [--dont-uncache]
+                // [--min-file-age=MIN_FILE_AGE]
+                // [--debug]
+                // [--ignore-dir2cast-mtime]
+
                 exit;
             }
             if(!defined('MP3_DIR') && !empty($cli_options['media-dir']))
@@ -1586,6 +1648,14 @@ class SettingsHandler
             if(!defined('MIN_FILE_AGE') && isset($cli_options['min-file-age']))
             {
                 define('MIN_FILE_AGE', (int)$cli_options['min-file-age']);
+            }
+            if(!defined('DEBUG') && isset($cli_options['debug']))
+            {
+                define('DEBUG', true);
+            }
+            if(!defined('IGNORE_DIR2CAST_MTIME') && isset($cli_options['ignore-dir2cast-mtime']))
+            {
+                define('IGNORE_DIR2CAST_MTIME', true);
             }
         }
        
@@ -1790,11 +1860,15 @@ class SettingsHandler
         if(!defined('MIN_FILE_AGE'))
             define('MIN_FILE_AGE', 30);
 
+        if(!defined('DEBUG'))
+            define('DEBUG', false);
+
         // Set up factory settings for Podcast subclasses
         Dir_Podcast::$EMPTY_PODCAST_IS_ERROR = !defined('CLI_ONLY') || !CLI_ONLY;
         Dir_Podcast::$RECURSIVE_DIRECTORY_ITERATOR = RECURSIVE_DIRECTORY_ITERATOR;
         Dir_Podcast::$ITEM_COUNT = ITEM_COUNT;
         Dir_Podcast::$MIN_FILE_AGE = MIN_FILE_AGE;
+        Dir_Podcast::$DEBUG = DEBUG;
         Cached_Dir_Podcast::$MIN_CACHE_TIME = MIN_CACHE_TIME;
         getID3_Podcast_Helper::$AUTO_SAVE_COVER_ART = AUTO_SAVE_COVER_ART;
 
@@ -1863,9 +1937,37 @@ class Dispatcher
     {
         // Ensure that the cache is invalidated if we have updated dir2cast.php or dir2cast.ini
         // n.b. this doesn't uncache individual media file caches, but also they have a versioning mechanism.
-        $this->podcast->updateMaxMtime(filemtime(__FILE__));
+        $this->podcast->updateMaxMtime(filemtime(__FILE__), __FILE__);
         if(defined('INI_FILE'))
-            $this->podcast->updateMaxMtime(filemtime(INI_FILE));
+            $this->podcast->updateMaxMtime(filemtime(INI_FILE), INI_FILE);
+    }
+
+    public function update_mtime_if_metadata_files_modified()
+    {
+        // Ensure that the cache is invalidated if we have updated any of non-episode files used for feed metadata
+        $metadata_files = array(
+            'description.txt',
+            'itunes_summary.txt',
+            'itunes_subtitle.txt',
+            'image.jpg',
+            'image.png',
+            'itunes_image.jpg',
+            'itunes_image.png',
+        );
+        foreach($metadata_files as $file)
+        {
+            $filepath = rtrim(MP3_DIR, '/') . '/' . $file;
+            if(!file_exists($filepath))
+            {
+                $filepath = DIR2CAST_BASE . '/' . $file;
+            }
+            if(!file_exists($filepath))
+            {
+                continue;
+            }
+
+            $this->podcast->updateMaxMtime(filemtime($filepath), $filepath);
+        }
     }
 
     public function init()
@@ -2001,7 +2103,9 @@ function main($args)
 
     $dispatcher->uncache_if_forced(FORCE_PASSWORD, $_GET);
     $dispatcher->uncache_if_output_file();
-    $dispatcher->update_mtime_if_dir2cast_or_settings_modified();
+    if(!defined('IGNORE_DIR2CAST_MTIME'))
+        $dispatcher->update_mtime_if_dir2cast_or_settings_modified();
+    $dispatcher->update_mtime_if_metadata_files_modified();
     $dispatcher->init();
     return $dispatcher->output(); // returns exit code
 }

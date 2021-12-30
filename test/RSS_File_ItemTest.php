@@ -284,6 +284,29 @@ class RSS_File_ItemTest extends RSS_ItemTest
         $this->assertEquals($file_count_before, $file_count_after);
     }
 
+    public function test_getModificationTime_returns_most_recent_including_metadata_files()
+    {
+        $item = $this->newRSSItem();
+        $now = time();
+
+        clearstatcache();
+
+        touch($this->filename, $now - 60);
+        $this->assertEquals($now - 60, $item->getModificationTime());
+
+        touch('example.txt', $now - 50);
+        $this->assertEquals($now - 50, $item->getModificationTime());
+
+        touch('example_subtitle.txt', $now - 40);
+        $this->assertEquals($now - 40, $item->getModificationTime());
+
+        touch('example.png', $now - 30);
+        $this->assertEquals($now - 30, $item->getModificationTime());
+
+        touch('example.jpg', $now - 20);
+        $this->assertEquals($now - 20, $item->getModificationTime());
+    }
+
     public function tearDown(): void
     {
         file_exists('example.jpg') && unlink('example.jpg');

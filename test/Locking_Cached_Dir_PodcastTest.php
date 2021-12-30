@@ -25,7 +25,7 @@ class Locking_Cached_Dir_PodcastTest extends Cached_Dir_PodcastTest
         $content = $mp->generate();
         unset($mp);
 
-        foreach(glob('temp/*.xml') as $cachefile)
+        foreach(glob(temp_xml_glob()) as $cachefile)
         {
             $fh = fopen($cachefile, 'a');
             $this->assertTrue(flock($fh, LOCK_NB | LOCK_EX));
@@ -35,7 +35,7 @@ class Locking_Cached_Dir_PodcastTest extends Cached_Dir_PodcastTest
         $mp2 = $this->newPodcast();
         $content2 = $mp2->generate();
 
-        foreach(glob('temp/*.xml') as $cachefile)
+        foreach(glob(temp_xml_glob()) as $cachefile)
         {
             $fh = fopen($cachefile, 'a');
             $this->assertFalse(flock($fh, LOCK_NB | LOCK_EX));
@@ -45,11 +45,11 @@ class Locking_Cached_Dir_PodcastTest extends Cached_Dir_PodcastTest
 
     public function test_temporary_lockfile_is_deleted_if_not_used()
     {
-        $this->assertEmpty(glob('temp/*'));
+        $this->assertEmpty(glob('temp' . DIRECTORY_SEPARATOR . '*'));
         $mp = $this->newPodcast();
-        $this->assertNotEmpty(glob('temp/*'));
+        $this->assertNotEmpty(glob('temp' . DIRECTORY_SEPARATOR . '*'));
         unset($mp);
-        $this->assertEmpty(glob('temp/*'));
+        $this->assertEmpty(glob('temp' . DIRECTORY_SEPARATOR . '*'));
     }
 
     public static function tearDownAfterClass(): void

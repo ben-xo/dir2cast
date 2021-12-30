@@ -76,6 +76,55 @@ class Dir_Podcast_RecursiveTest extends Dir_PodcastTest
         parent::delete_test_files();
     }
 
+    public function test_regenerates_if_metadata_files_added()
+    {
+        Dir_Podcast::$DEBUG = false;
+        Media_RSS_Item::$DESCRIPTION_SOURCE = 'summary';
+        $filemtime = $this->createTestItems();
+        age_dir_by('.', 200);
+
+        $mp = $this->newPodcast();
+        $before = $mp->generate();
+
+        $items = $mp->getItems();
+        $this->assertInstanceOf(MP3_RSS_Item::class, $items[0]);
+        $this->assertInstanceOf(MP4_RSS_Item::class, $items[1]);
+        $this->assertInstanceOf(M4A_RSS_Item::class, $items[2]);
+        $this->assertEquals($filemtime+50 - 200, $mp->getMaxMtime());
+
+        unset($mp); // releases locks
+
+        $this->assertEquals(0, preg_match('/party123/', $before));
+
+        $now = time();
+        age_dir_by('.', 500); // whizz past min cache time
+
+        file_put_contents('test2/test2.txt', 'party123');
+        touch('test2/test2.txt', $now);
+
+        age_dir_by('.', 500); // whizz past min file age
+
+        $mp = $this->newPodcast();
+        $after = $mp->generate(); // generate again
+
+        $items = $mp->getItems();
+        // ordering should be preserved
+        $this->assertInstanceOf(MP3_RSS_Item::class, $items[0]);
+        $this->assertInstanceOf(MP4_RSS_Item::class, $items[1]);
+        $this->assertInstanceOf(M4A_RSS_Item::class, $items[2]);
+        $this->assertEquals($now-500, $mp->getMaxMtime());
+        $this->assertEquals('party123', $items[1]->getSummary());
+
+        $this->assertEquals(1, preg_match('/party123/', $after));
+        unset($mp);
+    }
+
+    public function tearDown(): void
+    {
+        file_exists('test2/test2.txt') && unlink('test2/test2.txt');
+        parent::tearDown();
+    }
+
     public static function tearDownAfterClass(): void
     {
         Dir_PodcastTest::tearDownAfterClass();
