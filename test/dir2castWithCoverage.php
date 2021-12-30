@@ -10,8 +10,14 @@ use SebastianBergmann\CodeCoverage\Report\Text as TextReport;
 $filter = new Filter;
 $filter->includeDirectory('../../dir2cast.php');
 
+if(isset($_SERVER['PATH_COVERAGE']) && $_SERVER['PATH_COVERAGE'] != '') {
+    $selector = (new Selector)->forLineAndPathCoverage($filter);
+} else {
+    $selector = (new Selector)->forLineCoverage($filter);
+}
+
 $coverage = new CodeCoverage(
-    (new Selector)->forLineCoverage($filter),
+    $selector,
     $filter
 );
 
