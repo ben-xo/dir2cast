@@ -289,7 +289,9 @@ class RSS_File_ItemTest extends RSS_ItemTest
         $item = $this->newRSSItem();
         $now = time();
 
-        touch('example.mp3', $now - 60);
+        clearstatcache();
+
+        touch($this->filename, $now - 60);
         $this->assertEquals($now - 60, $item->getModificationTime());
 
         touch('example.txt', $now - 50);
