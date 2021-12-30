@@ -44,10 +44,11 @@ function rmrf($dir) {
     }
 }
 
-function age_dir_by($dir, $seconds)
+function age_dir_by($dir_or_file, $seconds)
 {
-    if(is_dir($dir) && !is_link($dir)) 
+    if(is_dir($dir_or_file) && !is_link($dir_or_file))
     {
+        $dir = $dir_or_file;
         $files = array_diff(scandir($dir), array('.','..'));
         foreach ($files as $file) 
         {
@@ -55,7 +56,7 @@ function age_dir_by($dir, $seconds)
         }
     }
 
-    touch($dir, filemtime($dir) - $seconds);
+    touch($dir_or_file, filemtime($dir_or_file) - $seconds);
     clearstatcache();
 }
 
