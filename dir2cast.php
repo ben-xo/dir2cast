@@ -768,6 +768,28 @@ class RSS_File_Item extends RSS_Item {
                 break;
         }
     }
+
+    public function getModificationTime()
+    {
+        $mtimes = array(
+            filemtime($this->getFilename())
+        );
+        $common_prefix = dirname($this->getFilename()) . '/' . basename($this->getFilename(), '.' . $this->getExtension());
+
+        foreach(array(
+            $this->getImageFilename('jpg'),
+            $this->getImageFilename('png'),
+            $common_prefix . '.txt',
+            $common_prefix . '_subtitle.txt'
+        ) as $f)
+        {
+            if(file_exists($f))
+            {
+                $mtimes[] = filemtime($f);
+            }
+        }
+        return max($mtimes);
+    }
 }
 
 class Media_RSS_Item extends RSS_File_Item implements Serializable {
@@ -1208,7 +1230,7 @@ class Dir_Podcast extends Podcast
         // skip 0-length files. getID3 chokes on them and listeners dislike them
         if(filesize($filename))
         {
-            $filemtime = filemtime($filename);
+            $filemtime = $the_item->getModificationTime();
 
             if((self::$MIN_FILE_AGE > 0) && $filemtime > (time() - self::$MIN_FILE_AGE))
             {
