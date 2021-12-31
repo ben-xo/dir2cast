@@ -26,5 +26,5 @@ jobs:
         run: ./test/run.sh --do-not-cache-result .
       - name: Test with phpunit (Windows)
         if: ${{ contains(matrix.operating-system, 'windows') }}
-        run: cd test ; ..\vendor\bin\phpunit --bootstrap "bootstrap.php" .
+        run: cd test ; vendor\bin\phpunit --bootstrap "bootstrap.php" .
 
