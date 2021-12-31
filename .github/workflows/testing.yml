@@ -21,6 +21,8 @@ jobs:
         uses: actions/checkout@v2
       - name: Composer Install
         uses: ramsey/composer-install@v2
+        with:
+          working-directory: "test"
       - name: Test with phpunit (MacOS, Linux)
         if: ${{ ! contains(matrix.operating-system, 'windows') }}
         run: ./test/run.sh --do-not-cache-result .
