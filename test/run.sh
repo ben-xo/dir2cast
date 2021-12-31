@@ -6,7 +6,12 @@ SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 cd "$SCRIPT_DIR"
 
 if [[ ! -e vendor ]]; then
-	composer install ||	(echo "Error: Make sure you have php, composer and xdebug installed."; exit 1)
+	echo "Error: Make sure you have php, composer and xdebug installed, then do 'composer install'"
+	echo "On a typical MacOS that would be the following commands:"
+	echo "  brew install php composer"
+	echo "  pecl install xdebug"
+	echo "  composer install"
+	exit 1
 fi
 
 tests=($@)
