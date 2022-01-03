@@ -1583,7 +1583,26 @@ class ErrorHandler
 
 class SettingsHandler
 {
-    private static $settings_cache = array();
+    private static $settings_cache = array(
+        'ATOM_TYPE'                    = 'application/rss+xml',
+        'LANGUAGE'                     = 'en-us',
+        'TTL'                          = 60,
+        'ITEM_COUNT'                   = 10,
+        'LONG_TITLES'                  = false,
+        'DESCRIPTION_SOURCE'           = 'comment',
+        'ITUNES_OWNER_NAME'            = '',
+        'ITUNES_OWNER_EMAIL'           = '',
+        'ITUNES_CATEGORIES'            = '',
+        'ITUNES_EXPLICIT'              = '',
+        'ITUNES_SUBTITLE_SUFFIX'       = '',
+        'MIN_FILE_AGE'                 = 30,
+        'DEBUG'                        = false,
+        'MIN_CACHE_TIME'               = 5,
+        'FORCE_PASSWORD'               = '',
+        'RECURSIVE_DIRECTORY_ITERATOR' = false,
+        'AUTO_SAVE_COVER_ART'          = true,
+        'DONT_UNCACHE_IF_OUTPUT_FILE'  = false,
+    );
     
     /**
      * This method sets up all app-wide settings that are required at initialization time.
@@ -1659,15 +1678,7 @@ class SettingsHandler
             }
         }
        
-        if(!defined('MIN_CACHE_TIME'))
-            define('MIN_CACHE_TIME', 5);
-        
-        if(!defined('FORCE_PASSWORD'))
-            define('FORCE_PASSWORD', '');
 
-        if(!defined('TMP_DIR')) {
-            define('TMP_DIR', DIR2CAST_BASE . '/temp');
-        }
 
         if(!defined('MP3_BASE'))
         {
@@ -1692,18 +1703,18 @@ class SettingsHandler
      */
     public static function defaults(array $SERVER)
     {
-        // if an MP3_DIR specific config file exists, load it now, as long as it's not the same file as the global one!
-        if( 
-            file_exists( MP3_DIR . '/dir2cast.ini' ) and    
-            realpath(DIR2CAST_BASE . '/dir2cast.ini') != realpath( MP3_DIR . '/dir2cast.ini' ) 
-        ) {
-            self::load_from_ini( MP3_DIR . '/dir2cast.ini' );
-        }
-        
-        self::finalize();
-        
-        
-        if(!defined('MP3_URL'))
+        // expects the following to already be set (usually in self::bootstrap():
+        // MP3_DIR
+        // DIR2CAST_BASE
+
+        $s = &self::$settings_cache;
+
+        // cheap defaults first
+
+        $s['COPYRIGHT']              = date('Y');
+        $s['TMP_DIR']                = DIR2CAST_BASE . '/temp';
+
+        if(!isset($s['MP3_URL']))
         {
             # This works on the principle that MP3_DIR must be under DOCUMENT_ROOT (otherwise how will you serve the MP3s?)
             # This may fail if MP3_DIR, or one of its parents under DOCUMENT_ROOT, is a symlink. In that case you will have
@@ -1711,81 +1722,66 @@ class SettingsHandler
             
             if(!empty($SERVER['HTTP_HOST']))
             {
-                $path_part = substr(MP3_DIR, strlen($SERVER['DOCUMENT_ROOT']));
-                define('MP3_URL', 
-                    'http' . (!empty($SERVER['HTTPS']) ? 's' : '') . '://' . $SERVER['HTTP_HOST'] . '/' . ltrim( rtrim( $path_part, '/' ) . '/', '/' ));
+                $path_part = substr(MP3_DIR strlen($SERVER['DOCUMENT_ROOT']));
+                $s['MP3_URL'] = 
+                    'http' . (!empty($SERVER['HTTPS']) ? 's' : '') . '://' . $SERVER['HTTP_HOST'] . '/' . ltrim( rtrim( $path_part, '/' ) . '/', '/' );
             }
             else
-                define('MP3_URL', 'file://' . MP3_DIR );
+                $s['MP3_URL'] = 'file://' . MP3_DIR;
         }
 
-        if(!defined('TITLE'))
+        if(!isset($s['TITLE']))
         {
             if(basename(MP3_DIR))
-                define('TITLE', basename(MP3_DIR));
+                $s['TITLE'] = basename(MP3_DIR);
             else
-                define('TITLE', 'My First dir2cast Podcast');
+                $s['TITLE'] = 'My First dir2cast Podcast';
         }
         
-        if(!defined('LINK'))
+        if(!isset($s['LINK']))
         {
             if(!empty($SERVER['HTTP_HOST']))
-                define('LINK', 'http' . (empty($SERVER['HTTPS']) ? '' : 's') . '://' . $SERVER['HTTP_HOST'] . $SERVER['PHP_SELF']);
+                $s['LINK'] = 'http' . (empty($SERVER['HTTPS']) ? '' : 's') . '://' . $SERVER['HTTP_HOST'] . $SERVER['PHP_SELF'];
             else
-                define('LINK', 'http://www.example.com/');
+                $s'LINK'] = 'http://www.example.com/';
         }
 
-        if(!defined('RSS_LINK'))
+        if(!isset($s['RSS_LINK']))
         {
             if(!empty($SERVER['HTTP_HOST']))
-                define('RSS_LINK', 'http' . (empty($SERVER['HTTPS']) ? '' : 's') . '://' . $SERVER['HTTP_HOST'] . $SERVER['PHP_SELF']);
+                $s['RSS_LINK'] = 'http' . (empty($SERVER['HTTPS']) ? '' : 's') . '://' . $SERVER['HTTP_HOST'] . $SERVER['PHP_SELF'];
             else
-                define('RSS_LINK', 'http://www.example.com/rss');
+                $s['RSS_LINK'] = 'http://www.example.com/rss';
         }
         
-        if(!defined('DESCRIPTION'))
+        if(!isset($s['DESCRIPTION']))
         {
             if(file_exists(MP3_DIR . '/description.txt'))
-                define('DESCRIPTION', file_get_contents(MP3_DIR . '/description.txt'));
+                $s['DESCRIPTION'] = file_get_contents(MP3_DIR . '/description.txt');
             elseif(file_exists(DIR2CAST_BASE . '/description.txt'))
-                define('DESCRIPTION', file_get_contents(DIR2CAST_BASE . '/description.txt'));
+                $s['DESCRIPTION'] = file_get_contents(DIR2CAST_BASE . '/description.txt');
             else
-                define('DESCRIPTION', 'Podcast');
+                $s['DESCRIPTION'] = 'Podcast';
         }
-        
-        if(!defined('ATOM_TYPE'))
-            define('ATOM_TYPE','application/rss+xml');
-
-        if(!defined('LANGUAGE'))
-            define('LANGUAGE', 'en-us');
-        
-        if(!defined('COPYRIGHT'))
-            define('COPYRIGHT', date('Y'));
             
-        if(!defined('TTL'))
-            define('TTL', 60);
-            
-        if(!defined('ITEM_COUNT'))
-            define('ITEM_COUNT', 10);
-            
-        if(!defined('ITUNES_SUBTITLE'))
+        if(!isset($s['ITUNES_SUBTITLE']))
         {
             if(file_exists(MP3_DIR . '/itunes_subtitle.txt'))
-                define('ITUNES_SUBTITLE', file_get_contents(MP3_DIR . '/itunes_subtitle.txt'));
+                $s['ITUNES_SUBTITLE'] = file_get_contents(MP3_DIR . '/itunes_subtitle.txt');
             elseif(file_exists(DIR2CAST_BASE . '/itunes_subtitle.txt'))
-                define('ITUNES_SUBTITLE', file_get_contents(DIR2CAST_BASE . '/itunes_subtitle.txt'));
+                $s['ITUNES_SUBTITLE'] = file_get_contents(DIR2CAST_BASE . '/itunes_subtitle.txt');
             else
-                define('ITUNES_SUBTITLE', DESCRIPTION);
+                $s['ITUNES_SUBTITLE'] = $s['DESCRIPTION'];
         }
         
-        if(!defined('ITUNES_SUMMARY'))
+        if(!isset($s['ITUNES_SUMMARY']))
         {
             if(file_exists(MP3_DIR . '/itunes_summary.txt'))
-                define('ITUNES_SUMMARY', file_get_contents(MP3_DIR . '/itunes_summary.txt'));
+                $s['ITUNES_SUMMARY'] = file_get_contents(MP3_DIR . '/itunes_summary.txt');
             elseif(file_exists(DIR2CAST_BASE . '/itunes_summary.txt'))
-                define('ITUNES_SUMMARY', file_get_contents(DIR2CAST_BASE . '/itunes_summary.txt'));
+                $s['ITUNES_SUMMARY'] = file_get_contents(DIR2CAST_BASE . '/itunes_summary.txt');
             else
-                define('ITUNES_SUMMARY', DESCRIPTION);
+                $s['ITUNES_SUMMARY'] = $s['DESCRIPTION'];
         }
 
         if(!defined('IMAGE'))
@@ -1816,11 +1812,7 @@ class SettingsHandler
                 define('ITUNES_IMAGE', '');
         }
         
-        if(!defined('ITUNES_OWNER_NAME'))
-            define('ITUNES_OWNER_NAME', '');
-        
-        if(!defined('ITUNES_OWNER_EMAIL'))
-            define('ITUNES_OWNER_EMAIL', '');
+
         
         if(!defined('WEBMASTER'))
         {
@@ -1833,35 +1825,17 @@ class SettingsHandler
         if(!defined('ITUNES_AUTHOR'))
             define('ITUNES_AUTHOR', WEBMASTER);
         
-        if(!defined('ITUNES_CATEGORIES'))
-            define('ITUNES_CATEGORIES', '');
+
+        // if an MP3_DIR specific config file exists, load it now, as long as it's not the same file as the global one!
+        if( 
+            file_exists( MP3_DIR . '/dir2cast.ini' ) and    
+            realpath(DIR2CAST_BASE . '/dir2cast.ini') != realpath( MP3_DIR . '/dir2cast.ini' ) 
+        ) {
+            self::load_from_ini( MP3_DIR . '/dir2cast.ini' );
+        }
         
-        if(!defined('ITUNES_EXPLICIT'))
-            define('ITUNES_EXPLICIT', '');
-            
-        if(!defined('LONG_TITLES'))
-            define('LONG_TITLES', false);
 
-        if(!defined('ITUNES_SUBTITLE_SUFFIX'))
-            define('ITUNES_SUBTITLE_SUFFIX', '');
-
-        if(!defined('DESCRIPTION_SOURCE'))
-            define('DESCRIPTION_SOURCE', 'comment');
-
-        if(!defined('RECURSIVE_DIRECTORY_ITERATOR'))
-            define('RECURSIVE_DIRECTORY_ITERATOR', false);
-
-        if(!defined('AUTO_SAVE_COVER_ART'))
-            define('AUTO_SAVE_COVER_ART', true);
-
-        if(!defined('DONT_UNCACHE_IF_OUTPUT_FILE'))
-            define('DONT_UNCACHE_IF_OUTPUT_FILE', false);
-
-        if(!defined('MIN_FILE_AGE'))
-            define('MIN_FILE_AGE', 30);
-
-        if(!defined('DEBUG'))
-            define('DEBUG', false);
+        self::finalize(); // lock those defines in
 
         // Set up factory settings for Podcast subclasses
         Dir_Podcast::$EMPTY_PODCAST_IS_ERROR = !defined('CLI_ONLY') || !CLI_ONLY;
