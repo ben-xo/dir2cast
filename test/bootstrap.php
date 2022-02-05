@@ -66,18 +66,18 @@ function prepare_testing_dir()
     is_dir('./testdir') && rmrf('./testdir');
     mkdir('./testdir');
     chdir('./testdir');
-    if(getenv('XDEBUG_MODE'))
-    {
-        symlink('../dir2castWithCoverage.php', './dir2cast.php');
-        symlink('../../getID3', './getID3');
-    }
-    else
-    {
+    // if(getenv('XDEBUG_MODE'))
+    // {
+    //     symlink('../dir2castWithCoverage.php', './dir2cast.php');
+    //     symlink('../../getID3', './getID3');
+    // }
+    // else
+    // {
         copy('../../dir2cast.php', './dir2cast.php');
         copy('../../dir2cast.ini', './dir2cast.ini');
         $fileSystem = new Symfony\Component\Filesystem\Filesystem();
         $fileSystem->mirror('../../getID3', './getID3');
-    }
+    // }
 }
 
 function temp_xml_glob()
