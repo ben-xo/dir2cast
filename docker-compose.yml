@@ -1,5 +1,9 @@
 version: "3.9"
 
+# after "docker-compose up" try the following URLs as examples:
+# http://localhost:8080/
+# http://localhost:8080/test/fixtures/
+
 services:
     web:
         image: nginx:alpine
@@ -15,6 +19,10 @@ services:
         image: php:7-fpm-alpine
         volumes:
             - .:/var/www/html
+
+            # You could also create a Dockerfile FROM php:7-fpm-alpine which includes these next two
             - ./dir2cast.php:/dir2cast.php
             - ./getID3:/getID3
+
+            # You should map a temp folder in otherwise you'll see errors about permission denied mkdir()
             - /tmp:/temp
