@@ -113,10 +113,11 @@ class Cached_Dir_PodcastTest extends Dir_PodcastTest
 
         $mp = $this->newPodcast();
 
-        $lastBuildDate = date('r');
-
         $this->assertFalse($mp->isCached());
+
+        $lastBuildDate = date('r');
         $mp->generate();
+
         clearstatcache();
         $this->assertTrue($mp->isCached());
 
