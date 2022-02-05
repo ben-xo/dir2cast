@@ -3,3 +3,4 @@
 .settings
 test/composer.lock
 test/vendor
+.unfinished
