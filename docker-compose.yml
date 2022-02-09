@@ -1,4 +1,4 @@
-version: "3.9"
+version: "2.3"
 
 # after "docker-compose up" try the following URLs as examples:
 # http://localhost:8080/
