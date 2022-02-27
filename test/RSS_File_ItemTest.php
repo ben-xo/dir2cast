@@ -309,6 +309,7 @@ class RSS_File_ItemTest extends RSS_ItemTest
 
     public function tearDown(): void
     {
+        file_exists($this->filename) && unlink($this->filename);
         file_exists('example.jpg') && unlink('example.jpg');
         file_exists('example.png') && unlink('example.png');
         file_exists('example.txt') && unlink('example.txt');
