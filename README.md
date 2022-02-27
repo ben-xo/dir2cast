@@ -210,8 +210,8 @@ TESTING
 To run the unit tests:
 1. make sure you have xdebug installed. (`pecl install xdebug`)
 2. make sure you have composer installed. (`brew install composer # (or similar)`)
-3. `composer install`
-4. `./test/run.sh`
+3. `cd test && composer install`
+4. `./run.sh`
 
 
 COPYRIGHT & LICENSE
