@@ -1,6 +1,6 @@
 [![Testing dir2cast](https://github.com/ben-xo/dir2cast/actions/workflows/testing.yml/badge.svg)](https://github.com/ben-xo/dir2cast/actions/workflows/testing.yml)
 
-dir2cast by Ben XO v1.31 (2021-12-30)
+dir2cast by Ben XO v1.32 (2022-04-18)
 ================================================================================
 
 https://github.com/ben-xo/dir2cast/
