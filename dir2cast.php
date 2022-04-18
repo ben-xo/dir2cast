@@ -1672,7 +1672,7 @@ class SettingsHandler
         if(!defined('MP3_BASE'))
         {
             if(!empty($SERVER['HTTP_HOST']))
-                define('MP3_BASE', dirname($SERVER['SCRIPT_FILENAME']));
+                define('MP3_BASE', realpath(dirname($SERVER['SCRIPT_FILENAME'])));
             else
                 define('MP3_BASE', DIR2CAST_BASE);
         }
