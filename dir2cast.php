@@ -56,7 +56,7 @@
 /* DEFAULTS *********************************************/
 
 // error handler needs these, so let's set them now.
-define('VERSION', '1.31');
+define('VERSION', '1.32');
 define('DIR2CAST_HOMEPAGE', 'https://github.com/ben-xo/dir2cast/');
 define('GENERATOR', 'dir2cast ' . VERSION . ' by Ben XO (' . DIR2CAST_HOMEPAGE . ')');
 
@@ -130,27 +130,6 @@ interface Podcast_Helper {
     public function addNamespaceTo(DOMElement $d, DOMDocument $doc);
 }
 
-class QuicktimeImageHelper {
-    public function findCover($info) {
-
-        if(!is_array($info)) return false;
-
-        // search for covr atom
-        if($info['name'] == 'covr') return $info;
-
-        if(isset($info['subatoms']) && is_array($info['subatoms'])) {
-            foreach($info['subatoms'] as $subatom) {
-                $cover = $this->findCover($subatom);
-                if($cover !== false) {
-                    return $cover;
-                }
-            }
-        }
-
-        return false;
-    }
-}
-
 /**
  * Uses external getID3 lib to analyze MP3 files.
  *
@@ -202,7 +181,6 @@ class getID3_Podcast_Helper implements Podcast_Helper {
 
                 if(self::$AUTO_SAVE_COVER_ART)
                 {
-                    // this works for MP3s
                     if(!empty($info['comments']['picture'][0]))
                     {
                         $item->saveImage(
@@ -210,21 +188,13 @@ class getID3_Podcast_Helper implements Podcast_Helper {
                             $info['comments']['picture'][0]['data']
                         );
                     }
-
-                    // this works for m4a and mp4
-                    elseif(!empty($info['quicktime']))
-                    {
-                        $qt_helper = new QuicktimeImageHelper();
-                        $image_atom = $qt_helper->findCover($info['quicktime']['moov']);
-                        if($image_atom && isset($image_atom['image_mime']) && isset($image_atom['data'])) {
-                            $item->saveImage($image_atom['image_mime'], $image_atom['data']);
-                        }
-                    }
                 }
             }
             
             if(!empty($info['playtime_string']))
                 $item->setDuration( $info['playtime_string'] );
+            else
+                $item->setDuration('0:00');
             
             $item->setAnalyzed(true);
         }

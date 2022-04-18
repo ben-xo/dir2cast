@@ -220,7 +220,7 @@ class RSS_Item_getID3_Podcast_HelperTest extends TestCase
 
         $content = $mp->generate();
 
-        $this->assertEquals('', $item->getDuration());
+        $this->assertEquals('0:00', $item->getDuration());
         $this->assertEquals('', $item->getID3Title());
         $this->assertEquals('', $item->getID3Artist());
         $this->assertEquals('', $item->getID3Album());
@@ -240,7 +240,7 @@ class RSS_Item_getID3_Podcast_HelperTest extends TestCase
 
         $content = $mp->generate();
 
-        $this->assertEquals('', $item->getDuration());
+        $this->assertEquals('0:00', $item->getDuration());
         $this->assertEquals('TTT', $item->getID3Title());
         $this->assertEquals('AAA', $item->getID3Artist());
         $this->assertEquals('ALAL', $item->getID3Album());
