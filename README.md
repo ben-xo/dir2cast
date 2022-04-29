@@ -84,17 +84,17 @@ dir2cast is quite flexible but the general idea is that you add cover art and
 tags to your media files - mp3, mp4 or m4a currently supported - and then the
 podcast that it generates uses the tags from your files.
 
-Step 1. Edit `dir2cast.ini` to your taste.
-Step 2. Upload `dir2cast.php` and `dir2cast.ini` to the web server.
-Step 3. Upload `getID3` to a folder called '`getID3`'. (You can download getID3 from
-        the same place as dir2cast.)
-Step 4. Upload a media file to the same folder as `dir2cast.php`
-Step 5. Go to the URL for `dir2cast.php `- e.g. http://example.com/dir2cast.php
-Step 6. This is your podcast! Check it's valid at https://podba.se/validate/
-        You may need to edit dir2cast.ini some more to get the text you want.
-        The generated feed is cached. It will regenerate if you add a new media
-        file, but if you want to force a regeneration delete the files from 
-        the "`temp`" folder that is created.
+1. Edit `dir2cast.ini` to your taste.
+2. Upload `dir2cast.php` and `dir2cast.ini` to the web server.
+3. Upload `getID3` to a folder called '`getID3`'. (You can download getID3 from
+   the same place as dir2cast.)
+4. Upload a media file to the same folder as `dir2cast.php`
+5. Go to the URL for `dir2cast.php `- e.g. http://example.com/dir2cast.php
+6. This is your podcast! Check it's valid at https://podba.se/validate/
+   You may need to edit dir2cast.ini some more to get the text you want.
+   The generated feed is cached. It will regenerate if you add a new media
+   file, but if you want to force a regeneration delete the files from 
+   the "`temp`" folder that is created.
 
 
 UNDERSTANDING HOW THE CACHING WORKS
@@ -174,8 +174,8 @@ From the example above, your podcast URL will be:
 
 To achieve this, you must configure apache with a rewrite rule such as:
 
-  RewriteEngine on
-  RewriteRule (.+)/rss$ dir2cast.php?dir=$1 [L]
+    RewriteEngine on
+    RewriteRule (.+)/rss$ dir2cast.php?dir=$1 [L]
 
 Put this in your `VHOST` configuration (inside a `<Location>` block) or in a
 `.htaccess` file alongside `dir2cast.php` .
