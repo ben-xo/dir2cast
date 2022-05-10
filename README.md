@@ -84,17 +84,17 @@ dir2cast is quite flexible but the general idea is that you add cover art and
 tags to your media files - mp3, mp4 or m4a currently supported - and then the
 podcast that it generates uses the tags from your files.
 
-Step 1. Edit `dir2cast.ini` to your taste.
-Step 2. Upload `dir2cast.php` and `dir2cast.ini` to the web server.
-Step 3. Upload `getID3` to a folder called '`getID3`'. (You can download getID3 from
-        the same place as dir2cast.)
-Step 4. Upload a media file to the same folder as `dir2cast.php`
-Step 5. Go to the URL for `dir2cast.php `- e.g. http://example.com/dir2cast.php
-Step 6. This is your podcast! Check it's valid at https://podba.se/validate/
-        You may need to edit dir2cast.ini some more to get the text you want.
-        The generated feed is cached. It will regenerate if you add a new media
-        file, but if you want to force a regeneration delete the files from 
-        the "`temp`" folder that is created.
+1. Edit `dir2cast.ini` to your taste.
+2. Upload `dir2cast.php` and `dir2cast.ini` to the web server.
+3. Upload `getID3` to a folder called '`getID3`'. (You can download getID3 from
+   the same place as dir2cast.)
+4. Upload a media file to the same folder as `dir2cast.php`
+5. Go to the URL for `dir2cast.php `- e.g. http://example.com/dir2cast.php
+6. This is your podcast! Check it's valid at https://podba.se/validate/
+   You may need to edit dir2cast.ini some more to get the text you want.
+   The generated feed is cached. It will regenerate if you add a new media
+   file, but if you want to force a regeneration delete the files from 
+   the "`temp`" folder that is created.
 
 
 UNDERSTANDING HOW THE CACHING WORKS
@@ -111,8 +111,8 @@ the media content, and of `dir2cast.php` and `dir2cast.ini`.
   30 seconds (`MIN_FILE_AGE`). This is so that it doesn't accidentally include
   files which are still being uploaded.
 * Empty media files are ignored (nobody enjoys listening to them anyway)
-* The feed will update `dir2cast.php` or `dir2cast.ini` are newer than the cache
-  file as a convenience when upgrading.
+* The feed will be updated when `dir2cast.php` or `dir2cast.ini` are newer
+  than the cache file as a convenience when upgrading.
 
 **Notes**:
 * Files in the feed appear in order of their modification times (most recent
@@ -143,11 +143,11 @@ Assuming the following:
 * you have two podcasts, and the MP3s live in `htdocs/dir2cast/cast1` and
   `htdocs/dir2cast/cast2`
 
-Step 1: Make 2 extra copies of `dir2cast.ini` (one for each cast), and then edit
-        to taste. (Any settings not specified will be taken from the main
-        `dir2cast.ini` - the one that is in the same folder as `dir2cast.php`).
-Step 2: Upload these additional dir2cast.ini files to the `htdocs/dir2cast/cast1/`
-        and `htdocs/dir2cast/cast2/` folders, respectively.
+1. Make 2 extra copies of `dir2cast.ini` (one for each cast), and then edit
+   to taste. (Any settings not specified will be taken from the main
+   `dir2cast.ini` - the one that is in the same folder as `dir2cast.php`).
+2. Upload these additional dir2cast.ini files to the `htdocs/dir2cast/cast1/`
+   and `htdocs/dir2cast/cast2/` folders, respectively.
 
 The podcast URLs will now be:
 
@@ -174,8 +174,8 @@ From the example above, your podcast URL will be:
 
 To achieve this, you must configure apache with a rewrite rule such as:
 
-  RewriteEngine on
-  RewriteRule (.+)/rss$ dir2cast.php?dir=$1 [L]
+    RewriteEngine on
+    RewriteRule (.+)/rss$ dir2cast.php?dir=$1 [L]
 
 Put this in your `VHOST` configuration (inside a `<Location>` block) or in a
 `.htaccess` file alongside `dir2cast.php` .
