@@ -2,6 +2,11 @@ Changelog
 =========
 
 1.33 unreleased * README fixed by @denilsonsa - thanks!
+                * Caching algorithm changed to so that it is no longer dependent
+                  on added media files having a newer file date (GitHub #51),
+                  and will look for any changes in filesize or date, as well
+                  as addition or removal of files. This means that dir2cast is
+                  now much more friendly to use cases for local media collections.
 
 1.32 2022-04-18 * Upgrade getID3 (includes important security fix for PHP 8+)
 
