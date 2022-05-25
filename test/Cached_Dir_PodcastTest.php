@@ -9,6 +9,7 @@ class Cached_Dir_PodcastTest extends Dir_PodcastTest
     {
         Dir_PodcastTest::setUpBeforeClass();
         Cached_Dir_Podcast::$MIN_CACHE_TIME = 5;
+        Cached_Dir_Podcast::$DEBUG = false;
     }
 
     public function setUp(): void
@@ -17,9 +18,10 @@ class Cached_Dir_PodcastTest extends Dir_PodcastTest
         mkdir('temp');
     }
 
-    public function newPodcast()
+    public function newPodcast($offset=0)
     {
         $podcast = new Cached_Dir_Podcast('.', './temp');
+        $podcast->setClockOffset($offset);
         $podcast->init();
         return $podcast;
     }
@@ -49,7 +51,7 @@ class Cached_Dir_PodcastTest extends Dir_PodcastTest
         // this should be ignored
         file_put_contents('extra.mp3', 'new data');
 
-        $mp2 = $this->newPodcast();
+        $mp2 = $this->newPodcast(2);
         $content2 = $mp2->generate();
 
         // should not pick up extra.mp3 as the cache file isn't old enough
@@ -71,7 +73,7 @@ class Cached_Dir_PodcastTest extends Dir_PodcastTest
         // this should be considered
         file_put_contents('extra.mp3', 'new data');
 
-        $mp2 = $this->newPodcast();
+        $mp2 = $this->newPodcast(10);
         $content2 = $mp2->generate();
 
         // should pick up extra.mp3 as the cache file is older than the min, and there's new content
@@ -79,6 +81,28 @@ class Cached_Dir_PodcastTest extends Dir_PodcastTest
         $this->assertEquals(1, preg_match('/extra\.mp3/', $content2));
     }
 
+    public function test_does_not_use_generated_cache_file_if_min_time_has_elapsed_and_theres_additional_old_content()
+    {
+        $this->createTestItems();
+        age_dir_by('.', 3600);
+
+        $mp = $this->newPodcast();
+        $content = $mp->generate();
+        unset($mp); // release lock, in sub tests
+
+        age_dir_by('.', 10);
+
+        // this should be considered
+        file_put_contents('extra.mp3', 'new data');
+        touch('extra.mp3', time() - 86400);
+
+        $mp2 = $this->newPodcast(10);
+        $content2 = $mp2->generate();
+
+        // should pick up extra.mp3 as the cache file is older than the min, and there's new content
+        $this->assertNotEquals($content, $content2);
+        $this->assertEquals(1, preg_match('/extra\.mp3/', $content2));
+    }
 
     public function test_renews_cache_if_old_but_not_stale()
     {
@@ -91,8 +115,7 @@ class Cached_Dir_PodcastTest extends Dir_PodcastTest
 
         age_dir_by('.', 3600);
 
-        $mp2 = $this->newPodcast();
-
+        $mp2 = $this->newPodcast(3600);
         $content2 = $mp2->generate();
 
         // should have used cache file anyway
@@ -126,7 +149,7 @@ class Cached_Dir_PodcastTest extends Dir_PodcastTest
 
         age_dir_by('.', 3600);
 
-        $mp2 = $this->newPodcast();
+        $mp2 = $this->newPodcast(3600);
         $this->assertTrue($mp2->isCached());
         $mp2->generate();
         clearstatcache();
@@ -138,7 +161,7 @@ class Cached_Dir_PodcastTest extends Dir_PodcastTest
         clearstatcache();
         age_dir_by('.', 3600);
         sleep(1); // not much choice here!
-        $mp3 = $this->newPodcast();
+        $mp3 = $this->newPodcast(3600+3600);
         $mp3->generate();
 
         clearstatcache();
