@@ -78,7 +78,6 @@ class Dir_Podcast_RecursiveTest extends Dir_PodcastTest
 
     public function test_regenerates_if_metadata_files_added()
     {
-        Dir_Podcast::$DEBUG = false;
         Media_RSS_Item::$DESCRIPTION_SOURCE = 'summary';
         $filemtime = $this->createTestItems();
         age_dir_by('.', 200);

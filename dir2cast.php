@@ -771,6 +771,29 @@ class RSS_File_Item extends RSS_Item {
         }
         return max($mtimes);
     }
+
+    public function getTotalFileSize()
+    {
+        $sizes = array(
+            $this->getFileSize()
+        );
+
+        $common_prefix = dirname($this->getFilename()) . '/' . basename($this->getFilename(), '.' . $this->getExtension());
+
+        foreach(array(
+            $this->getImageFilename('jpg'),
+            $this->getImageFilename('png'),
+            $common_prefix . '.txt',
+            $common_prefix . '_subtitle.txt'
+        ) as $f)
+        {
+            if(file_exists($f))
+            {
+                $sizes[] = filesize($f);
+            }
+        }
+        return array_sum($sizes);
+    }
 }
 
 class Media_RSS_Item extends RSS_File_Item implements Serializable {
@@ -1095,6 +1118,10 @@ class Dir_Podcast extends Podcast
     protected $scanned = false;
     protected $unsorted_items = array();
     protected $max_mtime = 0;
+    protected $item_hash_list = array();
+    protected $item_hash;
+
+    protected $clock_offset = 0;
     
     /**
      * Constructor
@@ -1144,6 +1171,8 @@ class Dir_Podcast extends Podcast
 
             if(self::$EMPTY_PODCAST_IS_ERROR && 0 == $item_count)
                 throw new Exception("No Items found in {$this->source_dir}");
+
+            $this->calculateItemHash();
 
             $this->scanned = true;
             $this->post_scan();
@@ -1199,6 +1228,22 @@ class Dir_Podcast extends Podcast
         return $this->max_mtime;
     }
 
+    public function calculateItemHash()
+    {
+        sort($this->item_hash_list);
+        $this->item_hash = md5(implode("\n", $this->item_hash_list));
+    }
+
+    public function getItemHash()
+    {
+        return $this->item_hash;
+    }
+
+    public function setClockOffset($offset)
+    {
+        $this->clock_offset = $offset;
+    }
+
     /**
      * Adds file to ->unsorted_items, and updates ->max_mtime
      * 
@@ -1210,7 +1255,6 @@ class Dir_Podcast extends Podcast
         if($the_item->getFileSize())
         {
             $filemtime_media_only = $the_item->getFileTimestamp();
-            $filemtime_inclusive = $the_item->getModificationTime();
 
             if((self::$MIN_FILE_AGE > 0) && $filemtime_media_only > (time() - self::$MIN_FILE_AGE))
             {
@@ -1218,9 +1262,13 @@ class Dir_Podcast extends Podcast
                 return;
             }
 
+            $filemtime_inclusive = $the_item->getModificationTime();
+
             // one array per mtime, just in case several MP3s share the same mtime.
-            $this->unsorted_items[$filemtime_media_only][] = $the_item;
             $this->updateMaxMtime($filemtime_inclusive, $the_item->getFilename());
+            $this->unsorted_items[$filemtime_media_only][] = $the_item;
+            $hashlist_mtime = $filemtime_inclusive + $this->clock_offset; // clock offset is just used in testing.
+            $this->item_hash_list[] = "{$hashlist_mtime}:{$the_item->getTotalFileSize()}";
         }
     }
 
@@ -1250,7 +1298,7 @@ class Dir_Podcast extends Podcast
             }
         }
 
-        unset($this->unsorted_items);        
+        unset($this->unsorted_items);
     }
 
     protected function pre_scan() { }
@@ -1267,6 +1315,7 @@ class Cached_Dir_Podcast extends Dir_Podcast
 {
     protected $temp_dir;
     protected $temp_file;
+    protected $item_hash_file;
     protected $cache_date;
     protected $serve_from_cache;
 
@@ -1283,10 +1332,11 @@ class Cached_Dir_Podcast extends Dir_Podcast
     public function __construct($source_dir, $temp_dir)
     {
         $this->temp_dir = $temp_dir;
-        $safe_source_dir = str_replace(array('/', '\\'), '_', $source_dir);
+        $safe_source_name = preg_replace('/[^\w]/', '_', dirname($source_dir) . '/' . basename($source_dir) );
         
         // something unique, safe, stable and easily identifiable
-        $this->temp_file = rtrim($temp_dir, '/') . '/' . md5($source_dir) . '_' . $safe_source_dir . '.xml';
+        $this->temp_file = rtrim($temp_dir, '/') . '/' . md5($source_dir) . '_' . $safe_source_name . '.xml';
+        $this->item_hash_file = rtrim($temp_dir, '/') . '/' . md5($source_dir) . '_' . $safe_source_name . '__item_hash.txt';
 
         parent::__construct($source_dir);
     }
@@ -1308,15 +1358,24 @@ class Cached_Dir_Podcast extends Dir_Podcast
             {
                 self::$DEBUG && print("Cache file is older than " . self::$MIN_CACHE_TIME . " seconds\n");
 
-                $this->scan(); // sets $this->max_mtime
+                $previous_item_hash = "";
+                if(file_exists($this->item_hash_file))
+                    $previous_item_hash = file_get_contents($this->item_hash_file);
+
+                $this->scan(); // sets $this->max_mtime and $this->item_hash
                 if( $this->cache_is_stale($cache_date, $this->max_mtime) )
                 {
                     self::$DEBUG && print("Cache is stale (cache file mtime: $cache_date, max mtime: {$this->max_mtime}). Uncaching\n");
                     $this->uncache();
                 }
+                elseif( $previous_item_hash != $this->item_hash )
+                {
+                    self::$DEBUG && print("Cache has changed (before: $previous_item_hash, after: {$this->item_hash}). Uncaching\n");
+                    $this->uncache();
+                }
                 else
                 {
-                    self::$DEBUG && print("Cache is not stale (cache file mtime: $cache_date, max mtime: {$this->max_mtime}). Renewing\n");
+                    self::$DEBUG && print("Cache is not stale (cache file mtime: $cache_date, max mtime: {$this->max_mtime} and previous hash {$previous_item_hash} and hash {$this->item_hash}). Renewing\n");
                     $this->renew();
                 }
             }
@@ -1384,6 +1443,7 @@ class Cached_Dir_Podcast extends Dir_Podcast
         {
             $output = parent::generate();
             file_put_contents($this->temp_file, $output); // save cached copy
+            file_put_contents($this->item_hash_file, $this->item_hash);
             $this->serve_from_cache = true;
         }
 
@@ -1586,7 +1646,7 @@ class SettingsHandler
             define('INI_FILE', $ini_file_name);
         }
         
-        $cli_options = getopt('', array('help', 'media-dir::', 'media-url::', 'output::', 'dont-uncache', 'min-file-age::', 'debug', 'ignore-dir2cast-mtime'));
+        $cli_options = getopt('', array('help', 'media-dir::', 'media-url::', 'output::', 'dont-uncache', 'min-file-age::', 'debug', 'ignore-dir2cast-mtime', 'clock-offset::'));
         if($cli_options) {
             if(isset($cli_options['help'])) {
                 print "Usage: php dir2cast.php [--help] [--media-dir=MP3_DIR] [--media-url=MP3_URL] [--output=OUTPUT_FILE]\n";
@@ -1596,6 +1656,7 @@ class SettingsHandler
                 // [--min-file-age=MIN_FILE_AGE]
                 // [--debug]
                 // [--ignore-dir2cast-mtime]
+                // [--clock-offset=CLOCK_OFFSET]
 
                 exit;
             }
@@ -1626,6 +1687,10 @@ class SettingsHandler
             if(!defined('IGNORE_DIR2CAST_MTIME') && isset($cli_options['ignore-dir2cast-mtime']))
             {
                 define('IGNORE_DIR2CAST_MTIME', true);
+            }
+            if(!defined('CLOCK_OFFSET') && isset($cli_options['clock-offset']))
+            {
+                define('CLOCK_OFFSET', (int)$cli_options['clock-offset']);
             }
         }
        
@@ -1832,6 +1897,9 @@ class SettingsHandler
 
         if(!defined('DEBUG'))
             define('DEBUG', false);
+
+        if(!defined('CLOCK_OFFSET'))
+            define('CLOCK_OFFSET', 0);
 
         // Set up factory settings for Podcast subclasses
         Dir_Podcast::$EMPTY_PODCAST_IS_ERROR = !defined('CLI_ONLY') || !CLI_ONLY;
@@ -2069,6 +2137,7 @@ function main($args)
     );
     
     $podcast = new Locking_Cached_Dir_Podcast(MP3_DIR, TMP_DIR);
+    $podcast->setClockOffset(CLOCK_OFFSET);
     $dispatcher = new Dispatcher($podcast);
 
     $dispatcher->uncache_if_forced(FORCE_PASSWORD, $_GET);

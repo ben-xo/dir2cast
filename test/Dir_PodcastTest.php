@@ -17,6 +17,7 @@ class Dir_PodcastTest extends PodcastTest
         parent::setUp();
         Dir_Podcast::$RECURSIVE_DIRECTORY_ITERATOR = false;
         Dir_Podcast::$ITEM_COUNT = 10;
+        Dir_Podcast::$DEBUG = false;
     }
 
     public function newPodcast()
@@ -110,7 +111,6 @@ class Dir_PodcastTest extends PodcastTest
 
     public function test_regenerates_if_metadata_files_added()
     {
-        Dir_Podcast::$DEBUG = false;
         Media_RSS_Item::$DESCRIPTION_SOURCE = 'summary';
         $filemtime = $this->createTestItems();
         age_dir_by('.', 200);
@@ -204,7 +204,6 @@ class Dir_PodcastTest extends PodcastTest
 
     public function tearDown(): void
     {
-        Dir_Podcast::$DEBUG = false;
         Media_RSS_Item::$DESCRIPTION_SOURCE = 'comment';
         $this->delete_test_files();
         parent::tearDown();

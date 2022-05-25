@@ -10,9 +10,10 @@ class Locking_Cached_Dir_PodcastTest extends Cached_Dir_PodcastTest
         Cached_Dir_PodcastTest::setUpBeforeClass();
     }
 
-    public function newPodcast()
+    public function newPodcast($offset=0)
     {
         $podcast = new Locking_Cached_Dir_Podcast('.', './temp');
+        $podcast->setClockOffset($offset);
         $podcast->init();
         return $podcast;
     }
