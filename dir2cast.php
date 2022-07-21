@@ -1200,6 +1200,7 @@ class Dir_Podcast extends Podcast
                 break;
 
             case 'm4a':
+            case 'm4b':
                 $this->addRssFileItem(new M4A_RSS_Item($filename));
                 break;
 
