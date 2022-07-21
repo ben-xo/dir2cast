@@ -1,7 +1,9 @@
 Changelog
 =========
 
-1.33 unreleased * README fixed by @denilsonsa - thanks!
+1.34 unreleased * Add support for M4B audiobook files as requested by @crosbyh
+
+1.33 2022-05-25 * README fixed by @denilsonsa - thanks!
                 * Caching algorithm changed to so that it is no longer dependent
                   on added media files having a newer file date (GitHub #51),
                   and will look for any changes in filesize or date, as well
