@@ -22,16 +22,19 @@ class Dir_Podcast_RecursiveTest extends Dir_PodcastTest
         mkdir('test2');
         mkdir('test3');
         mkdir('test4');
+        mkdir('test5');
         file_put_contents('test1/test1.mp3', 'content');
         file_put_contents('test2/test2.mp4', 'content');
         file_put_contents('test3/test3.m4a', 'content');
         file_put_contents('test4/test4.other', 'content');
+        file_put_contents('test5/test5.m4b', 'content');
 
         $filemtime = time();
         touch('test1/test1.mp3', $filemtime+50);
         touch('test2/test2.mp4', $filemtime);
         touch('test3/test3.m4a', $filemtime-50);
         touch('test4/test4.other', $filemtime-100);
+        touch('test5/test5.m4b', $filemtime-75);
 
         return $filemtime;
     }
@@ -42,16 +45,19 @@ class Dir_Podcast_RecursiveTest extends Dir_PodcastTest
         mkdir('test2');
         mkdir('test3');
         mkdir('test4');
+        mkdir('test5');
         file_put_contents('test1/test1.mp3', '');
         file_put_contents('test2/test2.mp4', '');
         file_put_contents('test3/test3.m4a', '');
         file_put_contents('test4/test4.other', '');
+        file_put_contents('test5/test5.m4b', '');
 
         $filemtime = time();
         touch('test1/test1.mp3', $filemtime+50);
         touch('test2/test2.mp4', $filemtime);
         touch('test3/test3.m4a', $filemtime-50);
         touch('test4/test4.other', $filemtime-100);
+        touch('test5/test5.m4b', $filemtime-75);
 
         return $filemtime;
     }
@@ -69,10 +75,12 @@ class Dir_Podcast_RecursiveTest extends Dir_PodcastTest
         file_exists('test2/test2.mp4') && unlink('test2/test2.mp4');
         file_exists('test3/test3.m4a') && unlink('test3/test3.m4a');
         file_exists('test4/test4.other') && unlink('test4/test4.other');
+        file_exists('test5/test5.m4b') && unlink('test5/test5.m4b');
         is_dir('test1') && rmdir('test1');
         is_dir('test2') && rmdir('test2');
         is_dir('test3') && rmdir('test3');
         is_dir('test4') && rmdir('test4');
+        is_dir('test5') && rmdir('test5');
         parent::delete_test_files();
     }
 
@@ -89,6 +97,7 @@ class Dir_Podcast_RecursiveTest extends Dir_PodcastTest
         $this->assertInstanceOf(MP3_RSS_Item::class, $items[0]);
         $this->assertInstanceOf(MP4_RSS_Item::class, $items[1]);
         $this->assertInstanceOf(M4A_RSS_Item::class, $items[2]);
+        $this->assertInstanceOf(M4A_RSS_Item::class, $items[3]);
         $this->assertEquals($filemtime+50 - 200, $mp->getMaxMtime());
 
         unset($mp); // releases locks
@@ -111,6 +120,7 @@ class Dir_Podcast_RecursiveTest extends Dir_PodcastTest
         $this->assertInstanceOf(MP3_RSS_Item::class, $items[0]);
         $this->assertInstanceOf(MP4_RSS_Item::class, $items[1]);
         $this->assertInstanceOf(M4A_RSS_Item::class, $items[2]);
+        $this->assertInstanceOf(M4A_RSS_Item::class, $items[3]);
         $this->assertEquals($now-500, $mp->getMaxMtime());
         $this->assertEquals('party123', $items[1]->getSummary());
 

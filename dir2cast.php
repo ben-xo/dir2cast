@@ -1,7 +1,7 @@
 <?php
 
 /******************************************************************************
- * Copyright (c) 2008-2021, Ben XO (me@ben-xo.com).
+ * Copyright (c) 2008-2022, Ben XO (me@ben-xo.com).
  *
  * All rights reserved.
  * 
@@ -56,7 +56,7 @@
 /* DEFAULTS *********************************************/
 
 // error handler needs these, so let's set them now.
-define('VERSION', '1.33');
+define('VERSION', '1.34');
 define('DIR2CAST_HOMEPAGE', 'https://github.com/ben-xo/dir2cast/');
 define('GENERATOR', 'dir2cast ' . VERSION . ' by Ben XO (' . DIR2CAST_HOMEPAGE . ')');
 
@@ -1200,6 +1200,7 @@ class Dir_Podcast extends Podcast
                 break;
 
             case 'm4a':
+            case 'm4b':
                 $this->addRssFileItem(new M4A_RSS_Item($filename));
                 break;
 

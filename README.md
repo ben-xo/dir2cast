@@ -1,5 +1,6 @@
 [![Testing dir2cast](https://github.com/ben-xo/dir2cast/actions/workflows/testing.yml/badge.svg)](https://github.com/ben-xo/dir2cast/actions/workflows/testing.yml)
 
+
 dir2cast by Ben XO v1.34 (2022-07-28)
 ================================================================================
 
@@ -22,10 +23,10 @@ Features:
   pick up most of the podcast text straight from the tags in the file (such as
   the artist, title and comment tags.)
 
-* supports MP3, MP4, and M4A files
+* supports MP3, MP4, M4A and M4B files
 
 * dir2cast will automatically use the ID3 fields from your files for the Author,
-  Title, etc. ID3v2 is supported, as are the regular tags found in MP4 and M4A
+  Title, etc. ID3v2 is supported, as are the usual tags found in MP4 / M4A / M4B
   files. (Uses getID3, which is bundled with dir2cast.)
 
 * dir2cast will automatically use the cover art embedded in your file as well.
@@ -81,7 +82,7 @@ Please note: the config file will make more sense if you read all of this `READM
 before trying the installation instructions.
 
 dir2cast is quite flexible but the general idea is that you add cover art and
-tags to your media files - mp3, mp4 or m4a currently supported - and then the
+tags to your media files (mp3, mp4, m4a and m4b currently supported) and then the
 podcast that it generates uses the tags from your files.
 
 1. Edit `dir2cast.ini` to your taste.
