@@ -31,12 +31,14 @@ class Dir_PodcastTest extends PodcastTest
         file_put_contents('test2.mp4', 'content');
         file_put_contents('test3.m4a', 'content');
         file_put_contents('test4.other', 'content');
+        file_put_contents('test5.m4b', 'content');
 
         $filemtime = time();
         touch('test1.mp3', $filemtime+50);
         touch('test2.mp4', $filemtime);
         touch('test3.m4a', $filemtime-50);
         touch('test4.other', $filemtime-100);
+        touch('test5.m4b', $filemtime-75);
 
         return $filemtime;
     }
@@ -47,12 +49,14 @@ class Dir_PodcastTest extends PodcastTest
         file_put_contents('test2.mp4', '');
         file_put_contents('test3.m4a', '');
         file_put_contents('test4.other', '');
+        file_put_contents('test5.m4b', '');
 
         $filemtime = time();
         touch('test1.mp3', $filemtime+50);
         touch('test2.mp4', $filemtime);
         touch('test3.m4a', $filemtime-50);
         touch('test4.other', $filemtime-100);
+        touch('test5.m4b', $filemtime-75);
 
         return $filemtime;
     }
@@ -65,7 +69,7 @@ class Dir_PodcastTest extends PodcastTest
         $this->assertEquals(0, $mp->getMaxMtime());
     }
 
-    public function test_three_supported_files_of_zero_length_not_added_to_podcast()
+    public function test_four_supported_files_of_zero_length_not_added_to_podcast()
     {
         $filemtime = $this->createEmptyTestItems();
         
@@ -75,17 +79,18 @@ class Dir_PodcastTest extends PodcastTest
         $this->assertEquals(0, $mp->getMaxMtime());
     }
 
-    public function test_three_supported_files_added_to_podcast()
+    public function test_four_supported_files_added_to_podcast()
     {
         $filemtime = $this->createTestItems();
         $mp = $this->newPodcast();
         $content = $mp->generate();
-        $this->assertCount(3, $mp->getItems());
+        $this->assertCount(4, $mp->getItems());
 
         $items = $mp->getItems();
         $this->assertInstanceOf(MP3_RSS_Item::class, $items[0]);
         $this->assertInstanceOf(MP4_RSS_Item::class, $items[1]);
         $this->assertInstanceOf(M4A_RSS_Item::class, $items[2]);
+        $this->assertInstanceOf(M4A_RSS_Item::class, $items[3]);
         $this->assertEquals($filemtime+50, $mp->getMaxMtime());
     }
 
@@ -100,12 +105,13 @@ class Dir_PodcastTest extends PodcastTest
 
         $content = $mp->generate(); // generate again
 
-        $this->assertCount(3, $mp->getItems());
+        $this->assertCount(4, $mp->getItems());
 
         $items = $mp->getItems();
         $this->assertInstanceOf(MP3_RSS_Item::class, $items[0]);
         $this->assertInstanceOf(MP4_RSS_Item::class, $items[1]);
         $this->assertInstanceOf(M4A_RSS_Item::class, $items[2]);
+        $this->assertInstanceOf(M4A_RSS_Item::class, $items[3]);
         $this->assertEquals($filemtime+50, $mp->getMaxMtime());
     }
 
@@ -122,6 +128,7 @@ class Dir_PodcastTest extends PodcastTest
         $this->assertInstanceOf(MP3_RSS_Item::class, $items[0]);
         $this->assertInstanceOf(MP4_RSS_Item::class, $items[1]);
         $this->assertInstanceOf(M4A_RSS_Item::class, $items[2]);
+        $this->assertInstanceOf(M4A_RSS_Item::class, $items[3]);
         $this->assertEquals($filemtime+50 - 200, $mp->getMaxMtime());
 
         unset($mp); // releases locks
@@ -144,6 +151,7 @@ class Dir_PodcastTest extends PodcastTest
         $this->assertInstanceOf(MP3_RSS_Item::class, $items[0]);
         $this->assertInstanceOf(MP4_RSS_Item::class, $items[1]);
         $this->assertInstanceOf(M4A_RSS_Item::class, $items[2]);
+        $this->assertInstanceOf(M4A_RSS_Item::class, $items[3]);
         $this->assertEquals($now-500, $mp->getMaxMtime());
         $this->assertEquals('party123', $items[1]->getSummary());
 
@@ -157,10 +165,10 @@ class Dir_PodcastTest extends PodcastTest
         $mp = $this->newPodcast();
 
         $helper = $this->createMock(Podcast_Helper::class);
-        $helper->expects($this->exactly(3))->method('appendToItem');
+        $helper->expects($this->exactly(4))->method('appendToItem');
 
         $helper2 = $this->createMock(Podcast_Helper::class);
-        $helper2->expects($this->exactly(3))->method('appendToItem');
+        $helper2->expects($this->exactly(4))->method('appendToItem');
 
         $mp->addHelper($helper);
         $mp->addHelper($helper2);
@@ -200,6 +208,7 @@ class Dir_PodcastTest extends PodcastTest
         file_exists('test3.m4a') && unlink('test3.m4a');
         file_exists('test4.other') && unlink('test4.other');
         file_exists('test2.txt') && unlink('test2.txt');
+        file_exists('test5.m4b') && unlink('test5.m4b');
     }
 
     public function tearDown(): void
