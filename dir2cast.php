@@ -125,6 +125,7 @@ abstract class GetterSetter {
 }
 
 interface Podcast_Helper {
+    public function id();
     public function appendToChannel(DOMElement $d, DOMDocument $doc);
     public function appendToItem(DOMElement $d, DOMDocument $doc, RSS_Item $item);
     public function addNamespaceTo(DOMElement $d, DOMDocument $doc);
@@ -135,7 +136,10 @@ interface Podcast_Helper {
  *
  */
 class getID3_Podcast_Helper implements Podcast_Helper {
-
+    public function id()
+    {
+        return get_class($this);
+    }
     static $AUTO_SAVE_COVER_ART = false;
         
     public function appendToChannel(DOMElement $d, DOMDocument $doc) { /* nothing */ }
@@ -206,6 +210,10 @@ class getID3_Podcast_Helper implements Podcast_Helper {
  *
  */
 class Caching_getID3_Podcast_Helper implements Podcast_Helper {
+    public function id()
+    {
+        return get_class($this);
+    }
 
     protected $wrapped_helper;
     protected $cache_dir;
@@ -267,6 +275,10 @@ class Caching_getID3_Podcast_Helper implements Podcast_Helper {
 }
 
 class Atom_Podcast_Helper extends GetterSetter implements Podcast_Helper {
+    public function id()
+    {
+         return get_class($this);
+    }
     
     protected $self_link;
     
@@ -312,6 +324,10 @@ class Atom_Podcast_Helper extends GetterSetter implements Podcast_Helper {
 }
 
 class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
+    public function id()
+    {
+        return get_class($this);
+    }
     
     static $ITUNES_SUBTITLE_SUFFIX = '';
 
@@ -554,7 +570,7 @@ class RSS_Item extends GetterSetter {
     
     public function addHelper(Podcast_Helper $helper)
     {
-        $this->helpers[] = $helper;
+        $this->helpers[$helper->id()] = $helper;
         return $helper;
     }
 }
@@ -978,7 +994,7 @@ abstract class Podcast extends GetterSetter
     
     public function addHelper(Podcast_Helper $helper)
     {
-        $this->helpers[] = $helper;
+        $this->helpers[$helper->id()] = $helper;
         
         // attach helper to items already added.
         // new items will have the helper attached when they are added.
@@ -1415,7 +1431,7 @@ class Cached_Dir_Podcast extends Dir_Podcast
      */
     public function renew()
     {
-        touch($this->temp_file); // renew cache file life expectancy        
+        touch($this->temp_file); // renew cache file life expectancy
     }
 
     public function uncache()

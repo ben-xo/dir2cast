@@ -72,7 +72,7 @@ class RSS_Item_getID3_Podcast_Helper_AUTO_SAVE_COVERTest extends RSS_Item_getID3
         mkdir('temp');
         $mp = new Cached_Dir_Podcast('.', 'temp');
         $mp->init();
-        $getid3 = $mp->addHelper(new Caching_getID3_Podcast_Helper('tmp', new getID3_Podcast_Helper()));
+        $getid3 = $mp->addHelper(new Caching_getID3_Podcast_Helper('temp', new getID3_Podcast_Helper()));
         $atom   = $mp->addHelper(new Atom_Podcast_Helper());
         $itunes = $mp->addHelper(new iTunes_Podcast_Helper());
         $content = $mp->generate();
@@ -84,7 +84,7 @@ class RSS_Item_getID3_Podcast_Helper_AUTO_SAVE_COVERTest extends RSS_Item_getID3
 
         $mp = new Cached_Dir_Podcast('.', 'temp');
         $mp->init();
-        $getid3 = $mp->addHelper(new Caching_getID3_Podcast_Helper('tmp', new getID3_Podcast_Helper()));
+        $getid3 = $mp->addHelper(new Caching_getID3_Podcast_Helper('temp', new getID3_Podcast_Helper()));
         $atom   = $mp->addHelper(new Atom_Podcast_Helper());
         $itunes = $mp->addHelper(new iTunes_Podcast_Helper());
         $content = $mp->generate();
