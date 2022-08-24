@@ -165,9 +165,11 @@ class Dir_PodcastTest extends PodcastTest
         $mp = $this->newPodcast();
 
         $helper = $this->createMock(Podcast_Helper::class);
+        $helper->expects($this->atLeastOnce())->method('id')->willReturn('Mock1');
         $helper->expects($this->exactly(4))->method('appendToItem');
 
         $helper2 = $this->createMock(Podcast_Helper::class);
+        $helper2->expects($this->atLeastOnce())->method('id')->willReturn('Mock2');
         $helper2->expects($this->exactly(4))->method('appendToItem');
 
         $mp->addHelper($helper);
@@ -185,9 +187,11 @@ class Dir_PodcastTest extends PodcastTest
         $mp = $this->newPodcast();
 
         $helper = $this->createMock(Podcast_Helper::class);
+        $helper->expects($this->atLeastOnce())->method('id')->willReturn('Mock1');
         $helper->expects($this->exactly(2))->method('appendToItem');
 
         $helper2 = $this->createMock(Podcast_Helper::class);
+        $helper2->expects($this->atLeastOnce())->method('id')->willReturn('Mock2');
         $helper2->expects($this->exactly(2))->method('appendToItem');
 
         $mp->addHelper($helper);

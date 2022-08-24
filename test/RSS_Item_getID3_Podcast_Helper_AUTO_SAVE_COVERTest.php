@@ -63,6 +63,37 @@ class RSS_Item_getID3_Podcast_Helper_AUTO_SAVE_COVERTest extends RSS_Item_getID3
         $this->assertEquals(file_get_contents('another.subdir/id3v2_artist_album_title_cover.jpg'), file_get_contents('../fixtures/empty.jpg'));
     }
 
+    public function test_auto_save_doesnt_create_spurious_helper_duplication()
+    {
+        define('CLI_ONLY', true);
+
+        copy('../fixtures/id3v2_artist_album_title_cover.mp3', './id3v2_artist_album_title_cover.mp3');
+
+        mkdir('temp');
+        $mp = new Cached_Dir_Podcast('.', 'temp');
+        $mp->init();
+        $getid3 = $mp->addHelper(new Caching_getID3_Podcast_Helper('temp', new getID3_Podcast_Helper()));
+        $atom   = $mp->addHelper(new Atom_Podcast_Helper());
+        $itunes = $mp->addHelper(new iTunes_Podcast_Helper());
+        $content = $mp->generate();
+
+        # checking for duplication
+        $this->assertEquals(1, preg_match_all("/<\/itunes:duration>/", $content));
+        
+        age_dir_by('.', 60);
+
+        $mp = new Cached_Dir_Podcast('.', 'temp');
+        $mp->init();
+        $getid3 = $mp->addHelper(new Caching_getID3_Podcast_Helper('temp', new getID3_Podcast_Helper()));
+        $atom   = $mp->addHelper(new Atom_Podcast_Helper());
+        $itunes = $mp->addHelper(new iTunes_Podcast_Helper());
+        $content = $mp->generate();
+
+        # checking for duplication
+        $this->assertEquals(1, preg_match_all("/<\/itunes:duration>/", $content));
+
+    }
+
     public static function tearDownAfterClass(): void
     {
         chdir('..');

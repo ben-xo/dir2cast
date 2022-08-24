@@ -56,7 +56,7 @@
 /* DEFAULTS *********************************************/
 
 // error handler needs these, so let's set them now.
-define('VERSION', '1.35');
+define('VERSION', '1.36');
 define('DIR2CAST_HOMEPAGE', 'https://github.com/ben-xo/dir2cast/');
 define('GENERATOR', 'dir2cast ' . VERSION . ' by Ben XO (' . DIR2CAST_HOMEPAGE . ')');
 
@@ -125,6 +125,7 @@ abstract class GetterSetter {
 }
 
 interface Podcast_Helper {
+    public function id();
     public function appendToChannel(DOMElement $d, DOMDocument $doc);
     public function appendToItem(DOMElement $d, DOMDocument $doc, RSS_Item $item);
     public function addNamespaceTo(DOMElement $d, DOMDocument $doc);
@@ -135,7 +136,10 @@ interface Podcast_Helper {
  *
  */
 class getID3_Podcast_Helper implements Podcast_Helper {
-
+    public function id()
+    {
+        return get_class($this);
+    }
     static $AUTO_SAVE_COVER_ART = false;
         
     public function appendToChannel(DOMElement $d, DOMDocument $doc) { /* nothing */ }
@@ -206,6 +210,10 @@ class getID3_Podcast_Helper implements Podcast_Helper {
  *
  */
 class Caching_getID3_Podcast_Helper implements Podcast_Helper {
+    public function id()
+    {
+        return get_class($this);
+    }
 
     protected $wrapped_helper;
     protected $cache_dir;
@@ -267,6 +275,10 @@ class Caching_getID3_Podcast_Helper implements Podcast_Helper {
 }
 
 class Atom_Podcast_Helper extends GetterSetter implements Podcast_Helper {
+    public function id()
+    {
+         return get_class($this);
+    }
     
     protected $self_link;
     
@@ -312,7 +324,13 @@ class Atom_Podcast_Helper extends GetterSetter implements Podcast_Helper {
 }
 
 class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
+    public function id()
+    {
+        return get_class($this);
+    }
     
+    static $ITUNES_SUBTITLE_SUFFIX = '';
+
     protected $owner_name, $owner_email, $image_href, $explicit;
     protected $categories = array();
     
@@ -404,7 +422,7 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
         $itunes_subtitle = $item->getSubtitle();
         if($itunes_subtitle !== '')
         {
-            $elements['subtitle'] = $itunes_subtitle . ITUNES_SUBTITLE_SUFFIX;
+            $elements['subtitle'] = $itunes_subtitle . iTunes_Podcast_Helper::$ITUNES_SUBTITLE_SUFFIX;
         }
                 
         foreach($elements as $key => $val)
@@ -552,7 +570,7 @@ class RSS_Item extends GetterSetter {
     
     public function addHelper(Podcast_Helper $helper)
     {
-        $this->helpers[] = $helper;
+        $this->helpers[$helper->id()] = $helper;
         return $helper;
     }
 }
@@ -976,7 +994,7 @@ abstract class Podcast extends GetterSetter
     
     public function addHelper(Podcast_Helper $helper)
     {
-        $this->helpers[] = $helper;
+        $this->helpers[$helper->id()] = $helper;
         
         // attach helper to items already added.
         // new items will have the helper attached when they are added.
@@ -1413,7 +1431,7 @@ class Cached_Dir_Podcast extends Dir_Podcast
      */
     public function renew()
     {
-        touch($this->temp_file); // renew cache file life expectancy        
+        touch($this->temp_file); // renew cache file life expectancy
     }
 
     public function uncache()
@@ -1915,6 +1933,7 @@ class SettingsHandler
         Dir_Podcast::$DEBUG = DEBUG;
         Cached_Dir_Podcast::$MIN_CACHE_TIME = MIN_CACHE_TIME;
         getID3_Podcast_Helper::$AUTO_SAVE_COVER_ART = AUTO_SAVE_COVER_ART;
+        iTunes_Podcast_Helper::$ITUNES_SUBTITLE_SUFFIX = ITUNES_SUBTITLE_SUFFIX;
 
         // Set up up factory settings for RSS Items
         RSS_File_Item::$FILES_URL = MP3_URL; // TODO: rename this to MEDIA_URL
