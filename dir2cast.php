@@ -56,7 +56,7 @@
 /* DEFAULTS *********************************************/
 
 // error handler needs these, so let's set them now.
-define('VERSION', '1.34');
+define('VERSION', '1.35');
 define('DIR2CAST_HOMEPAGE', 'https://github.com/ben-xo/dir2cast/');
 define('GENERATOR', 'dir2cast ' . VERSION . ' by Ben XO (' . DIR2CAST_HOMEPAGE . ')');
 
@@ -590,14 +590,14 @@ class RSS_File_Item extends RSS_Item {
 
     protected function filenameToUrl($filename)
     {
-        return rtrim(self::$FILES_URL, '/') . '/' . str_replace('%2F', '/', rawurlencode($this->stripBasePath($filename)));
+        return rtrim(RSS_File_Item::$FILES_URL, '/') . '/' . str_replace('%2F', '/', rawurlencode($this->stripBasePath($filename)));
     }
 
     protected function stripBasePath($filename)
     {
-        if(strlen(self::$FILES_DIR) && strpos($filename, self::$FILES_DIR) === 0)
+        if(strlen(RSS_File_Item::$FILES_DIR) && strpos($filename, RSS_File_Item::$FILES_DIR) === 0)
         {
-            return ltrim(substr($filename, strlen(self::$FILES_DIR)), '/');
+            return ltrim(substr($filename, strlen(RSS_File_Item::$FILES_DIR)), '/');
         }
         return $filename;
     }
@@ -685,12 +685,17 @@ class RSS_File_Item extends RSS_Item {
 
     protected function getImageFilename($type)
     {
-        $image_file_name = basename($this->getFilename(), '.' . $this->getExtension()) . '.' . $type;
-        if(strpos($image_file_name, '/') === false)
+        $item_file_name = $this->getFilename();
+        $ext_length = strlen($this->getExtension());
+        if($ext_length == 0)
         {
-            return $image_file_name;
+            $image_file_name = rtrim($item_file_name, '.') . '.' . $type;
         }
-        return dirname($this->getFilename()) . '/' . $image_file_name;
+        else {
+            $item_file_name_length = strlen($this->getFilename());
+            $image_file_name = rtrim(substr($item_file_name, 0, $item_file_name_length - $ext_length), '.') . '.' . $type;
+        }
+        return $image_file_name;
     }
 
     /**

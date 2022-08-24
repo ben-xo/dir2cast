@@ -7,10 +7,10 @@ class RSS_Item_getID3_Podcast_HelperTest extends TestCase
 
     public static function setUpBeforeClass(): void
     {
+        prepare_testing_dir();
         getID3_Podcast_Helper::$AUTO_SAVE_COVER_ART = false;
         RSS_File_Item::$FILES_URL = 'http://www.example.com/mp3/';
         RSS_File_Item::$FILES_DIR = getcwd();
-        prepare_testing_dir();
     }
 
     public function newHelper()
