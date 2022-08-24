@@ -313,6 +313,8 @@ class Atom_Podcast_Helper extends GetterSetter implements Podcast_Helper {
 
 class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
     
+    static $ITUNES_SUBTITLE_SUFFIX = '';
+
     protected $owner_name, $owner_email, $image_href, $explicit;
     protected $categories = array();
     
@@ -404,7 +406,7 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
         $itunes_subtitle = $item->getSubtitle();
         if($itunes_subtitle !== '')
         {
-            $elements['subtitle'] = $itunes_subtitle . ITUNES_SUBTITLE_SUFFIX;
+            $elements['subtitle'] = $itunes_subtitle . iTunes_Podcast_Helper::$ITUNES_SUBTITLE_SUFFIX;
         }
                 
         foreach($elements as $key => $val)
@@ -1915,6 +1917,7 @@ class SettingsHandler
         Dir_Podcast::$DEBUG = DEBUG;
         Cached_Dir_Podcast::$MIN_CACHE_TIME = MIN_CACHE_TIME;
         getID3_Podcast_Helper::$AUTO_SAVE_COVER_ART = AUTO_SAVE_COVER_ART;
+        iTunes_Podcast_Helper::$ITUNES_SUBTITLE_SUFFIX = ITUNES_SUBTITLE_SUFFIX;
 
         // Set up up factory settings for RSS Items
         RSS_File_Item::$FILES_URL = MP3_URL; // TODO: rename this to MEDIA_URL

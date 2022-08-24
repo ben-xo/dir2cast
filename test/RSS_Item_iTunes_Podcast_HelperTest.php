@@ -42,7 +42,7 @@ final class RSS_Item_iTunes_Podcast_HelperTest extends TestCase
      */
     public function test_rss_item_itunes_subtitle_suffix()
     {
-        define('ITUNES_SUBTITLE_SUFFIX', ' Click here for more…');
+        iTunes_Podcast_Helper::$ITUNES_SUBTITLE_SUFFIX = ' Click here for more…';
 
         $mp = new MyPodcast();
         $helper = new iTunes_Podcast_Helper();
