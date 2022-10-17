@@ -44,6 +44,13 @@ class SettingsHandlerTest extends TestCase
     );
 
     public $temp_file = false;
+    public $starting_dir = false;
+
+    public function setUp(): void
+    {
+        $this->temp_file = false;
+        $this->starting_dir = false;
+    }
     
     public function test_getopt_hook()
     {
@@ -340,6 +347,110 @@ class SettingsHandlerTest extends TestCase
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
+    public function test_GET_media_dir_safe_dot_dot_1()
+    {
+        $this->starting_dir = getcwd();
+        mkdir('deep');
+        mkdir('deep/root');
+        chdir('deep/root');
+        SettingsHandler::bootstrap(array(), array("dir" => ".."), array());
+
+        $this->assertEquals(MP3_BASE, realpath("{$this->starting_dir}/.."));  // due to bootstrap.php chdir
+        $this->assertEquals(slashdir(MP3_DIR), slashdir(MP3_BASE));
+        $this->assertFalse(http_response_code());
+    }
+    
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_GET_media_dir_safe_dot_dot_2()
+    {
+        $this->starting_dir = getcwd();
+        mkdir('deep');
+        mkdir('deep/root');
+        chdir('deep/root');
+        SettingsHandler::bootstrap(array(), array("dir" => "../../.."), array());
+
+        $this->assertEquals(MP3_BASE, realpath("{$this->starting_dir}/.."));  // due to bootstrap.php chdir
+        $this->assertEquals(slashdir(MP3_DIR), slashdir(MP3_BASE));
+        $this->assertFalse(http_response_code());
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_GET_media_dir_safe_slash_dir()
+    {
+        $this->starting_dir = getcwd();
+        mkdir('deep');
+        mkdir('deep/root');
+        chdir('deep/root');
+        $this->expectException("ExitException");
+        $this->expectExceptionMessage("Not Found: /etc");
+        $this->expectExceptionCode(-2);
+        SettingsHandler::bootstrap(array(), array("dir" => "/etc"), array());
+        $this->assertEquals(http_response_code(), 404);
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_GET_media_dir_safe_slash_dir_2()
+    {
+        $this->starting_dir = getcwd();
+        mkdir('deep');
+        mkdir('deep/root');
+        chdir('deep/root');
+        $this->expectException("ExitException");
+        $this->expectExceptionMessage("Not Found: ////etc");
+        $this->expectExceptionCode(-2);
+        SettingsHandler::bootstrap(array(), array("dir" => "////etc"), array());
+        $this->assertEquals(http_response_code(), 404);
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_GET_media_dir_safe_dir_with_good_base()
+    {
+        $this->starting_dir = getcwd();
+        mkdir('deep');
+        mkdir('deep/root');
+        chdir('deep/root');
+        define('MP3_BASE', realpath('..'));
+        SettingsHandler::bootstrap(array(), array("dir" => "root"), array());
+
+        $this->assertEquals(MP3_BASE, realpath(".."));
+        $this->assertEquals(MP3_DIR, realpath('.'));
+        $this->assertFalse(http_response_code());
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_GET_media_dir_unsafe_slash_dir_with_good_base()
+    {
+        $this->starting_dir = getcwd();
+        mkdir('deep');
+        mkdir('deep/root');
+        chdir('deep/root');
+        define('MP3_BASE', realpath('..'));
+        $this->expectException("ExitException");
+        $this->expectExceptionMessage("Not Found: ../deep/root");
+        $this->expectExceptionCode(-2);
+        SettingsHandler::bootstrap(array(), array("dir" => "../deep/root"), array());
+        $this->assertEquals(http_response_code(), 404);
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
     // public function test_cli_arg_parsing()
     // {
 
@@ -518,6 +629,10 @@ class SettingsHandlerTest extends TestCase
 
     public function tearDown(): void
     {
+        if($this->starting_dir) {
+            chdir($this->starting_dir);
+            rmrf('deep');
+        }
         file_exists('description.txt') && unlink('description.txt');
         file_exists('itunes_subtitle.txt') && unlink('itunes_subtitle.txt');
         file_exists('itunes_summary.txt') && unlink('itunes_summary.txt');
@@ -526,10 +641,12 @@ class SettingsHandlerTest extends TestCase
         if($this->temp_file)
         {
             if(file_exists($this->temp_file)) {
+                chmod($this->temp_file, 755);
                 if(is_dir($this->temp_file)) rmdir($this->temp_file);
                 else unlink($this->temp_file);
             }
             elseif(file_exists('../'.$this->temp_file)) {
+                chmod('../'.$this->temp_file, 755);
                 if(is_dir('../'.$this->temp_file)) rmdir('../'.$this->temp_file);
                 else unlink('../'.$this->temp_file);
             }

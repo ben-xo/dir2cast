@@ -124,6 +124,11 @@ function fake_getopt($argv_in, $short_options, $long_options)
     return array();
 }
 
+function slashdir($dir)
+{
+    return rtrim($dir, '/') . '/';
+}
+
 define('NO_DISPATCHER', true);
 
 require_once('../dir2cast.php');
