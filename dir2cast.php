@@ -1692,6 +1692,7 @@ class SettingsHandler
             define('CLI_ONLY', true);
         }
 
+        // do not use DIR2CAST_BASE directly. use DIR2CAST_BASE()
         if(defined('CLI_ONLY')) {
             define('DIR2CAST_BASE', realpath(dirname($argv[0])));
         } else {
@@ -1730,6 +1731,7 @@ class SettingsHandler
                 {
                     ErrorHandler::display404($cli_options['media-dir']);
                 }
+                // do not use MP3_DIR directly. use MP3_DIR()
                 define('MP3_DIR', slashdir(realpath($cli_options['media-dir'])));
             }
             if(!defined('MP3_URL') && !empty($cli_options['media-url']))
@@ -1772,6 +1774,7 @@ class SettingsHandler
             define('TMP_DIR', DIR2CAST_BASE() . 'temp');
         }
 
+        // do not use MP3_BASE directly. use MP3_BASE()
         if(!defined('MP3_BASE'))
         {
             if(!empty($SERVER['HTTP_HOST']))
@@ -1779,7 +1782,8 @@ class SettingsHandler
             else
                 define('MP3_BASE', DIR2CAST_BASE());
         }
-            
+
+        // do not use MP3_DIR directly. use MP3_DIR()
         if(!defined('MP3_DIR'))
         {
             if(!empty($GET['dir']))
