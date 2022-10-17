@@ -1656,7 +1656,7 @@ class SettingsHandler
      */
     public static function getopt($argv_in, $short_options, $long_options)
     {
-        if($argv_in != $GLOBALS['argv'])
+        if(isset($GLOBALS['argv']) && $argv_in != $GLOBALS['argv'])
         {
             return fake_getopt($argv_in, $short_options, $long_options);
         }
