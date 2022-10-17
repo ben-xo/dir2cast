@@ -1195,7 +1195,10 @@ class Dir_Podcast extends Podcast
             self::$DEBUG && print("$item_count items added.\n");
 
             if(self::$EMPTY_PODCAST_IS_ERROR && 0 == $item_count)
-                throw new Exception("No Items found in {$this->source_dir}");
+            {
+                http_response_code(404);
+                throw new Exception("No content yet.");
+            }
 
             $this->calculateItemHash();
 
@@ -1580,12 +1583,20 @@ class ErrorHandler
     {    
         if(self::$errors)
         {
-            if(!defined('CLI_ONLY') && !ini_get('html_errors'))
+            if(!defined('CLI_ONLY') || !CLI_ONLY)
+            {
+                if(!http_response_code())
+                {
+                    http_response_code(500);
+                }q
+            }
+
+            if((!defined('CLI_ONLY') || !CLI_ONLY) && !ini_get('html_errors'))
             {
                 header("Content-type: text/plain"); // reset the content-type
             }
 
-            if(!defined('CLI_ONLY') && ini_get('html_errors'))
+            if((!defined('CLI_ONLY') || !CLI_ONLY ) && ini_get('html_errors'))
             {
                 header("Content-type: text/html"); // reset the content-type
                         
@@ -1605,14 +1616,16 @@ class ErrorHandler
                     <h1>An error occurred generating your podcast.</h1>
                     <div id="the_error">
                         <?php echo $message; ?>
-                        <br><br>
                         <?php if(!empty(ErrorHandler::$primer)): ?>
-                            <?php echo self::get_primed_error(ErrorHandler::$primer); ?>
                             <br><br>
+                            <?php echo self::get_primed_error(ErrorHandler::$primer); ?>
                         <?php endif; ?>
-                        <div id="additional_error">
-                            This error occurred on line <?php echo $errline; ?> of <?php echo $errfile; ?>.
-                        </div>
+                        <?php if(http_response_code() == 500): ?>
+                            <br><br>
+                            <div id="additional_error">
+                                This error occurred on line <?php echo $errline; ?> of <?php echo $errfile; ?>.
+                            </div>
+                        <?php endif; ?>
                     </div>
                     <div id="footer"><a href="<?php echo DIR2CAST_HOMEPAGE ?>">dir2cast</a> <?php echo VERSION; ?> by Ben XO</div>
                     <p>
@@ -1631,15 +1644,15 @@ class ErrorHandler
                     echo strip_tags(self::get_primed_error(ErrorHandler::$primer)) . "\n";
             }
 
-            throw new ExitException("", -1);
+            exit(-1); // can't throw - this is the exception handler
         }
     }
 
     public static function display404($message)
     {
-        if(defined('CLI_ONLY'))
+        if(defined('CLI_ONLY') && CLI_ONLY)
         {
-            header("HTTP/1.0 404 Not Found");
+            http_response_code(404);
             header("Content-type: text/plain");
         }
         throw new ExitException("Not Found: $message", -2);
