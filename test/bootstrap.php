@@ -87,7 +87,9 @@ function temp_xml_glob()
 
 function escape_single_quoted_string($string)
 {
-    return str_replace(array("'", '\\'), array("\\'", '\\\\'), $string);
+    $string = str_replace('\\', '\\\\', $string);
+    $string = str_replace('\'', '\\\'', $string);
+    return $string;
 }
 
 function fake_getopt_command($argv_in, $short_options, $long_options)
@@ -117,8 +119,9 @@ function fake_getopt($argv_in, $short_options, $long_options)
     $output = null;
     $result_code = null;
     exec($command, $output, $result_code);
-    var_dump($output);
-    return unserialize($output[0]);
+    if(count($output) > 0)
+        return unserialize($output[0]);
+    return array();
 }
 
 define('NO_DISPATCHER', true);

@@ -59,10 +59,9 @@ final class FakeGetoptTest extends TestCase
             fake_getopt(array('php', '--media-dir=""'), '', array('media-dir::')),
             array('media-dir' => '""')
         );
-        print(fake_getopt(array('php', '--media-dir=\'\''), '', array('media-dir::')));
         $this->assertEquals(
             fake_getopt(array('php', "--media-dir=''"), '', array('media-dir::')),
-            false // XXX: seems to be a bug in getopt
+            array('media-dir' => "''")
         );
     }
     public function test_fake_getopt_both_arg_types()
