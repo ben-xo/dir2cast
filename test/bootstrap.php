@@ -116,7 +116,8 @@ function fake_getopt($argv_in, $short_options, $long_options)
     $command = fake_getopt_command($argv_in, $short_options, $long_options);
     $output = null;
     $result_code = null;
-    exec($command . " 2>/dev/null", $output, $result_code);
+    exec($command, $output, $result_code);
+    var_dump($output);
     return unserialize($output[0]);
 }
 
