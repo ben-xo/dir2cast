@@ -137,7 +137,34 @@ class SettingsHandlerTest extends TestCase
         
         // should not be defined as $argv was empty
         $this->assertFalse(defined('CLI_ONLY'));
-        $this->assertEquals(DIR2CAST_BASE, slashdir(realpath('..'))); // from bootstrap.php
+        $this->assertEquals(DIR2CAST_BASE(), slashdir(realpath('..'))); // from bootstrap.php
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_pre_defined_slashed()
+    {
+        define('DIR2CAST_BASE', '/tmp/');
+        $this->assertEquals(DIR2CAST_BASE(), '/tmp/');
+        define('MP3_BASE', '/tmp/');
+        $this->assertEquals(DIR2CAST_BASE(), '/tmp/');
+        define('MP3_PATH', '/tmp/');
+        $this->assertEquals(DIR2CAST_BASE(), '/tmp/');
+    }
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_pre_defined_slashless()
+    {
+        define('DIR2CAST_BASE', '/tmp');
+        $this->assertEquals(DIR2CAST_BASE(), '/tmp/');
+        define('MP3_BASE', '/tmp');
+        $this->assertEquals(DIR2CAST_BASE(), '/tmp/');
+        define('MP3_PATH', '/tmp');
+        $this->assertEquals(DIR2CAST_BASE(), '/tmp/');
     }
 
     /**
@@ -172,7 +199,7 @@ class SettingsHandlerTest extends TestCase
         $this->assertFalse(defined('CLI_ONLY'));
         SettingsHandler::bootstrap(array(), array(), array('dir2cast.php'));
         $this->assertTrue(defined('CLI_ONLY'));
-        $this->assertEquals(DIR2CAST_BASE, slashdir(getcwd())); // from fake $argv
+        $this->assertEquals(DIR2CAST_BASE(), slashdir(getcwd())); // from fake $argv
     }
 
     /**
@@ -187,9 +214,9 @@ class SettingsHandlerTest extends TestCase
         SettingsHandler::bootstrap(array(), array(), array($argv0, $argv1));
         $this->assertEquals(MIN_CACHE_TIME, 5);
         $this->assertEquals(FORCE_PASSWORD, '');
-        $this->assertEquals(TMP_DIR, DIR2CAST_BASE . 'temp');
-        $this->assertEquals(MP3_BASE, DIR2CAST_BASE);
-        $this->assertEquals(MP3_DIR, DIR2CAST_BASE);
+        $this->assertEquals(TMP_DIR, DIR2CAST_BASE() . 'temp');
+        $this->assertEquals(MP3_BASE(), DIR2CAST_BASE());
+        $this->assertEquals(MP3_DIR(), DIR2CAST_BASE());
     }
     
     /**
@@ -207,8 +234,8 @@ class SettingsHandlerTest extends TestCase
             /* $GET */ array(),
             /* $argv */ array()
         );
-        $this->assertEquals(MP3_BASE, '/var/www/');
-        $this->assertEquals(MP3_DIR, '/var/www/');
+        $this->assertEquals(MP3_BASE(), '/var/www/');
+        $this->assertEquals(MP3_DIR(), '/var/www/');
     }
     
     /**
@@ -322,8 +349,8 @@ class SettingsHandlerTest extends TestCase
         mkdir($this->temp_file);
 
         SettingsHandler::bootstrap(array(), array(), array("dir2cast.php", "--media-dir={$this->temp_file}"));
-        $this->assertEquals(MP3_BASE, slashdir(realpath('.')));
-        $this->assertEquals(MP3_DIR, slashdir(realpath($this->temp_file)));
+        $this->assertEquals(MP3_BASE(), slashdir(realpath('.')));
+        $this->assertEquals(MP3_DIR(), slashdir(realpath($this->temp_file)));
         $this->assertFalse(http_response_code());
     }
 
@@ -338,8 +365,8 @@ class SettingsHandlerTest extends TestCase
         mkdir('../' . $this->temp_file);
 
         SettingsHandler::bootstrap(array(), array("dir" => $this->temp_file), array());
-        $this->assertEquals(MP3_BASE, slashdir(realpath('..')));  // due to bootstrap.php chdir
-        $this->assertEquals(MP3_DIR, slashdir(realpath('../' . $this->temp_file)));
+        $this->assertEquals(MP3_BASE(), slashdir(realpath('..')));  // due to bootstrap.php chdir
+        $this->assertEquals(MP3_DIR(), slashdir(realpath('../' . $this->temp_file)));
         $this->assertFalse(http_response_code());
     }
 
@@ -355,8 +382,8 @@ class SettingsHandlerTest extends TestCase
         chdir('deep/root');
         SettingsHandler::bootstrap(array(), array("dir" => ".."), array());
 
-        $this->assertEquals(MP3_BASE, slashdir(realpath("{$this->starting_dir}/..")));  // due to bootstrap.php chdir
-        $this->assertEquals(MP3_DIR, slashdir(MP3_BASE));
+        $this->assertEquals(MP3_BASE(), slashdir(realpath("{$this->starting_dir}/..")));  // due to bootstrap.php chdir
+        $this->assertEquals(MP3_DIR(), MP3_BASE());
         $this->assertFalse(http_response_code());
     }
     
@@ -372,8 +399,8 @@ class SettingsHandlerTest extends TestCase
         chdir('deep/root');
         SettingsHandler::bootstrap(array(), array("dir" => "../../.."), array());
 
-        $this->assertEquals(MP3_BASE, slashdir(realpath("{$this->starting_dir}/..")));  // due to bootstrap.php chdir
-        $this->assertEquals(MP3_DIR, slashdir(MP3_BASE));
+        $this->assertEquals(MP3_BASE(), slashdir(realpath("{$this->starting_dir}/..")));  // due to bootstrap.php chdir
+        $this->assertEquals(MP3_DIR(), MP3_BASE());
         $this->assertFalse(http_response_code());
     }
 
@@ -424,8 +451,8 @@ class SettingsHandlerTest extends TestCase
         define('MP3_BASE', realpath('..'));
         SettingsHandler::bootstrap(array(), array("dir" => "root"), array());
 
-        $this->assertEquals(MP3_BASE, realpath(".."));
-        $this->assertEquals(MP3_DIR, realpath('.') . '/');
+        $this->assertEquals(MP3_BASE(), realpath("..") . '/');
+        $this->assertEquals(MP3_DIR(), realpath('.') . '/');
         $this->assertFalse(http_response_code());
     }
 
@@ -497,7 +524,7 @@ class SettingsHandlerTest extends TestCase
         $this->assertSame(getID3_Podcast_Helper::$AUTO_SAVE_COVER_ART, AUTO_SAVE_COVER_ART);
         $this->assertSame(iTunes_Podcast_Helper::$ITUNES_SUBTITLE_SUFFIX, ITUNES_SUBTITLE_SUFFIX);
         $this->assertSame(RSS_File_Item::$FILES_URL, MP3_URL);
-        $this->assertSame(RSS_File_Item::$FILES_DIR, MP3_DIR);
+        $this->assertSame(RSS_File_Item::$FILES_DIR, MP3_DIR());
         $this->assertSame(Media_RSS_Item::$LONG_TITLES, LONG_TITLES);
         $this->assertSame(Media_RSS_Item::$DESCRIPTION_SOURCE, DESCRIPTION_SOURCE);
     }
