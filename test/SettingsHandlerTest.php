@@ -43,6 +43,30 @@ class SettingsHandlerTest extends TestCase
         'MIN_FILE_AGE',
     );
     
+    public function test_getopt_hook()
+    {
+        $argv_copy = $GLOBALS['argv'];
+        $argc_copy = $GLOBALS['argc'];
+
+        $short_options = '';
+        $long_options = array('help', 'media-dir::', 'bootstrap');
+
+        $cli_options = SettingsHandler::getopt(array(), $short_options, $long_options);
+        $this->assertEquals($cli_options, array());
+
+        $cli_options = SettingsHandler::getopt(array('--help'), $short_options, $long_options);
+        $this->assertEquals($cli_options, array('help' => true));
+
+        $cli_options = SettingsHandler::getopt(array('--media-dir='), $short_options, $long_options);
+        $this->assertEquals($cli_options, array('media-dir' => ''));
+
+        $cli_options = SettingsHandler::getopt(array('--media-dir=test'), $short_options, $long_options);
+        $this->assertEquals($cli_options, array('media-dir' => 'test'));
+
+        $this->assertEquals($argv_copy, $GLOBALS['argv']);
+        $this->assertEquals($argc_copy, $GLOBALS['argc']);
+    }
+
     /**
      * @runInSeparateProcess
      * @preserveGlobalState disabled
@@ -121,12 +145,13 @@ class SettingsHandlerTest extends TestCase
     /**
      * @runInSeparateProcess
      * @preserveGlobalState disabled
-     * @testWith [null]
-     *           ["dir2cast.php"]
+     * @testWith [null, null]
+     *           ["dir2cast.php", null]
+     *           ["dir2cast.php", "--media-dir="]
      */
-    public function test_bootstrap_sets_sensible_global_defaults_for_entire_installation($argv0)
+    public function test_bootstrap_sets_sensible_global_defaults_for_entire_installation($argv0, $argv1)
     {
-        SettingsHandler::bootstrap(array(), array(), array($argv0));
+        SettingsHandler::bootstrap(array(), array(), array($argv0, $argv1));
         $this->assertEquals(MIN_CACHE_TIME, 5);
         $this->assertEquals(FORCE_PASSWORD, '');
         $this->assertEquals(TMP_DIR, DIR2CAST_BASE . '/temp');
@@ -153,6 +178,46 @@ class SettingsHandlerTest extends TestCase
         $this->assertEquals(MP3_DIR, '/var/www');
     }
     
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_cli_media_404()
+    {
+        $temp = tempnam('./', 'test_cli_media_404');
+        try
+        {
+            $this->expectException("ExitException");
+            $this->expectExceptionCode(-2);
+            SettingsHandler::bootstrap(array(), array(), array("dir2cast.php", "--media-dir=$temp"));
+        }
+        catch(Exception $e)
+        {
+            throw $e;
+        }
+        finally
+        {
+            unlink($temp);
+        }
+    }
+    
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_cli_media_dir_404()
+    {
+        
+    }
+    
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_cli_arg_parsing()
+    {
+
+    }
     // TODO: test HTTP_HOST + GET dir
 
     /**

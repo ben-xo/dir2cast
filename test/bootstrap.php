@@ -85,6 +85,36 @@ function temp_xml_glob()
     return '.' . DIRECTORY_SEPARATOR . 'temp' . DIRECTORY_SEPARATOR . '*.xml';
 }
 
+function escape_single_quoted_string($string)
+{
+    return str_replace(array("'", '\\'), array("\\'", '\\\\'), $string);
+}
+
+function fake_getopt_command($argv_in, $short_options, $long_options)
+{
+    $argv_string = "'" . implode("', '", array_map('escape_single_quoted_string', $argv_in) ). "'";
+    $argv_count = count($argv_in);
+    $short_options_string = addslashes($short_options);
+    $long_options_string = "'" . implode("', '", array_map('escape_single_quoted_string', $long_options) ). "'";
+
+    $command_parts = array(
+        'php', '-d', 'register_argc_argv=false', '-r', <<<EOSCRIPT
+            \$GLOBALS["argv"]=array($argv_string);
+            \$GLOBALS["argc"]=$argv_count;
+            print(serialize((getopt('$short_options_string', array($long_options_string)))));
+        EOSCRIPT
+    );
+    return implode(" ", array_map('escapeshellarg', $command_parts));
+}
+
+function fake_getopt($argv_in, $short_options, $long_options)
+{
+    // $command = php -d 'register_argc_argv=false' -r '$GLOBALS["argv"]=array("php", "--stuff");$GLOBALS["argc"]=1;print(serialize((getopt("", array("stuff")))));'
+
+    $command = fake_getopt_command($argv_in, $short_options, $long_options);
+    exec($command, $output, $result_code);
+    return unserialize($output[0]);
+}
 
 define('NO_DISPATCHER', true);
 

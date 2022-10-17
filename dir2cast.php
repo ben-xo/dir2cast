@@ -92,6 +92,8 @@ spl_autoload_register('__autoloader');
 
 /* CLASSES **********************************************/
 
+class ExitException extends Exception {}
+
 abstract class GetterSetter {
     
     protected $parameters = array();
@@ -1573,7 +1575,7 @@ class ErrorHandler
                 return 'dir2cast requires getID3. You should download this from <a href="' . DIR2CAST_HOMEPAGE . '">' . DIR2CAST_HOMEPAGE .'</a> and install it with dir2cast.';
         }
     }
-    
+
     public static function display($message, $errfile, $errline)
     {    
         if(self::$errors)
@@ -1629,16 +1631,41 @@ class ErrorHandler
                     echo strip_tags(self::get_primed_error(ErrorHandler::$primer)) . "\n";
             }
 
-            exit(-1);
+            throw new ExitException("", -1);
         }
     }
-    
+
+    public static function display404($message)
+    {
+        if(defined('CLI_ONLY'))
+        {
+            header("HTTP/1.0 404 Not Found");
+            header("Content-type: text/plain");
+        }
+        echo "Not Found: $message\n";
+        throw new ExitException("", -2);
+    }
 }
 
 class SettingsHandler
 {
     private static $settings_cache = array();
     
+    /**
+     * getopt() uses argv directly and is a pain to mock. It's nicer to pass argv in,
+     * but mocking it a pain.
+     */
+    public static function getopt($argv_in, $short_options, $long_options)
+    {
+        if($argv_in != $GLOBALS['argv'])
+        {
+            return fake_getopt($argv_in, $short_options, $long_options);
+        }
+        return getopt($short_options, $long_options);
+    }
+
+
+
     /**
      * This method sets up all app-wide settings that are required at initialization time.
      * 
@@ -1670,7 +1697,7 @@ class SettingsHandler
             define('INI_FILE', $ini_file_name);
         }
         
-        $cli_options = getopt('', array('help', 'media-dir::', 'media-url::', 'output::', 'dont-uncache', 'min-file-age::', 'debug', 'ignore-dir2cast-mtime', 'clock-offset::'));
+        $cli_options = self::getopt($argv, '', array('help', 'media-dir::', 'media-url::', 'output::', 'dont-uncache', 'min-file-age::', 'debug', 'ignore-dir2cast-mtime', 'clock-offset::'));
         if($cli_options) {
             if(isset($cli_options['help'])) {
                 print "Usage: php dir2cast.php [--help] [--media-dir=MP3_DIR] [--media-url=MP3_URL] [--output=OUTPUT_FILE]\n";
@@ -1687,6 +1714,10 @@ class SettingsHandler
             if(!defined('MP3_DIR') && !empty($cli_options['media-dir']))
             {
                 define('MP3_DIR', realpath($cli_options['media-dir']));
+                if(!is_dir(MP3_DIR) or !is_readable(MP3_DIR))
+                {
+                    ErrorHandler::display404($cli_options['media-dir']);
+                }
             }
             if(!defined('MP3_URL') && !empty($cli_options['media-url']))
             {
@@ -1739,11 +1770,16 @@ class SettingsHandler
         if(!defined('MP3_DIR'))
         {
             if(!empty($GET['dir']))
+            {
                 define('MP3_DIR', MP3_BASE . '/' . safe_path(magic_stripslashes($GET['dir'])));
+                if(!is_dir(MP3_DIR) or !is_readable(MP3_DIR))
+                {
+                    ErrorHandler::display404($GET['dir']);
+                }
+            }
             else
                 define('MP3_DIR', MP3_BASE);
         }
-
     }
     
     /**
@@ -2181,7 +2217,14 @@ if(!defined('NO_DISPATCHER'))
     if(isset($GLOBALS['argv'])) {
         $args = $argv;
     }
-    exit(main($args));
+    try
+    {
+        exit(main($args));
+    }
+    catch(ExitException $e)
+    {
+        exit($e->getCode());
+    }
 }
 
 /* THE END *********************************************/
