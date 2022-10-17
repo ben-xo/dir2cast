@@ -1642,8 +1642,7 @@ class ErrorHandler
             header("HTTP/1.0 404 Not Found");
             header("Content-type: text/plain");
         }
-        echo "Not Found: $message\n";
-        throw new ExitException("", -2);
+        throw new ExitException("Not Found: $message", -2);
     }
 }
 
@@ -2223,6 +2222,7 @@ if(!defined('NO_DISPATCHER'))
     }
     catch(ExitException $e)
     {
+        print($e->getMessage()."\n");
         exit($e->getCode());
     }
 }

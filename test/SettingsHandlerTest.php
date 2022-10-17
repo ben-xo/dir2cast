@@ -42,6 +42,8 @@ class SettingsHandlerTest extends TestCase
         'DONT_UNCACHE_IF_OUTPUT_FILE',
         'MIN_FILE_AGE',
     );
+
+    public $temp_file = false;
     
     public function test_getopt_hook()
     {
@@ -51,17 +53,41 @@ class SettingsHandlerTest extends TestCase
         $short_options = '';
         $long_options = array('help', 'media-dir::', 'bootstrap');
 
-        $cli_options = SettingsHandler::getopt(array(), $short_options, $long_options);
+        $cli_options = SettingsHandler::getopt(
+            array(),
+            $short_options, $long_options
+        );
         $this->assertEquals($cli_options, array());
 
-        $cli_options = SettingsHandler::getopt(array('--help'), $short_options, $long_options);
-        $this->assertEquals($cli_options, array('help' => true));
+        $cli_options = SettingsHandler::getopt(
+            array('dir2cast.php'),
+            $short_options, $long_options
+        );
+        $this->assertEquals($cli_options, array());
 
-        $cli_options = SettingsHandler::getopt(array('--media-dir='), $short_options, $long_options);
-        $this->assertEquals($cli_options, array('media-dir' => ''));
+        $cli_options = SettingsHandler::getopt(
+            array('dir2cast.php', '--help'),
+            $short_options, $long_options
+        );
+        $this->assertEquals($cli_options, array('help' => false));
 
-        $cli_options = SettingsHandler::getopt(array('--media-dir=test'), $short_options, $long_options);
-        $this->assertEquals($cli_options, array('media-dir' => 'test'));
+        $cli_options = SettingsHandler::getopt(
+            array('dir2cast.php', '--media-dir=test1'),
+            $short_options, $long_options
+        );
+        $this->assertEquals($cli_options, array('media-dir' => 'test1'));
+
+        $cli_options = SettingsHandler::getopt(
+            array('dir2cast.php', '--media-dir=test2', '--bootstrap'),
+            $short_options, $long_options
+        );
+        $this->assertEquals($cli_options, array('media-dir' => 'test2', 'bootstrap' => false));
+
+        $cli_options = SettingsHandler::getopt(
+            array('dir2cast.php', '--bootstrap', '--media-dir=test3'),
+            $short_options, $long_options
+        );
+        $this->assertEquals($cli_options, array('media-dir' => 'test3', 'bootstrap' => false));
 
         $this->assertEquals($argv_copy, $GLOBALS['argv']);
         $this->assertEquals($argc_copy, $GLOBALS['argc']);
@@ -184,40 +210,133 @@ class SettingsHandlerTest extends TestCase
      */
     public function test_cli_media_404()
     {
-        $temp = tempnam('./', 'test_cli_media_404');
-        try
-        {
-            $this->expectException("ExitException");
-            $this->expectExceptionCode(-2);
-            SettingsHandler::bootstrap(array(), array(), array("dir2cast.php", "--media-dir=$temp"));
-        }
-        catch(Exception $e)
-        {
-            throw $e;
-        }
-        finally
-        {
-            unlink($temp);
-        }
-    }
-    
-    /**
-     * @runInSeparateProcess
-     * @preserveGlobalState disabled
-     */
-    public function test_cli_media_dir_404()
-    {
+        $this->temp_file = basename(tempnam('./', 'test_cli_media_404'));
+        $this->assertFalse(strpos($this->temp_file, '/'));
+        unlink($this->temp_file);
         
+        $this->expectException("ExitException");
+        $this->expectExceptionMessage("Not Found: {$this->temp_file}");
+        $this->expectExceptionCode(-2);
+        SettingsHandler::bootstrap(array(), array(), array("dir2cast.php", "--media-dir={$this->temp_file}"));
     }
-    
+
     /**
      * @runInSeparateProcess
      * @preserveGlobalState disabled
      */
-    public function test_cli_arg_parsing()
+    public function test_GET_media_404()
     {
-
+        $this->temp_file = basename(tempnam('../', 'test_GET_media_404'));
+        $this->assertFalse(strpos($this->temp_file, '/'));
+        unlink('../' . $this->temp_file);
+        
+        $this->expectException("ExitException");
+        $this->expectExceptionMessage("Not Found: {$this->temp_file}");
+        $this->expectExceptionCode(-2);
+        SettingsHandler::bootstrap(array(), array("dir" => $this->temp_file), array());
     }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_cli_media_not_dir_404()
+    {
+        $this->temp_file = basename(tempnam('./', 'test_cli_media_not_dir_404'));
+
+        $this->expectException("ExitException");
+        $this->expectExceptionMessage("Not Found: {$this->temp_file}");
+        $this->expectExceptionCode(-2);
+        SettingsHandler::bootstrap(array(), array(), array("dir2cast.php", "--media-dir={$this->temp_file}"));
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_GET_media_not_dir_404()
+    {
+        $this->temp_file = basename(tempnam('../', 'test_GET_media_not_dir_404'));
+
+        $this->expectException("ExitException");
+        $this->expectExceptionMessage("Not Found: {$this->temp_file}");
+        $this->expectExceptionCode(-2);
+        SettingsHandler::bootstrap(array(), array("dir" => $this->temp_file), array());
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_cli_media_dir_but_no_permissions_404()
+    {
+        $this->temp_file = basename(tempnam('./', 'test_cli_media_dir_but_no_permissions_404'));
+        unlink($this->temp_file);
+        mkdir($this->temp_file);
+        chmod($this->temp_file, 0);
+
+        $this->expectException("ExitException");
+        $this->expectExceptionMessage("Not Found: {$this->temp_file}");
+        $this->expectExceptionCode(-2);
+        SettingsHandler::bootstrap(array(), array(), array("dir2cast.php", "--media-dir={$this->temp_file}"));
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_GET_media_dir_but_no_permissions_404()
+    {
+        $this->temp_file = basename(tempnam('../', 'test_GET_media_dir_but_no_permissions_404'));
+        unlink('../' . $this->temp_file);
+        mkdir('../' . $this->temp_file);
+        chmod('../' . $this->temp_file, 0);
+
+        $this->expectException("ExitException");
+        $this->expectExceptionMessage("Not Found: {$this->temp_file}");
+        $this->expectExceptionCode(-2);
+        SettingsHandler::bootstrap(array(), array("dir" => $this->temp_file), array());
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_cli_media_dir_a_ok()
+    {
+        $this->temp_file = basename(tempnam('./', 'test_cli_media_dir_a_ok'));
+        unlink($this->temp_file);
+        mkdir($this->temp_file);
+
+        SettingsHandler::bootstrap(array(), array(), array("dir2cast.php", "--media-dir={$this->temp_file}"));
+        $this->assertEquals(MP3_BASE, realpath('.'));
+        $this->assertEquals(MP3_DIR, realpath($this->temp_file));
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_GET_media_dir_a_ok()
+    {
+        $this->temp_file = basename(tempnam('../', 'test_GET_media_dir_a_ok'));
+        unlink('../' . $this->temp_file);
+        mkdir('../' . $this->temp_file);
+
+        SettingsHandler::bootstrap(array(), array("dir" => $this->temp_file), array());
+        $this->assertEquals(MP3_BASE, realpath('..'));  // due to bootstrap.php chdir
+        $this->assertEquals(MP3_DIR, realpath('../' . $this->temp_file));
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    // public function test_cli_arg_parsing()
+    // {
+
+    // }
+    
     // TODO: test HTTP_HOST + GET dir
 
     /**
@@ -396,6 +515,17 @@ class SettingsHandlerTest extends TestCase
         file_exists('itunes_summary.txt') && unlink('itunes_summary.txt');
         file_exists('image.jpg') && unlink('image.jpg');
         file_exists('itunes_image.jpg') && unlink('itunes_image.jpg');
+        if($this->temp_file)
+        {
+            if(file_exists($this->temp_file)) {
+                if(is_dir($this->temp_file)) rmdir($this->temp_file);
+                else unlink($this->temp_file);
+            }
+            elseif(file_exists('../'.$this->temp_file)) {
+                if(is_dir('../'.$this->temp_file)) rmdir('../'.$this->temp_file);
+                else unlink('../'.$this->temp_file);
+            }
+        }
     }
 }
 

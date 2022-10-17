@@ -38,6 +38,7 @@ if [[ "$PATH_COVERAGE" != '' ]]; then
 fi
 
 vendor/bin/phpunit \
+    --colors=always \
     --bootstrap "$SCRIPT_DIR/bootstrap.php" \
     --coverage-php /tmp/cov-main \
     --coverage-filter ../dir2cast.php \
