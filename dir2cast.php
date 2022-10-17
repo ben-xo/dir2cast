@@ -1588,7 +1588,7 @@ class ErrorHandler
                 if(!http_response_code())
                 {
                     http_response_code(500);
-                }q
+                }
             }
 
             if((!defined('CLI_ONLY') || !CLI_ONLY) && !ini_get('html_errors'))
