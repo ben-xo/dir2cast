@@ -109,11 +109,13 @@ function fake_getopt_command($argv_in, $short_options, $long_options)
 
 /**
  * Dangerous (due to exec()) and unlikely to work properly outside of testing.
- * Needed because getopt() can't have its input mocked without register_argc_argv=false !
+ * Needed because getopt() can't have its input mocked without register_argc_argv=false
  */
 function fake_getopt($argv_in, $short_options, $long_options)
 {
     $command = fake_getopt_command($argv_in, $short_options, $long_options);
+    $output = null;
+    $result_code = null;
     exec($command . " 2>/dev/null", $output, $result_code);
     return unserialize($output[0]);
 }
