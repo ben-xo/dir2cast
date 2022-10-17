@@ -218,6 +218,7 @@ class SettingsHandlerTest extends TestCase
         $this->expectExceptionMessage("Not Found: {$this->temp_file}");
         $this->expectExceptionCode(-2);
         SettingsHandler::bootstrap(array(), array(), array("dir2cast.php", "--media-dir={$this->temp_file}"));
+        $this->assertFalse(http_response_code());
     }
 
     /**
@@ -234,6 +235,7 @@ class SettingsHandlerTest extends TestCase
         $this->expectExceptionMessage("Not Found: {$this->temp_file}");
         $this->expectExceptionCode(-2);
         SettingsHandler::bootstrap(array(), array("dir" => $this->temp_file), array());
+        $this->assertEquals(http_response_code(), 404);
     }
 
     /**
@@ -248,6 +250,7 @@ class SettingsHandlerTest extends TestCase
         $this->expectExceptionMessage("Not Found: {$this->temp_file}");
         $this->expectExceptionCode(-2);
         SettingsHandler::bootstrap(array(), array(), array("dir2cast.php", "--media-dir={$this->temp_file}"));
+        $this->assertFalse(http_response_code());
     }
 
     /**
@@ -262,6 +265,7 @@ class SettingsHandlerTest extends TestCase
         $this->expectExceptionMessage("Not Found: {$this->temp_file}");
         $this->expectExceptionCode(-2);
         SettingsHandler::bootstrap(array(), array("dir" => $this->temp_file), array());
+        $this->assertEquals(http_response_code(), 404);
     }
 
     /**
@@ -279,6 +283,7 @@ class SettingsHandlerTest extends TestCase
         $this->expectExceptionMessage("Not Found: {$this->temp_file}");
         $this->expectExceptionCode(-2);
         SettingsHandler::bootstrap(array(), array(), array("dir2cast.php", "--media-dir={$this->temp_file}"));
+        $this->assertFalse(http_response_code());
     }
 
     /**
@@ -296,6 +301,7 @@ class SettingsHandlerTest extends TestCase
         $this->expectExceptionMessage("Not Found: {$this->temp_file}");
         $this->expectExceptionCode(-2);
         SettingsHandler::bootstrap(array(), array("dir" => $this->temp_file), array());
+        $this->assertEquals(http_response_code(), 404);
     }
 
     /**
@@ -311,6 +317,7 @@ class SettingsHandlerTest extends TestCase
         SettingsHandler::bootstrap(array(), array(), array("dir2cast.php", "--media-dir={$this->temp_file}"));
         $this->assertEquals(MP3_BASE, realpath('.'));
         $this->assertEquals(MP3_DIR, realpath($this->temp_file));
+        $this->assertFalse(http_response_code());
     }
 
     /**
@@ -326,6 +333,7 @@ class SettingsHandlerTest extends TestCase
         SettingsHandler::bootstrap(array(), array("dir" => $this->temp_file), array());
         $this->assertEquals(MP3_BASE, realpath('..'));  // due to bootstrap.php chdir
         $this->assertEquals(MP3_DIR, realpath('../' . $this->temp_file));
+        $this->assertFalse(http_response_code());
     }
 
     /**
