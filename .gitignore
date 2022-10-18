@@ -4,3 +4,8 @@
 test/composer.lock
 test/vendor
 .unfinished
+.vscode
+
+# using the docker-compose example will auto-extract some embedded images. ignore.
+test/fixtures/id3v2_artist_album_title_cover.jpg
+test/fixtures/tagged_with_cover.jpg
