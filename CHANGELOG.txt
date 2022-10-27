@@ -1,13 +1,13 @@
 Changelog
 =========
 
-1.37 2022-10-17 * Errors now return an HTTP status code 500 by default.
+1.37 2022-10-27 * Errors now return an HTTP status code 500 by default.
                 * If the error is due to no content, or a bad URL passed to
                   ?dir=, then it will be a 404 and no information about
                   the server paths will be returned in the output. Thanks
-                  to @EdwarDDay for this security related suggestion.
+                  to @EdwarDDay for this security suggestion. (#64)
                 * fix nasty bug where paths were sometimes invalid due to
-                  mishandling of trailing slashes
+                  mishandling of trailing slashes (#55)
 
 1.36 2022-08-25 * Fix bug where podcasts with autosaved cover art would end up
                   with duplicated iTunes metadata tags. Thanks once again to
