@@ -85,6 +85,44 @@ function temp_xml_glob()
     return '.' . DIRECTORY_SEPARATOR . 'temp' . DIRECTORY_SEPARATOR . '*.xml';
 }
 
+function escape_single_quoted_string($string)
+{
+    $string = str_replace('\\', '\\\\', $string);
+    $string = str_replace('\'', '\\\'', $string);
+    return $string;
+}
+
+function fake_getopt_command($argv_in, $short_options, $long_options)
+{
+    $argv_string = "'" . implode("', '", array_map('escape_single_quoted_string', $argv_in) ). "'";
+    $argv_count = count($argv_in);
+    $short_options_string = escape_single_quoted_string($short_options);
+    $long_options_string = "'" . implode("', '", array_map('escape_single_quoted_string', $long_options) ). "'";
+
+    $command_parts = array(
+        'php', '-d', 'register_argc_argv=false', '-r', escapeshellarg(<<<EOSCRIPT
+            \$GLOBALS["argv"]=array($argv_string);
+            \$GLOBALS["argc"]=$argv_count;
+            print(serialize(getopt('$short_options_string', array($long_options_string))));
+        EOSCRIPT)
+    );
+    return implode(" ", $command_parts);
+}
+
+/**
+ * Dangerous (due to exec()) and unlikely to work properly outside of testing.
+ * Needed because getopt() can't have its input mocked without register_argc_argv=false
+ */
+function fake_getopt($argv_in, $short_options, $long_options)
+{
+    $command = fake_getopt_command($argv_in, $short_options, $long_options);
+    $output = null;
+    $result_code = null;
+    exec($command, $output, $result_code);
+    if(count($output) > 0)
+        return unserialize($output[0]);
+    return array();
+}
 
 define('NO_DISPATCHER', true);
 

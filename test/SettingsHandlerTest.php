@@ -42,7 +42,64 @@ class SettingsHandlerTest extends TestCase
         'DONT_UNCACHE_IF_OUTPUT_FILE',
         'MIN_FILE_AGE',
     );
+
+    public $temp_file = false;
+    public $starting_dir = false;
+
+    public function setUp(): void
+    {
+        $this->temp_file = false;
+        $this->starting_dir = false;
+    }
     
+    public function test_getopt_hook()
+    {
+        $argv_copy = $GLOBALS['argv'];
+        $argc_copy = $GLOBALS['argc'];
+
+        $short_options = '';
+        $long_options = array('help', 'media-dir::', 'bootstrap');
+
+        $cli_options = SettingsHandler::getopt(
+            array(),
+            $short_options, $long_options
+        );
+        $this->assertEquals($cli_options, array());
+
+        $cli_options = SettingsHandler::getopt(
+            array('dir2cast.php'),
+            $short_options, $long_options
+        );
+        $this->assertEquals($cli_options, array());
+
+        $cli_options = SettingsHandler::getopt(
+            array('dir2cast.php', '--help'),
+            $short_options, $long_options
+        );
+        $this->assertEquals($cli_options, array('help' => false));
+
+        $cli_options = SettingsHandler::getopt(
+            array('dir2cast.php', '--media-dir=test1'),
+            $short_options, $long_options
+        );
+        $this->assertEquals($cli_options, array('media-dir' => 'test1'));
+
+        $cli_options = SettingsHandler::getopt(
+            array('dir2cast.php', '--media-dir=test2', '--bootstrap'),
+            $short_options, $long_options
+        );
+        $this->assertEquals($cli_options, array('media-dir' => 'test2', 'bootstrap' => false));
+
+        $cli_options = SettingsHandler::getopt(
+            array('dir2cast.php', '--bootstrap', '--media-dir=test3'),
+            $short_options, $long_options
+        );
+        $this->assertEquals($cli_options, array('media-dir' => 'test3', 'bootstrap' => false));
+
+        $this->assertEquals($argv_copy, $GLOBALS['argv']);
+        $this->assertEquals($argc_copy, $GLOBALS['argc']);
+    }
+
     /**
      * @runInSeparateProcess
      * @preserveGlobalState disabled
@@ -80,7 +137,34 @@ class SettingsHandlerTest extends TestCase
         
         // should not be defined as $argv was empty
         $this->assertFalse(defined('CLI_ONLY'));
-        $this->assertEquals(DIR2CAST_BASE, realpath('..')); // from bootstrap.php
+        $this->assertEquals(DIR2CAST_BASE(), slashdir(realpath('..'))); // from bootstrap.php
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_pre_defined_slashed()
+    {
+        define('DIR2CAST_BASE', '/tmp/');
+        $this->assertEquals(DIR2CAST_BASE(), '/tmp/');
+        define('MP3_BASE', '/tmp/');
+        $this->assertEquals(DIR2CAST_BASE(), '/tmp/');
+        define('MP3_PATH', '/tmp/');
+        $this->assertEquals(DIR2CAST_BASE(), '/tmp/');
+    }
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_pre_defined_slashless()
+    {
+        define('DIR2CAST_BASE', '/tmp');
+        $this->assertEquals(DIR2CAST_BASE(), '/tmp/');
+        define('MP3_BASE', '/tmp');
+        $this->assertEquals(DIR2CAST_BASE(), '/tmp/');
+        define('MP3_PATH', '/tmp');
+        $this->assertEquals(DIR2CAST_BASE(), '/tmp/');
     }
 
     /**
@@ -115,23 +199,24 @@ class SettingsHandlerTest extends TestCase
         $this->assertFalse(defined('CLI_ONLY'));
         SettingsHandler::bootstrap(array(), array(), array('dir2cast.php'));
         $this->assertTrue(defined('CLI_ONLY'));
-        $this->assertEquals(DIR2CAST_BASE, getcwd()); // from fake $argv
+        $this->assertEquals(DIR2CAST_BASE(), slashdir(getcwd())); // from fake $argv
     }
 
     /**
      * @runInSeparateProcess
      * @preserveGlobalState disabled
-     * @testWith [null]
-     *           ["dir2cast.php"]
+     * @testWith [null, null]
+     *           ["dir2cast.php", null]
+     *           ["dir2cast.php", "--media-dir="]
      */
-    public function test_bootstrap_sets_sensible_global_defaults_for_entire_installation($argv0)
+    public function test_bootstrap_sets_sensible_global_defaults_for_entire_installation($argv0, $argv1)
     {
-        SettingsHandler::bootstrap(array(), array(), array($argv0));
+        SettingsHandler::bootstrap(array(), array(), array($argv0, $argv1));
         $this->assertEquals(MIN_CACHE_TIME, 5);
         $this->assertEquals(FORCE_PASSWORD, '');
-        $this->assertEquals(TMP_DIR, DIR2CAST_BASE . '/temp');
-        $this->assertEquals(MP3_BASE, DIR2CAST_BASE);
-        $this->assertEquals(MP3_DIR, DIR2CAST_BASE);
+        $this->assertEquals(TMP_DIR, DIR2CAST_BASE() . 'temp');
+        $this->assertEquals(MP3_BASE(), DIR2CAST_BASE());
+        $this->assertEquals(MP3_DIR(), DIR2CAST_BASE());
     }
     
     /**
@@ -149,9 +234,254 @@ class SettingsHandlerTest extends TestCase
             /* $GET */ array(),
             /* $argv */ array()
         );
-        $this->assertEquals(MP3_BASE, '/var/www');
-        $this->assertEquals(MP3_DIR, '/var/www');
+        $this->assertEquals(MP3_BASE(), '/var/www/');
+        $this->assertEquals(MP3_DIR(), '/var/www/');
     }
+    
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_cli_media_404()
+    {
+        $this->temp_file = basename(tempnam('./', 'test_cli_media_404'));
+        $this->assertFalse(strpos($this->temp_file, '/'));
+        unlink($this->temp_file);
+        
+        $this->expectException("ExitException");
+        $this->expectExceptionMessage("Not Found: {$this->temp_file}");
+        $this->expectExceptionCode(-2);
+        SettingsHandler::bootstrap(array(), array(), array("dir2cast.php", "--media-dir={$this->temp_file}"));
+        $this->assertFalse(http_response_code());
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_GET_media_404()
+    {
+        $this->temp_file = basename(tempnam('../', 'test_GET_media_404'));
+        $this->assertFalse(strpos($this->temp_file, '/'));
+        unlink('../' . $this->temp_file);
+        
+        $this->expectException("ExitException");
+        $this->expectExceptionMessage("Not Found: {$this->temp_file}");
+        $this->expectExceptionCode(-2);
+        SettingsHandler::bootstrap(array(), array("dir" => $this->temp_file), array());
+        $this->assertEquals(http_response_code(), 404);
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_cli_media_not_dir_404()
+    {
+        $this->temp_file = basename(tempnam('./', 'test_cli_media_not_dir_404'));
+
+        $this->expectException("ExitException");
+        $this->expectExceptionMessage("Not Found: {$this->temp_file}");
+        $this->expectExceptionCode(-2);
+        SettingsHandler::bootstrap(array(), array(), array("dir2cast.php", "--media-dir={$this->temp_file}"));
+        $this->assertFalse(http_response_code());
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_GET_media_not_dir_404()
+    {
+        $this->temp_file = basename(tempnam('../', 'test_GET_media_not_dir_404'));
+
+        $this->expectException("ExitException");
+        $this->expectExceptionMessage("Not Found: {$this->temp_file}");
+        $this->expectExceptionCode(-2);
+        SettingsHandler::bootstrap(array(), array("dir" => $this->temp_file), array());
+        $this->assertEquals(http_response_code(), 404);
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_cli_media_dir_but_no_permissions_404()
+    {
+        $this->temp_file = basename(tempnam('./', 'test_cli_media_dir_but_no_permissions_404'));
+        unlink($this->temp_file);
+        mkdir($this->temp_file);
+        chmod($this->temp_file, 0);
+
+        $this->expectException("ExitException");
+        $this->expectExceptionMessage("Not Found: {$this->temp_file}");
+        $this->expectExceptionCode(-2);
+        SettingsHandler::bootstrap(array(), array(), array("dir2cast.php", "--media-dir={$this->temp_file}"));
+        $this->assertFalse(http_response_code());
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_GET_media_dir_but_no_permissions_404()
+    {
+        $this->temp_file = basename(tempnam('../', 'test_GET_media_dir_but_no_permissions_404'));
+        unlink('../' . $this->temp_file);
+        mkdir('../' . $this->temp_file);
+        chmod('../' . $this->temp_file, 0);
+
+        $this->expectException("ExitException");
+        $this->expectExceptionMessage("Not Found: {$this->temp_file}");
+        $this->expectExceptionCode(-2);
+        SettingsHandler::bootstrap(array(), array("dir" => $this->temp_file), array());
+        $this->assertEquals(http_response_code(), 404);
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_cli_media_dir_a_ok()
+    {
+        $this->temp_file = basename(tempnam('./', 'test_cli_media_dir_a_ok'));
+        unlink($this->temp_file);
+        mkdir($this->temp_file);
+
+        SettingsHandler::bootstrap(array(), array(), array("dir2cast.php", "--media-dir={$this->temp_file}"));
+        $this->assertEquals(MP3_BASE(), slashdir(realpath('.')));
+        $this->assertEquals(MP3_DIR(), slashdir(realpath($this->temp_file)));
+        $this->assertFalse(http_response_code());
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_GET_media_dir_a_ok()
+    {
+        $this->temp_file = basename(tempnam('../', 'test_GET_media_dir_a_ok'));
+        unlink('../' . $this->temp_file);
+        mkdir('../' . $this->temp_file);
+
+        SettingsHandler::bootstrap(array(), array("dir" => $this->temp_file), array());
+        $this->assertEquals(MP3_BASE(), slashdir(realpath('..')));  // due to bootstrap.php chdir
+        $this->assertEquals(MP3_DIR(), slashdir(realpath('../' . $this->temp_file)));
+        $this->assertFalse(http_response_code());
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_GET_media_dir_safe_dot_dot_1()
+    {
+        $this->starting_dir = getcwd();
+        mkdir('deep');
+        mkdir('deep/root');
+        chdir('deep/root');
+        SettingsHandler::bootstrap(array(), array("dir" => ".."), array());
+
+        $this->assertEquals(MP3_BASE(), slashdir(realpath("{$this->starting_dir}/..")));  // due to bootstrap.php chdir
+        $this->assertEquals(MP3_DIR(), MP3_BASE());
+        $this->assertFalse(http_response_code());
+    }
+    
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_GET_media_dir_safe_dot_dot_2()
+    {
+        $this->starting_dir = getcwd();
+        mkdir('deep');
+        mkdir('deep/root');
+        chdir('deep/root');
+        SettingsHandler::bootstrap(array(), array("dir" => "../../.."), array());
+
+        $this->assertEquals(MP3_BASE(), slashdir(realpath("{$this->starting_dir}/..")));  // due to bootstrap.php chdir
+        $this->assertEquals(MP3_DIR(), MP3_BASE());
+        $this->assertFalse(http_response_code());
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_GET_media_dir_safe_slash_dir()
+    {
+        $this->starting_dir = getcwd();
+        mkdir('deep');
+        mkdir('deep/root');
+        chdir('deep/root');
+        $this->expectException("ExitException");
+        $this->expectExceptionMessage("Not Found: /etc");
+        $this->expectExceptionCode(-2);
+        SettingsHandler::bootstrap(array(), array("dir" => "/etc"), array());
+        $this->assertEquals(http_response_code(), 404);
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_GET_media_dir_safe_slash_dir_2()
+    {
+        $this->starting_dir = getcwd();
+        mkdir('deep');
+        mkdir('deep/root');
+        chdir('deep/root');
+        $this->expectException("ExitException");
+        $this->expectExceptionMessage("Not Found: ////etc");
+        $this->expectExceptionCode(-2);
+        SettingsHandler::bootstrap(array(), array("dir" => "////etc"), array());
+        $this->assertEquals(http_response_code(), 404);
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_GET_media_dir_safe_dir_with_good_base()
+    {
+        $this->starting_dir = getcwd();
+        mkdir('deep');
+        mkdir('deep/root');
+        chdir('deep/root');
+        define('MP3_BASE', realpath('..'));
+        SettingsHandler::bootstrap(array(), array("dir" => "root"), array());
+
+        $this->assertEquals(MP3_BASE(), realpath("..") . '/');
+        $this->assertEquals(MP3_DIR(), realpath('.') . '/');
+        $this->assertFalse(http_response_code());
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function test_GET_media_dir_unsafe_slash_dir_with_good_base()
+    {
+        $this->starting_dir = getcwd();
+        mkdir('deep');
+        mkdir('deep/root');
+        chdir('deep/root');
+        define('MP3_BASE', realpath('..'));
+        $this->expectException("ExitException");
+        $this->expectExceptionMessage("Not Found: ../deep/root");
+        $this->expectExceptionCode(-2);
+        SettingsHandler::bootstrap(array(), array("dir" => "../deep/root"), array());
+        $this->assertEquals(http_response_code(), 404);
+    }
+
+    /**
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    // public function test_cli_arg_parsing()
+    // {
+
+    // }
     
     // TODO: test HTTP_HOST + GET dir
 
@@ -194,7 +524,7 @@ class SettingsHandlerTest extends TestCase
         $this->assertSame(getID3_Podcast_Helper::$AUTO_SAVE_COVER_ART, AUTO_SAVE_COVER_ART);
         $this->assertSame(iTunes_Podcast_Helper::$ITUNES_SUBTITLE_SUFFIX, ITUNES_SUBTITLE_SUFFIX);
         $this->assertSame(RSS_File_Item::$FILES_URL, MP3_URL);
-        $this->assertSame(RSS_File_Item::$FILES_DIR, MP3_DIR);
+        $this->assertSame(RSS_File_Item::$FILES_DIR, MP3_DIR());
         $this->assertSame(Media_RSS_Item::$LONG_TITLES, LONG_TITLES);
         $this->assertSame(Media_RSS_Item::$DESCRIPTION_SOURCE, DESCRIPTION_SOURCE);
     }
@@ -225,7 +555,7 @@ class SettingsHandlerTest extends TestCase
         SettingsHandler::bootstrap(array(), array(), array('dir2cast.php'));
         SettingsHandler::defaults(array());
         
-        $this->assertEquals(MP3_URL, 'file://' . getcwd());
+        $this->assertEquals(MP3_URL, 'file://' . getcwd() . '/');
         $this->assertEquals(LINK, 'http://www.example.com/');
         $this->assertEquals(RSS_LINK, 'http://www.example.com/rss');
         $this->assertEquals(TITLE, 'test'); // name of this folder
@@ -326,11 +656,28 @@ class SettingsHandlerTest extends TestCase
 
     public function tearDown(): void
     {
+        if($this->starting_dir) {
+            chdir($this->starting_dir);
+            rmrf('deep');
+        }
         file_exists('description.txt') && unlink('description.txt');
         file_exists('itunes_subtitle.txt') && unlink('itunes_subtitle.txt');
         file_exists('itunes_summary.txt') && unlink('itunes_summary.txt');
         file_exists('image.jpg') && unlink('image.jpg');
         file_exists('itunes_image.jpg') && unlink('itunes_image.jpg');
+        if($this->temp_file)
+        {
+            if(file_exists($this->temp_file)) {
+                chmod($this->temp_file, 755);
+                if(is_dir($this->temp_file)) rmdir($this->temp_file);
+                else unlink($this->temp_file);
+            }
+            elseif(file_exists('../'.$this->temp_file)) {
+                chmod('../'.$this->temp_file, 755);
+                if(is_dir('../'.$this->temp_file)) rmdir('../'.$this->temp_file);
+                else unlink('../'.$this->temp_file);
+            }
+        }
     }
 }
 
