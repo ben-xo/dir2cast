@@ -332,6 +332,7 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
     }
     
     static $ITUNES_SUBTITLE_SUFFIX = '';
+    static $ITUNES_SEASON_TAG = false;
 
     protected $owner_name, $owner_email, $image_href, $explicit;
     protected $categories = array();
@@ -425,6 +426,15 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
         if($itunes_subtitle !== '')
         {
             $elements['subtitle'] = $itunes_subtitle . iTunes_Podcast_Helper::$ITUNES_SUBTITLE_SUFFIX;
+        }
+
+        if(iTunes_Podcast_Helper::$ITUNES_SEASON_TAG)
+        {
+            $season = $item->getSeason();
+            if($season !== '')
+            {
+                $elements['season'] = $season;
+            }
         }
                 
         foreach($elements as $key => $val)
@@ -1956,6 +1966,9 @@ class SettingsHandler
         if(!defined('ITUNES_SUBTITLE_SUFFIX'))
             define('ITUNES_SUBTITLE_SUFFIX', '');
 
+        if(!defined('ITUNES_SEASON_TAG'))
+            define('ITUNES_SEASON_TAG', false);
+
         if(!defined('DESCRIPTION_SOURCE'))
             define('DESCRIPTION_SOURCE', 'comment');
 
@@ -1986,6 +1999,7 @@ class SettingsHandler
         Cached_Dir_Podcast::$MIN_CACHE_TIME = MIN_CACHE_TIME;
         getID3_Podcast_Helper::$AUTO_SAVE_COVER_ART = AUTO_SAVE_COVER_ART;
         iTunes_Podcast_Helper::$ITUNES_SUBTITLE_SUFFIX = ITUNES_SUBTITLE_SUFFIX;
+        iTunes_Podcast_Helper::$ITUNES_SEASON_TAG = ITUNES_SEASON_TAG;
 
         // Set up up factory settings for RSS Items
         RSS_File_Item::$FILES_URL = MP3_URL; // TODO: rename this to MEDIA_URL
