@@ -50,6 +50,11 @@ class Media_RSS_ItemTest extends RSS_File_ItemTest
         return '';
     }
 
+    public function getID3PartOfASet()
+    {
+        return '';
+    }
+
     protected $media_rss_item_class = 'Media_RSS_Item';
 
     public function newRSSItem()
@@ -67,6 +72,7 @@ class Media_RSS_ItemTest extends RSS_File_ItemTest
         $item->setID3Title($this->getID3Title());
         $item->setID3Artist($this->getID3Artist());
         $item->setID3Comment($this->getID3Comment());
+        $item->setID3PartOfASet($this->getID3PartOfASet());
         return $item;
     }
 
@@ -134,6 +140,11 @@ class Media_RSS_ItemTest extends RSS_File_ItemTest
         Media_RSS_Item::$DESCRIPTION_SOURCE = 'summary';
         $item = $this->newRSSItem();
         $this->assertEquals('', $item->getSummary());
+    }
+
+    public function test_season_from_part_of_set_tag_by_default() {
+        $item = $this->newRSSItem();
+        $this->assertEquals($this->getID3PartOfASet(), $item->getSeason());
     }
 
     public function tearDown(): void

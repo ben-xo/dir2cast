@@ -173,7 +173,7 @@ class getID3_Podcast_Helper implements Podcast_Helper {
             }
             
             unset($this->getid3);
-            
+
             if(!empty($info['comments']))
             {
                 if(!empty($info['comments']['title'][0]))
@@ -184,6 +184,8 @@ class getID3_Podcast_Helper implements Podcast_Helper {
                     $item->setID3Album( $info['comments']['album'][0] );
                 if(!empty($info['comments']['comment'][0]))
                     $item->setID3Comment( $info['comments']['comment'][0] );
+                if(!empty($info['part_of_a_set'][0]))
+                    $item->setID3PartOfASet( $info['part_of_a_set'][0] );
 
                 if(self::$AUTO_SAVE_COVER_ART)
                 {
@@ -927,6 +929,17 @@ class Media_RSS_Item extends RSS_File_Item implements Serializable {
             $subtitle = $this->getID3Artist();
         }
         return $subtitle;
+    }
+
+    public function getSeason()
+    {
+        $season = parent::getSeason();
+        if(!$season)
+        {
+            // use part_of_a_set tag as season if there's no override
+            $season = $this->getID3PartOfASet();
+        }
+        return $season;
     }
 
     /**
