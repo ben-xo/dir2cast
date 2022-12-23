@@ -1188,7 +1188,7 @@ class Dir_Podcast extends Podcast
             foreach($di as $file)
             {
                 $filepath = $file->getPath() . '/' . $file->getFileName();
-                self::$DEBUG && print("Considering ${filepath}…\n");
+                self::$DEBUG && print("Considering {$filepath}…\n");
                 $item_count = $this->addItem($filepath);
             }
 
@@ -1247,7 +1247,7 @@ class Dir_Podcast extends Podcast
     {
         if($date > $this->max_mtime) 
         {
-            self::$DEBUG && print("mtime ceiling {$this->max_mtime} ➡ ${date} (now: " . time() . ") from $filename\n");
+            self::$DEBUG && print("mtime ceiling {$this->max_mtime} ➡ {$date} (now: " . time() . ") from $filename\n");
             $this->max_mtime = $date;
         }
     }
