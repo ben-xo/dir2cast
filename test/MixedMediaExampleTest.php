@@ -18,12 +18,14 @@ class MixedMediaExampleTest extends TestCase
         copy('../fixtures/id3v2_artist_album_title.mp3', '2.mp3');
         copy('../fixtures/tagged.mp4', '3.mp4');
         copy('../fixtures/id3v2_comment.mp3', '4.mp3');
+        copy('../fixtures/id3v2_artist_title_partofaset.mp3', '5.mp3');
 
         $now = time();
         touch('1.mp3', $now);
         touch('2.mp3', $now+50);
         touch('3.mp4', $now+100);
         touch('4.mp3', $now+150);
+        touch('5.mp3', $now+200);
         self::$filemtime = $now;
 
         self::$output = '';
@@ -90,63 +92,74 @@ class MixedMediaExampleTest extends TestCase
         // generated valid XML
         $data = simplexml_load_string(file_get_contents(self::$file));
 
-        $this->assertCount(4, $data->channel->item);
-        $this->assertEquals('4.mp3',    $data->channel->item[0]->title);
-        $this->assertEquals('TTT',      $data->channel->item[1]->title);
-        $this->assertEquals('EXAMPLE7', $data->channel->item[2]->title);
-        $this->assertEquals('EXAMPLE3', $data->channel->item[3]->title);
+        $this->assertCount(5, $data->channel->item);
+        $this->assertEquals('EXAMPLE#65', $data->channel->item[0]->title);
+        $this->assertEquals('4.mp3',      $data->channel->item[1]->title);
+        $this->assertEquals('TTT',        $data->channel->item[2]->title);
+        $this->assertEquals('EXAMPLE7',   $data->channel->item[3]->title);
+        $this->assertEquals('EXAMPLE3',   $data->channel->item[4]->title);
 
-        $this->assertEquals('https://www.example.com/podcast/4.mp3', $data->channel->item[0]->link);
-        $this->assertEquals('https://www.example.com/podcast/3.mp4', $data->channel->item[1]->link);
-        $this->assertEquals('https://www.example.com/podcast/2.mp3', $data->channel->item[2]->link);
-        $this->assertEquals('https://www.example.com/podcast/1.mp3', $data->channel->item[3]->link);
+        $this->assertEquals('https://www.example.com/podcast/5.mp3', $data->channel->item[0]->link);
+        $this->assertEquals('https://www.example.com/podcast/4.mp3', $data->channel->item[1]->link);
+        $this->assertEquals('https://www.example.com/podcast/3.mp4', $data->channel->item[2]->link);
+        $this->assertEquals('https://www.example.com/podcast/2.mp3', $data->channel->item[3]->link);
+        $this->assertEquals('https://www.example.com/podcast/1.mp3', $data->channel->item[4]->link);
 
-        $this->assertEquals('COMMENT8', $data->channel->item[0]->description);
-        $this->assertEquals('CCC',      $data->channel->item[1]->description);
-        $this->assertEquals('',         $data->channel->item[2]->description);
+        $this->assertEquals('',         $data->channel->item[0]->description);
+        $this->assertEquals('COMMENT8', $data->channel->item[1]->description);
+        $this->assertEquals('CCC',      $data->channel->item[2]->description);
         $this->assertEquals('',         $data->channel->item[3]->description);
+        $this->assertEquals('',         $data->channel->item[4]->description);
 
-        $this->assertEquals(date('r', self::$filemtime + 150), $data->channel->item[0]->pubDate);
-        $this->assertEquals(date('r', self::$filemtime + 100), $data->channel->item[1]->pubDate);
-        $this->assertEquals(date('r', self::$filemtime + 50),  $data->channel->item[2]->pubDate);
-        $this->assertEquals(date('r', self::$filemtime + 0),   $data->channel->item[3]->pubDate);
+        $this->assertEquals(date('r', self::$filemtime + 200), $data->channel->item[0]->pubDate);
+        $this->assertEquals(date('r', self::$filemtime + 150), $data->channel->item[1]->pubDate);
+        $this->assertEquals(date('r', self::$filemtime + 100), $data->channel->item[2]->pubDate);
+        $this->assertEquals(date('r', self::$filemtime + 50),  $data->channel->item[3]->pubDate);
+        $this->assertEquals(date('r', self::$filemtime + 0),   $data->channel->item[4]->pubDate);
 
         $this->assertEquals($data->channel->item[0]->link, $data->channel->item[0]->enclosure->attributes()->url);
         $this->assertEquals($data->channel->item[1]->link, $data->channel->item[1]->enclosure->attributes()->url);
         $this->assertEquals($data->channel->item[2]->link, $data->channel->item[2]->enclosure->attributes()->url);
         $this->assertEquals($data->channel->item[3]->link, $data->channel->item[3]->enclosure->attributes()->url);
+        $this->assertEquals($data->channel->item[4]->link, $data->channel->item[4]->enclosure->attributes()->url);
 
-        $this->assertEquals((string)filesize('4.mp3'), $data->channel->item[0]->enclosure->attributes()->length);
-        $this->assertEquals((string)filesize('3.mp4'), $data->channel->item[1]->enclosure->attributes()->length);
-        $this->assertEquals((string)filesize('2.mp3'), $data->channel->item[2]->enclosure->attributes()->length);
-        $this->assertEquals((string)filesize('1.mp3'), $data->channel->item[3]->enclosure->attributes()->length);
+        $this->assertEquals((string)filesize('5.mp3'), $data->channel->item[0]->enclosure->attributes()->length);
+        $this->assertEquals((string)filesize('4.mp3'), $data->channel->item[1]->enclosure->attributes()->length);
+        $this->assertEquals((string)filesize('3.mp4'), $data->channel->item[2]->enclosure->attributes()->length);
+        $this->assertEquals((string)filesize('2.mp3'), $data->channel->item[3]->enclosure->attributes()->length);
+        $this->assertEquals((string)filesize('1.mp3'), $data->channel->item[4]->enclosure->attributes()->length);
 
         $this->assertEquals('audio/mpeg', $data->channel->item[0]->enclosure->attributes()->type);
-        $this->assertEquals('video/mp4',  $data->channel->item[1]->enclosure->attributes()->type);
-        $this->assertEquals('audio/mpeg', $data->channel->item[2]->enclosure->attributes()->type);
+        $this->assertEquals('audio/mpeg', $data->channel->item[1]->enclosure->attributes()->type);
+        $this->assertEquals('video/mp4',  $data->channel->item[2]->enclosure->attributes()->type);
         $this->assertEquals('audio/mpeg', $data->channel->item[3]->enclosure->attributes()->type);
+        $this->assertEquals('audio/mpeg', $data->channel->item[4]->enclosure->attributes()->type);
 
         //$this->assertEquals('', $data->channel->item[0]->image);
         //$this->assertEquals('', $data->channel->item[1]->image);
-        $this->assertEquals('', $data->channel->item[2]->image);
+        //$this->assertEquals('', $data->channel->item[2]->image);
         $this->assertEquals('', $data->channel->item[3]->image);
+        $this->assertEquals('', $data->channel->item[4]->image);
 
         $itdtd = "http://www.itunes.com/dtds/podcast-1.0.dtd";
 
-        $this->assertEquals('COMMENT8', $data->channel->item[0]->children($itdtd)->summary);
-        $this->assertEquals('CCC',      $data->channel->item[1]->children($itdtd)->summary);
-        $this->assertEquals('',         $data->channel->item[2]->children($itdtd)->summary);
-        //$this->assertEquals('',         $data->channel->item[3]->children($itdtd)->summary);
+        $this->assertEquals('',         $data->channel->item[0]->children($itdtd)->summary);
+        $this->assertEquals('COMMENT8', $data->channel->item[1]->children($itdtd)->summary);
+        $this->assertEquals('CCC',      $data->channel->item[2]->children($itdtd)->summary);
+        $this->assertEquals('',         $data->channel->item[3]->children($itdtd)->summary);
+        //$this->assertEquals('',         $data->channel->item[4]->children($itdtd)->summary);
 
-        $this->assertEquals('',        $data->channel->item[0]->children($itdtd)->author);
-        $this->assertEquals('AAA',     $data->channel->item[1]->children($itdtd)->author);
-        $this->assertEquals('ARTIST7', $data->channel->item[2]->children($itdtd)->author);
-        $this->assertEquals('ARTIST3', $data->channel->item[3]->children($itdtd)->author);
+        $this->assertEquals('ARTIST#65', $data->channel->item[0]->children($itdtd)->author);
+        $this->assertEquals('',          $data->channel->item[1]->children($itdtd)->author);
+        $this->assertEquals('AAA',       $data->channel->item[2]->children($itdtd)->author);
+        $this->assertEquals('ARTIST7',   $data->channel->item[3]->children($itdtd)->author);
+        $this->assertEquals('ARTIST3',   $data->channel->item[4]->children($itdtd)->author);
 
-        $this->assertEquals('',        $data->channel->item[0]->children($itdtd)->subtitle);
-        $this->assertEquals('AAA',     $data->channel->item[1]->children($itdtd)->subtitle);
-        //$this->assertEquals('ARTIST7', $data->channel->item[2]->children($itdtd)->subtitle);
-        $this->assertEquals('ARTIST3', $data->channel->item[3]->children($itdtd)->subtitle);
+        $this->assertEquals('ARTIST#65', $data->channel->item[0]->children($itdtd)->subtitle);
+        $this->assertEquals('',          $data->channel->item[1]->children($itdtd)->subtitle);
+        $this->assertEquals('AAA',       $data->channel->item[2]->children($itdtd)->subtitle);
+        //$this->assertEquals('ARTIST7', $data->channel->item[3]->children($itdtd)->subtitle);
+        $this->assertEquals('ARTIST3',   $data->channel->item[4]->children($itdtd)->subtitle);
 
     }
 
@@ -154,14 +167,14 @@ class MixedMediaExampleTest extends TestCase
     {
         $data = simplexml_load_string(file_get_contents(self::$file));
 
-        $this->assertEquals('', $data->channel->item[0]->image);
         $this->assertEquals('', $data->channel->item[1]->image);
+        $this->assertEquals('', $data->channel->item[2]->image);
 
         $itdtd = "http://www.itunes.com/dtds/podcast-1.0.dtd";
 
-        $this->assertEquals('', $data->channel->item[3]->children($itdtd)->summary);
-        $this->assertEquals('ARTIST7', $data->channel->item[2]->children($itdtd)->subtitle);
-        $this->assertEquals('', $data->channel->item[0]->children($itdtd)->image);
+        $this->assertEquals('', $data->channel->item[4]->children($itdtd)->summary);
+        $this->assertEquals('ARTIST7', $data->channel->item[3]->children($itdtd)->subtitle);
+        $this->assertEquals('', $data->channel->item[2]->children($itdtd)->image);
         $this->assertEquals('', $data->channel->item[1]->children($itdtd)->image);
         
     }
