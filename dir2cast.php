@@ -184,8 +184,8 @@ class getID3_Podcast_Helper implements Podcast_Helper {
                     $item->setID3Album( $info['comments']['album'][0] );
                 if(!empty($info['comments']['comment'][0]))
                     $item->setID3Comment( $info['comments']['comment'][0] );
-                if(!empty($info['part_of_a_set'][0]))
-                    $item->setID3PartOfASet( $info['part_of_a_set'][0] );
+                if(!empty($info['comments']['part_of_a_set'][0]))
+                    $item->setID3PartOfASet( $info['comments']['part_of_a_set'][0] );
 
                 if(self::$AUTO_SAVE_COVER_ART)
                 {

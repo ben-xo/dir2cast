@@ -160,7 +160,19 @@ class MixedMediaExampleTest extends TestCase
         $this->assertEquals('AAA',       $data->channel->item[2]->children($itdtd)->subtitle);
         //$this->assertEquals('ARTIST7', $data->channel->item[3]->children($itdtd)->subtitle);
         $this->assertEquals('ARTIST3',   $data->channel->item[4]->children($itdtd)->subtitle);
+    }
 
+    public function test_itunes_season()
+    {
+        // generated valid XML
+        $data = simplexml_load_string(file_get_contents(self::$file));
+        $itdtd = "http://www.itunes.com/dtds/podcast-1.0.dtd";
+        // $this->assertEquals('Season 1', $data->channel->item[0]->children($itdtd)->season);
+        $this->assertEmpty($data->channel->item[0]->children($itdtd)->season);
+        $this->assertEmpty($data->channel->item[1]->children($itdtd)->season);
+        $this->assertEmpty($data->channel->item[2]->children($itdtd)->season);
+        $this->assertEmpty($data->channel->item[3]->children($itdtd)->season);
+        $this->assertEmpty($data->channel->item[4]->children($itdtd)->season);
     }
 
     public function test_podcast_has_expected_overrideable_fields()
