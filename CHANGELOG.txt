@@ -1,6 +1,12 @@
 Changelog
 =========
 
+1.38 2022-12-24 * Add ITUNES_SEASON_TAG option to dir2cast.ini. When enabled,
+                  the "Part Of A Set" tag (TPOS), if filled, will be used to
+                  output an <itunes:season> tag. See the .ini for usage info.
+                  Suggested by @EdwarDDay (#65)
+                * Fix deprecation warning in PHP 8.2.
+
 1.37 2022-10-27 * Errors now return an HTTP status code 500 by default.
                 * If the error is due to no content, or a bad URL passed to
                   ?dir=, then it will be a 404 and no information about
