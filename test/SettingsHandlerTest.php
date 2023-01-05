@@ -36,7 +36,7 @@ class SettingsHandlerTest extends TestCase
         'ITUNES_EXPLICIT',
         'LONG_TITLES',
         'ITUNES_SUBTITLE_SUFFIX',
-        'ITUNES_SEASON_TAG',
+        'ITUNES_TYPE_SERIAL',
         'DESCRIPTION_SOURCE',
         'RECURSIVE_DIRECTORY_ITERATOR',
         'AUTO_SAVE_COVER_ART',
@@ -116,7 +116,7 @@ class SettingsHandlerTest extends TestCase
         $this->assertEmpty(RSS_File_Item::$FILES_URL);
         $this->assertEmpty(RSS_File_Item::$FILES_DIR);
         $this->assertEmpty(iTunes_Podcast_Helper::$ITUNES_SUBTITLE_SUFFIX);
-        $this->assertFalse(iTunes_Podcast_Helper::$ITUNES_SEASON_TAG);
+        $this->assertFalse(iTunes_Podcast_Helper::$ITUNES_TYPE_SERIAL);
         $this->assertFalse(Media_RSS_Item::$LONG_TITLES);
         $this->assertEquals('comment', Media_RSS_Item::$DESCRIPTION_SOURCE);
         
@@ -512,7 +512,7 @@ class SettingsHandlerTest extends TestCase
         $this->assertEquals(ITUNES_EXPLICIT, '');
         $this->assertEquals(LONG_TITLES, false);
         $this->assertEquals(ITUNES_SUBTITLE_SUFFIX, '');
-        $this->assertEquals(ITUNES_SEASON_TAG, false);
+        $this->assertEquals(ITUNES_TYPE_SERIAL, false);
         $this->assertEquals(DESCRIPTION_SOURCE, 'comment');
         $this->assertEquals(RECURSIVE_DIRECTORY_ITERATOR, false);
         $this->assertEquals(AUTO_SAVE_COVER_ART, true);
@@ -526,7 +526,7 @@ class SettingsHandlerTest extends TestCase
         $this->assertSame(Cached_Dir_Podcast::$MIN_CACHE_TIME, MIN_CACHE_TIME);
         $this->assertSame(getID3_Podcast_Helper::$AUTO_SAVE_COVER_ART, AUTO_SAVE_COVER_ART);
         $this->assertSame(iTunes_Podcast_Helper::$ITUNES_SUBTITLE_SUFFIX, ITUNES_SUBTITLE_SUFFIX);
-        $this->assertSame(iTunes_Podcast_Helper::$ITUNES_SEASON_TAG, ITUNES_SEASON_TAG);
+        $this->assertSame(iTunes_Podcast_Helper::$ITUNES_TYPE_SERIAL, ITUNES_TYPE_SERIAL);
         $this->assertSame(RSS_File_Item::$FILES_URL, MP3_URL);
         $this->assertSame(RSS_File_Item::$FILES_DIR, MP3_DIR());
         $this->assertSame(Media_RSS_Item::$LONG_TITLES, LONG_TITLES);
