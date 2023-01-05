@@ -30,6 +30,16 @@ class ITunesPodcastSeasonTest extends MixedMediaExampleTest
         exec('php dir2cast.php --media-url=https://www.example.com/podcast/ --output=out.xml --min-file-age=0', MixedMediaExampleTest::$output, MixedMediaExampleTest::$returncode);
     }
 
+    public function test_itunes_type()
+    {
+        // generated valid XML
+        $data = simplexml_load_string(file_get_contents(self::$file));
+        $itdtd = "http://www.itunes.com/dtds/podcast-1.0.dtd";
+
+        // assert itunes:type = serial
+        $this->assertEquals('serial', $data->channel->children($itdtd)->type);
+    }
+
     public function test_itunes_season()
     {
         // generated valid XML
@@ -41,6 +51,19 @@ class ITunesPodcastSeasonTest extends MixedMediaExampleTest
         $this->assertEmpty($data->channel->item[3]->children($itdtd)->season);
         $this->assertEmpty($data->channel->item[4]->children($itdtd)->season);
         $this->assertEmpty($data->channel->item[5]->children($itdtd)->season);
+    }
+
+    public function test_itunes_episode()
+    {
+        // generated valid XML
+        $data = simplexml_load_string(file_get_contents(self::$file));
+        $itdtd = "http://www.itunes.com/dtds/podcast-1.0.dtd";
+        $this->assertEquals('1', $data->channel->item[0]->children($itdtd)->episode);
+        $this->assertEmpty($data->channel->item[1]->children($itdtd)->episode);
+        $this->assertEmpty($data->channel->item[2]->children($itdtd)->episode);
+        $this->assertEmpty($data->channel->item[3]->children($itdtd)->episode);
+        $this->assertEmpty($data->channel->item[4]->children($itdtd)->episode);
+        $this->assertEmpty($data->channel->item[5]->children($itdtd)->episode);
     }
 
 
