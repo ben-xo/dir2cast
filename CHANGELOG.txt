@@ -1,11 +1,14 @@
 Changelog
 =========
 
-1.38 2022-12-24 * Add ITUNES_SEASON_TAG option to dir2cast.ini. When enabled,
-                  the "Part Of A Set" tag (TPOS), if filled, will be used to
-                  output an <itunes:season> tag. See the .ini for usage info.
+1.38 2023-01-05 * Add ITUNES_TYPE_SERIAL option to dir2cast.ini. When enabled,
+                  the feed will have <itunes:type>serial<itunes:type> set.
+                  For each episode, the "Part Of A Set" tag (TPOS), if filled,
+                  will be used to output an <itunes:season> tag, and the 
+                  "Track Number" tag (TRCK), if filled, will be used to output
+                  an <itunes:episode> tag. See the .ini for usage info.
                   Suggested by @EdwarDDay (#65)
-                * Fix deprecation warning in PHP 8.2.
+                * Fix deprecation warning in PHP 8.2, and tested up to PHP 8.3
 
 1.37 2022-10-27 * Errors now return an HTTP status code 500 by default.
                 * If the error is due to no content, or a bad URL passed to
