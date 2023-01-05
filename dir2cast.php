@@ -184,6 +184,8 @@ class getID3_Podcast_Helper implements Podcast_Helper {
                     $item->setID3Album( $info['comments']['album'][0] );
                 if(!empty($info['comments']['comment'][0]))
                     $item->setID3Comment( $info['comments']['comment'][0] );
+                if(!empty($info['comments']['track'][0]))
+                    $item->setID3Track( $info['comments']['track'][0] );
                 if(!empty($info['comments']['part_of_a_set'][0]))
                     $item->setID3PartOfASet( $info['comments']['part_of_a_set'][0] );
 
@@ -394,6 +396,12 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
             $channel->appendChild( $doc->createElement('itunes:image') )
                 ->setAttribute('href', $this->image_href);
         }
+
+        if(iTunes_Podcast_Helper::$ITUNES_TYPE_SERIAL)
+        {
+            $channel->appendChild( $doc->createElement('itunes:type') )
+                ->appendChild( new DOMText( 'serial' ) );
+        }
     }
     
     public function appendToItem(DOMElement $item_element, DOMDocument $doc, RSS_Item $item)
@@ -432,6 +440,13 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
 
         if(iTunes_Podcast_Helper::$ITUNES_TYPE_SERIAL)
         {
+
+            $episode = $item->getEpisode();
+            if($episode !== '')
+            {
+                $elements['episode'] = $episode;
+            }
+
             $season = $item->getSeason();
             if($season !== '')
             {
@@ -929,6 +944,17 @@ class Media_RSS_Item extends RSS_File_Item implements Serializable {
             $subtitle = $this->getID3Artist();
         }
         return $subtitle;
+    }
+
+    public function getEpisode()
+    {
+        $episode = parent::getEpisode();
+        if(!$episode)
+        {
+            // use track tag as season if there's no override
+            $episode = $this->getID3Track();
+        }
+        return $episode;
     }
 
     public function getSeason()
