@@ -89,6 +89,16 @@ class MixedMediaExampleTest extends TestCase
 
     }
 
+    public function test_itunes_type()
+    {
+        // generated valid XML
+        $data = simplexml_load_string(file_get_contents(self::$file));
+        $itdtd = "http://www.itunes.com/dtds/podcast-1.0.dtd";
+
+        // assert itunes:type = serial
+        $this->assertEmpty($data->channel->children($itdtd)->type);
+    }    
+
     public function test_podcast_has_expected_items_with_default_behaviour(): void
     {
         // generated valid XML
