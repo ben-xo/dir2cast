@@ -17,6 +17,7 @@ final class MixedMediaExampleWithExtraFilesTest extends MixedMediaExampleTest
         copy('../fixtures/tagged.mp4', '3.mp4');
         copy('../fixtures/id3v2_comment.mp3', '4.mp3');
         copy('../fixtures/id3v2_artist_title_partofaset.mp3', '5.mp3');
+        copy('../fixtures/id3v2_artist_title_track.mp3', '6.mp3');
 
         $now = time();
         touch('1.mp3', $now);
@@ -24,6 +25,7 @@ final class MixedMediaExampleWithExtraFilesTest extends MixedMediaExampleTest
         touch('3.mp4', $now+100);
         touch('4.mp3', $now+150);
         touch('5.mp3', $now+200);
+        touch('6.mp3', $now+250);
         MixedMediaExampleTest::$filemtime = $now;
 
         file_put_contents('description.txt', 'Best Podcast Ever!');
