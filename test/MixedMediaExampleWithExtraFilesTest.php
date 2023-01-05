@@ -67,15 +67,15 @@ final class MixedMediaExampleWithExtraFilesTest extends MixedMediaExampleTest
     {
         $data = simplexml_load_string(file_get_contents(self::$file));
 
-        $this->assertEquals('https://www.example.com/podcast/4.png', $data->channel->item[1]->image);
-        $this->assertEquals('https://www.example.com/podcast/3.jpg', $data->channel->item[2]->image);
+        $this->assertEquals('https://www.example.com/podcast/4.png', $data->channel->item[2]->image);
+        $this->assertEquals('https://www.example.com/podcast/3.jpg', $data->channel->item[3]->image);
 
         $itdtd = "http://www.itunes.com/dtds/podcast-1.0.dtd";
 
-        $this->assertEquals('New, Improved Summary', $data->channel->item[4]->children($itdtd)->summary);
-        $this->assertEquals('Return Of The Episode', $data->channel->item[3]->children($itdtd)->subtitle);
-        $this->assertEquals('https://www.example.com/podcast/4.png', $data->channel->item[1]->children($itdtd)->image->attributes()->href);
-        $this->assertEquals('https://www.example.com/podcast/3.jpg', $data->channel->item[2]->children($itdtd)->image->attributes()->href);
+        $this->assertEquals('New, Improved Summary', $data->channel->item[5]->children($itdtd)->summary);
+        $this->assertEquals('Return Of The Episode', $data->channel->item[4]->children($itdtd)->subtitle);
+        $this->assertEquals('https://www.example.com/podcast/4.png', $data->channel->item[2]->children($itdtd)->image->attributes()->href);
+        $this->assertEquals('https://www.example.com/podcast/3.jpg', $data->channel->item[3]->children($itdtd)->image->attributes()->href);
         
     }
 
