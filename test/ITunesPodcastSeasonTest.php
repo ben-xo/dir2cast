@@ -24,7 +24,7 @@ class ITunesPodcastSeasonTest extends MixedMediaExampleTest
         touch('6.mp3', $now+250);
         MixedMediaExampleTest::$filemtime = $now;
 
-        file_put_contents('./dir2cast.ini', "ITUNES_TYPE_SERIAL = true\n");
+        file_put_contents('./dir2cast.ini', "ITUNES_TYPE = serial\n");
 
         MixedMediaExampleTest::$output = '';
         exec('php dir2cast.php --media-url=https://www.example.com/podcast/ --output=out.xml --min-file-age=0', MixedMediaExampleTest::$output, MixedMediaExampleTest::$returncode);

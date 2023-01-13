@@ -1,9 +1,10 @@
 Changelog
 =========
 
-1.38 2023-01-05 * Add ITUNES_TYPE_SERIAL option to dir2cast.ini. When enabled,
-                  the feed will have <itunes:type>serial<itunes:type> set.
-                  For each episode, the "Part Of A Set" tag (TPOS), if filled,
+1.38 2023-01-05 * Add <itunes:type> defaulting to "episodic". The ITUNES_TYPE
+                  option in dir2cast.ini will let you set the  feed to
+                  <itunes:type>serial<itunes:type> set, and then,
+                  for each episode, the "Part Of A Set" tag (TPOS), if filled,
                   will be used to output an <itunes:season> tag, and the 
                   "Track Number" tag (TRCK), if filled, will be used to output
                   an <itunes:episode> tag. See the .ini for usage info.

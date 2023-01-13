@@ -96,7 +96,7 @@ class MixedMediaExampleTest extends TestCase
         $itdtd = "http://www.itunes.com/dtds/podcast-1.0.dtd";
 
         // assert itunes:type = serial
-        $this->assertEmpty($data->channel->children($itdtd)->type);
+        $this->assertEquals('episodic', $data->channel->children($itdtd)->type);
     }    
 
     public function test_podcast_has_expected_items_with_default_behaviour(): void
