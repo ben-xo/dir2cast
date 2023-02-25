@@ -56,7 +56,7 @@
 /* DEFAULTS *********************************************/
 
 // error handler needs these, so let's set them now.
-define('VERSION', '1.37');
+define('VERSION', '1.38');
 define('DIR2CAST_HOMEPAGE', 'https://github.com/ben-xo/dir2cast/');
 define('GENERATOR', 'dir2cast ' . VERSION . ' by Ben XO (' . DIR2CAST_HOMEPAGE . ')');
 
@@ -173,7 +173,7 @@ class getID3_Podcast_Helper implements Podcast_Helper {
             }
             
             unset($this->getid3);
-            
+
             if(!empty($info['comments']))
             {
                 if(!empty($info['comments']['title'][0]))
@@ -184,6 +184,10 @@ class getID3_Podcast_Helper implements Podcast_Helper {
                     $item->setID3Album( $info['comments']['album'][0] );
                 if(!empty($info['comments']['comment'][0]))
                     $item->setID3Comment( $info['comments']['comment'][0] );
+                if(!empty($info['comments']['track_number'][0]))
+                    $item->setID3Track( $info['comments']['track_number'][0] );
+                if(!empty($info['comments']['part_of_a_set'][0]))
+                    $item->setID3PartOfASet( $info['comments']['part_of_a_set'][0] );
 
                 if(self::$AUTO_SAVE_COVER_ART)
                 {
@@ -332,6 +336,7 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
     }
     
     static $ITUNES_SUBTITLE_SUFFIX = '';
+    static $ITUNES_TYPE = "episodic";
 
     protected $owner_name, $owner_email, $image_href, $explicit;
     protected $categories = array();
@@ -391,6 +396,12 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
             $channel->appendChild( $doc->createElement('itunes:image') )
                 ->setAttribute('href', $this->image_href);
         }
+
+        if(strlen(iTunes_Podcast_Helper::$ITUNES_TYPE))
+        {
+            $channel->appendChild( $doc->createElement('itunes:type') )
+                ->appendChild( new DOMText( iTunes_Podcast_Helper::$ITUNES_TYPE == "serial" ? "serial" : "episodic" ) );
+        }
     }
     
     public function appendToItem(DOMElement $item_element, DOMDocument $doc, RSS_Item $item)
@@ -425,6 +436,22 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
         if($itunes_subtitle !== '')
         {
             $elements['subtitle'] = $itunes_subtitle . iTunes_Podcast_Helper::$ITUNES_SUBTITLE_SUFFIX;
+        }
+
+        if(iTunes_Podcast_Helper::$ITUNES_TYPE == "serial")
+        {
+
+            $episode = $item->getEpisode();
+            if($episode !== '')
+            {
+                $elements['episode'] = $episode;
+            }
+
+            $season = $item->getSeason();
+            if($season !== '')
+            {
+                $elements['season'] = $season;
+            }
         }
                 
         foreach($elements as $key => $val)
@@ -917,6 +944,28 @@ class Media_RSS_Item extends RSS_File_Item implements Serializable {
             $subtitle = $this->getID3Artist();
         }
         return $subtitle;
+    }
+
+    public function getEpisode()
+    {
+        $episode = parent::getEpisode();
+        if(!$episode)
+        {
+            // use track tag as season if there's no override
+            $episode = $this->getID3Track();
+        }
+        return $episode;
+    }
+
+    public function getSeason()
+    {
+        $season = parent::getSeason();
+        if(!$season)
+        {
+            // use part_of_a_set tag as season if there's no override
+            $season = $this->getID3PartOfASet();
+        }
+        return $season;
     }
 
     /**
@@ -1956,6 +2005,9 @@ class SettingsHandler
         if(!defined('ITUNES_SUBTITLE_SUFFIX'))
             define('ITUNES_SUBTITLE_SUFFIX', '');
 
+        if(!defined('ITUNES_TYPE'))
+            define('ITUNES_TYPE', "episodic");
+
         if(!defined('DESCRIPTION_SOURCE'))
             define('DESCRIPTION_SOURCE', 'comment');
 
@@ -1986,6 +2038,7 @@ class SettingsHandler
         Cached_Dir_Podcast::$MIN_CACHE_TIME = MIN_CACHE_TIME;
         getID3_Podcast_Helper::$AUTO_SAVE_COVER_ART = AUTO_SAVE_COVER_ART;
         iTunes_Podcast_Helper::$ITUNES_SUBTITLE_SUFFIX = ITUNES_SUBTITLE_SUFFIX;
+        iTunes_Podcast_Helper::$ITUNES_TYPE = ITUNES_TYPE;
 
         // Set up up factory settings for RSS Items
         RSS_File_Item::$FILES_URL = MP3_URL; // TODO: rename this to MEDIA_URL

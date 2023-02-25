@@ -4,8 +4,8 @@ jobs:
   build:
     strategy:
       matrix:
-        operating-system: [ubuntu-latest, macos-10.15]
-        php-versions: ['7.3', '7.4', '8.0', '8.1']
+        operating-system: [ubuntu-latest, macos-11]
+        php-versions: ['7.3', '7.4', '8.0', '8.1', '8.2', '8.3']
     runs-on: ${{ matrix.operating-system }}
     steps:
       - name: Setup PHP and extensions
@@ -18,7 +18,7 @@ jobs:
         env:
           fail-fast: true
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Composer Install
         uses: ramsey/composer-install@v2
         with:
