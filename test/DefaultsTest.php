@@ -16,6 +16,14 @@ final class DefaultsTest extends TestCase
         exec('php dir2cast.php --output=out.xml', self::$output, self::$returncode);
     }
 
+    public function test_default_dir2cast_ini_is_functionally_empty(): void
+    {
+        $ini_content = file_get_contents('./dir2cast.ini');
+        $this->assertGreaterThan(10000, strlen($ini_content), "ini file is unusually small. If you have edited it, some tests will fail.");
+        $ini_content = preg_replace("/^(;.*|\s*)\r\n/m", '', $ini_content);
+        $this->assertEquals("", $ini_content, "ini file is not the default. Some tests may fail.");
+    }
+
     public function test_default_empty_podcast_creates_output(): void
     {
         $this->assertTrue(file_exists(self::$file));
