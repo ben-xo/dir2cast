@@ -49,6 +49,8 @@ Features:
 * You can set a per-file iTunes Summary by creating a text file with the same
   name as the media file (e.g. for file.mp3, create file.txt).
 
+* You can deploy a container the babyraptor/dir2cast Docker image
+
 
 QUICK HOW TO GUIDES
 ================================================================================
@@ -96,6 +98,25 @@ podcast that it generates uses the tags from your files.
    The generated feed is cached. It will regenerate if you add a new media
    file, but if you want to force a regeneration delete the files from 
    the "`temp`" folder that is created.
+
+
+DOCKER SETUP
+================================================================================
+Note: I did not create the image that I've deployed (project is in the works there), so this is a product of trial and error. Similarly, I do not use docker-compose but the "create container" tool in portainer so keep in mind these are more a guide than an exact recipe.
+
+Local setup
+1. Make sure to pull the image, even with the weird tag babyraptor/dir2cast:69adefa
+2. Map the container's port 80 to whatever port you want to access it with on your local network
+3. Create a volume to map with /var/www/html
+4. If desired, you can bind the /var/www/html/<episode folder> to a location on some shared drive that you drop files into from your PC instead of in a docker volume
+5. Your podcast feed should now exist at <docker ip>:<container port>/dir2cast.php
+
+
+Remote w SWAG
+1. Install SWAG and test that you can remotely access your docker server https://docs.linuxserver.io/general/swag
+2. Create a <name>.subdomain.conf file for your podcast server container (again, linuxserver) with the container name and internal port (not the port you use locally to hit the host)
+3. Add your dir2cast container to the network that you created with SWAG
+4. Check that podcasts can be played/downloaded. If your feed is exists but files aren't available, update MP3_URL in the dir2cast.ini file for https (see comment in that file)
 
 
 UNDERSTANDING HOW THE CACHING WORKS
