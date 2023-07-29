@@ -49,6 +49,8 @@ Features:
 * You can set a per-file iTunes Summary by creating a text file with the same
   name as the media file (e.g. for file.mp3, create file.txt).
 
+* You can deploy a container the babyraptor/dir2cast Docker image
+
 
 QUICK HOW TO GUIDES
 ================================================================================
@@ -97,6 +99,28 @@ podcast that it generates uses the tags from your files.
    file, but if you want to force a regeneration delete the files from 
    the "`temp`" folder that is created.
 
+
+DOCKER SETUP
+================================================================================
+Note: I did not create the image that I've deployed (project is in the works there), so this is a product of trial and error. There are settings in dir2cast or swag that are not covered in this 
+
+Local setup
+1. Make sure to pull the image, even with the weird tag babyraptor/dir2cast:69adefa
+2. Map the container's port 80 to whatever port you want to access it with on your local network (i.e. port 8080)
+3. Create a volume to map with /var/www/html
+4. If desired, you can bind the /var/www/html/<episode folder> to a location on some shared drive that you drop files into from your PC instead of in a docker volume
+5. Combine these into something like `docker run --name dir2cast -d -p 8080:80 -v podcast_volume:/var/www/html babyraptor/dir2cast:69adefa`
+6. Once you add mp3 files, your podcast feed should now exist at <docker server ip>:<container port>/dir2cast.php
+
+Remote w SWAG
+1. Install SWAG and test that you can remotely access your docker server. Here's a guide https://docs.linuxserver.io/general/swag
+2. Create a <name>.subdomain.conf file for your podcast server container as specified in the swag guide
+3. Add your dir2cast container to the network that you created with SWAG
+4. Check that podcasts can be played/downloaded. If your feed exists and can be subscribed to, but files aren't available, update MP3_URL in the dir2cast.ini file for https (see comment in that file)
+
+Notes
+* if you have shared folders that are accessible from your PC, a bind mount can make it easier to drag and drop. if you see '.\_' prefixed junk files in your feed, that is a mac issue (not dir2cast)
+* 502 errors are likely swag configuration problems. Check container name, port mapping, etc
 
 UNDERSTANDING HOW THE CACHING WORKS
 ================================================================================
