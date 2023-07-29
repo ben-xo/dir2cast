@@ -263,7 +263,7 @@ To run the unit tests:
 COPYRIGHT & LICENSE
 ================================================================================
 
-Copyright (c) 2008-2021, Ben XO (me@ben-xo.com).
+Copyright (c) 2008-2023, Ben XO (@benxo on most platforms).
 
 The software is released under the BSD License.
 
