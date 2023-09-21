@@ -1881,7 +1881,9 @@ class SettingsHandler
 
         if(!defined('TITLE'))
         {
-            if(basename(MP3_DIR()))
+            if(file_exists(MP3_DIR() . 'title.txt'))
+                define('TITLE', file_get_contents(MP3_DIR() . 'title.txt'));
+            elseif(basename(MP3_DIR()))
                 define('TITLE', basename(MP3_DIR()));
             else
                 define('TITLE', 'My First dir2cast Podcast');
@@ -2115,6 +2117,7 @@ class Dispatcher
         // Ensure that the cache is invalidated if we have updated any of non-episode files used for feed metadata
         $metadata_files = array(
             'description.txt',
+            'title.txt',
             'itunes_summary.txt',
             'itunes_subtitle.txt',
             'image.jpg',
