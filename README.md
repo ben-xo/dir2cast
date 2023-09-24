@@ -1,7 +1,7 @@
 [![Testing dir2cast](https://github.com/ben-xo/dir2cast/actions/workflows/testing.yml/badge.svg)](https://github.com/ben-xo/dir2cast/actions/workflows/testing.yml)
 
 
-dir2cast by Ben XO v1.38 (2023-01-05)
+dir2cast by Ben XO v1.39 (2023-10-24)
 ================================================================================
 
 https://github.com/ben-xo/dir2cast/
@@ -218,7 +218,7 @@ To run the unit tests:
 COPYRIGHT & LICENSE
 ================================================================================
 
-Copyright (c) 2008-2021, Ben XO (me@ben-xo.com).
+Copyright (c) 2008-2023, Ben XO (me@ben-xo.com).
 
 The software is released under the BSD License.
 
