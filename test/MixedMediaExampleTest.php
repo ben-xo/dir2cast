@@ -50,12 +50,17 @@ class MixedMediaExampleTest extends TestCase
         $this->assertSame(0, self::$returncode);
     }
 
+    public function test_podcast_has_default_title(): void
+    {
+        $data = simplexml_load_string(file_get_contents(self::$file));
+        $this->assertEquals('testdir', $data->channel->title);
+    }
+
     public function test_podcast_is_valid_with_default_values(): void
     {
         // generated valid XML
         $data = simplexml_load_string(file_get_contents(self::$file));
 
-        $this->assertEquals('testdir', $data->channel->title);
         $this->assertEquals('http://www.example.com/', $data->channel->link);
         $this->assertEquals('en-us', $data->channel->language);
         $this->assertEquals('60', $data->channel->ttl);

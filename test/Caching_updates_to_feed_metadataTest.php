@@ -64,6 +64,15 @@ class Caching_updates_to_feed_metadataTest extends TestCase
         $this->assertEquals(1, preg_match('/Magic Word/', $new_content));
     }
 
+    public function test_update_to_title_invalidates_cache(): void
+    {
+        file_put_contents('title.txt', 'Magic Word');
+        $new_content = $this->_update_feed();
+        $this->assertNotEquals($this->content, $new_content);
+        $this->assertEquals(0, preg_match('/Magic Word/', $this->content));
+        $this->assertEquals(1, preg_match('/Magic Word/', $new_content));
+    }
+
     public function test_update_to_itunes_summary_invalidates_cache(): void
     {
         file_put_contents('itunes_summary.txt', 'Magic Word');
@@ -71,7 +80,7 @@ class Caching_updates_to_feed_metadataTest extends TestCase
         $this->assertNotEquals($this->content, $new_content);
         $this->assertEquals(0, preg_match('/Magic Word/', $this->content));
         $this->assertEquals(1, preg_match('/Magic Word/', $new_content));
-     }
+    }
 
     public function test_update_to_itunes_subtitle_invalidates_cache(): void
     {

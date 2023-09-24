@@ -5,7 +5,7 @@ use PHPUnit\Framework\TestCase;
 final class MixedMediaExampleWithExtraFilesTest extends MixedMediaExampleTest
 {
     public static $file = 'out.xml';
- 
+
     public static $filemtime = 0;
 
     public static function setUpBeforeClass(): void
@@ -29,6 +29,7 @@ final class MixedMediaExampleWithExtraFilesTest extends MixedMediaExampleTest
         MixedMediaExampleTest::$filemtime = $now;
 
         file_put_contents('description.txt', 'Best Podcast Ever!');
+        file_put_contents('title.txt', 'Title of this podcast!');
         file_put_contents('itunes_subtitle.txt', 'Best Podcast on iTunes Ever!');
         file_put_contents('itunes_summary.txt', 'Four of the best example episodes');
 
@@ -48,6 +49,12 @@ final class MixedMediaExampleWithExtraFilesTest extends MixedMediaExampleTest
         );
     }
 
+    public function test_podcast_has_default_title(): void
+    {
+        $data = simplexml_load_string(file_get_contents(self::$file));
+        $this->assertEquals('Title of this podcast!', $data->channel->title);
+    }
+
     public function test_podcast_has_correct_overridable_metadata()
     {
         $data = simplexml_load_string(file_get_contents(self::$file));
@@ -55,7 +62,6 @@ final class MixedMediaExampleWithExtraFilesTest extends MixedMediaExampleTest
 
         $this->assertEquals('https://www.example.com/podcast/image.jpg', $data->channel->image->url);
         $this->assertEquals('http://www.example.com/', $data->channel->image->link);
-        $this->assertEquals('testdir', $data->channel->image->title);
 
         $itunes_elements = $data->channel->children("http://www.itunes.com/dtds/podcast-1.0.dtd");
         $this->assertEquals('Best Podcast on iTunes Ever!', $itunes_elements->subtitle);

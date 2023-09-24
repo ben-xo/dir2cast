@@ -144,7 +144,7 @@ class Cached_Dir_PodcastTest extends Dir_PodcastTest
         clearstatcache();
         $this->assertTrue($mp->isCached());
 
-        $this->assertEquals($lastBuildDate, $mp->getLastBuildDate());
+        $this->assertEquals($lastBuildDate, $mp->getLastBuildDate(), "build date", 1.0);
         unset($mp); // release lock, in sub tests
 
         age_dir_by('.', 3600);
@@ -155,7 +155,7 @@ class Cached_Dir_PodcastTest extends Dir_PodcastTest
         clearstatcache();
         $this->assertTrue($mp2->isCached());
 
-        $this->assertEquals($lastBuildDate, $mp2->getLastBuildDate());
+        $this->assertEquals($lastBuildDate, $mp2->getLastBuildDate(), "build date", 1.0);
         unset($mp2);
 
         clearstatcache();
@@ -165,7 +165,7 @@ class Cached_Dir_PodcastTest extends Dir_PodcastTest
         $mp3->generate();
 
         clearstatcache();
-        $this->assertEquals($lastBuildDate, $mp3->getLastBuildDate());
+        $this->assertEquals($lastBuildDate, $mp3->getLastBuildDate(), "build date", 1.0);
     }
 
     public function tearDown(): void
