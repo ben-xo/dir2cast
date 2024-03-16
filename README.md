@@ -49,6 +49,8 @@ Features:
 * You can set a per-file iTunes Summary by creating a text file with the same
   name as the media file (e.g. for file.mp3, create file.txt).
 
+* You can deploy a container using the ctkcoding/dir2cast Docker image
+
 
 QUICK HOW TO GUIDES
 ================================================================================
@@ -97,6 +99,52 @@ podcast that it generates uses the tags from your files.
    file, but if you want to force a regeneration delete the files from 
    the "`temp`" folder that is created.
 
+
+DOCKER SETUP
+================================================================================
+Note: There are many ways to get dir2cast working under docker, and this guide
+is a product of trial and error. There are settings in dir2cast and SWAG that are
+not covered in this guide.
+
+Local setup
+-----------
+1. Map the container's port 80 to whatever port you want to access it with on your
+   local network (e.g. port 8080)
+2. Episodes will be scanned for at `/var/www/html/episodes` unless you pass in a
+   different MP3_DIR, so make sure to create a volume to map under `/var/www/html`,
+   or directly bind the episodes folder to a location on your file system where you wish to store episodes
+4. To start the container, try something like: 
+   `docker run --name dir2cast -d -p 8080:80 -v podcast_volume:/var/www/html/episodes ctkcoding/dir2cast:latest` and add env vars to represent settings in dir2cast.ini that
+   you'd like to change from the default. Dockerfile contains a list of supported ENV
+   options and defaults that will be used to create a new dir2cast.ini at container run
+   time
+5. Once you add media files to the location you chose after step 2, your podcast
+   feed should now exist at `<docker server ip>:<container port>/rss`
+
+Remote using SWAG
+-----------------
+1. Install SWAG and test that you can remotely access your docker server. Here's
+   a basic guide https://docs.linuxserver.io/general/swag
+2. Create a `<container>.subdomain.conf` file for your podcast server container as
+   specified in the current SWAG guide. Keep in mind the SWAG steps may have changed
+   since this was written
+3. Set the SWAG network as the only network your dir2cast container is connected to and
+   restart both containers
+4. Check that podcast episodes can be played/downloaded. If your feed exists and can be
+   subscribed to, but files aren't available, try setting `MP3_URL` env var  with
+   https:// rather than http://. (see comment in ini file)
+
+Notes
+-----
+* If you have shared folders that are accessible from your computer, using a bind mount
+  (rather than a docker volume) is an easy way to enable a simple workflow for you to
+  drag and drop content into the podcast feed.
+* If you see '.\_' prefixed junk files in your feed, that is an unfortunate side-effect
+  of using network shares from macOS, and not dir2cast's fault.
+* 502 errors are likely SWAG configuration problems. Check container name, port mapping, etc.
+* currently the only docker env vars that can be fed in at startup and set in dir2cast.ini are ITEM_COUNT, MP3_DIR, TITLE, AUTO_SAVE_COVER_ART. Copy the RUN commands in Dockerfile for any new env vars needed
+
+Thank you to @ctkcoding for the contribution of this guide.
 
 UNDERSTANDING HOW THE CACHING WORKS
 ================================================================================
@@ -218,7 +266,7 @@ To run the unit tests:
 COPYRIGHT & LICENSE
 ================================================================================
 
-Copyright (c) 2008-2021, Ben XO (me@ben-xo.com).
+Copyright (c) 2008-2023, Ben XO (@benxo on most platforms).
 
 The software is released under the BSD License.
 
