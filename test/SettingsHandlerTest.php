@@ -34,6 +34,7 @@ class SettingsHandlerTest extends TestCase
         'ITUNES_AUTHOR',
         'ITUNES_CATEGORIES',
         'ITUNES_EXPLICIT',
+        'ITUNES_BLOCK',
         'LONG_TITLES',
         'ITUNES_SUBTITLE_SUFFIX',
         'ITUNES_TYPE',
@@ -510,6 +511,7 @@ class SettingsHandlerTest extends TestCase
         $this->assertEquals(ITUNES_AUTHOR, '');
         $this->assertEquals(ITUNES_CATEGORIES, '');
         $this->assertEquals(ITUNES_EXPLICIT, '');
+        $this->assertEquals(ITUNES_BLOCK, '');
         $this->assertEquals(LONG_TITLES, false);
         $this->assertEquals(ITUNES_SUBTITLE_SUFFIX, '');
         $this->assertEquals(ITUNES_TYPE, 'episodic');

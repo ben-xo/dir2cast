@@ -143,6 +143,17 @@ final class iTunes_Podcast_HelperTest extends TestCase
         $this->assertChannelHasElement('explicit', 'yes', $data->channel);
     }
 
+    public function test_adds_block_to_podcast()
+    {
+        $mp = new MyPodcast();
+        $itunes = $mp->addHelper(new iTunes_Podcast_Helper());
+        $itunes->setBlock('yes');
+        $content = $mp->generate();
+
+        $data = simplexml_load_string($content, 'SimpleXMLElement');
+        $this->assertChannelHasElement('block', 'yes', $data->channel);
+    }
+
     public function test_adds_image_to_podcast()
     {
         $mp = new MyPodcast();
