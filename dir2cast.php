@@ -390,6 +390,11 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
                 ->appendChild( new DOMText( $this->explicit ) );
         }
         
+        if(!empty($this->block))
+        {
+            $channel->appendChild( $doc->createElement('itunes:block') )
+                ->appendChild( new DOMText( $this->block ) );
+        }
         
         if(!empty($this->image_href))
         {
@@ -532,6 +537,11 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
     public function setExplicit($explicit)
     {
         $this->explicit = $explicit;
+    }
+    
+    public function setBlock($block)
+    {
+        $this->block = $block;
     }
 }
 
@@ -1999,6 +2009,9 @@ class SettingsHandler
         if(!defined('ITUNES_EXPLICIT'))
             define('ITUNES_EXPLICIT', '');
             
+        if(!defined('ITUNES_BLOCK'))
+            define('ITUNES_BLOCK', '');
+            
         if(!defined('LONG_TITLES'))
             define('LONG_TITLES', false);
 
@@ -2166,6 +2179,7 @@ class Dispatcher
             $itunes->setSummary(ITUNES_SUMMARY);
             $itunes->setImage(ITUNES_IMAGE);
             $itunes->setExplicit(ITUNES_EXPLICIT);
+            $itunes->setBlock(ITUNES_BLOCK);
 
             $itunes->setOwnerName(ITUNES_OWNER_NAME);
             $itunes->setOwnerEmail(ITUNES_OWNER_EMAIL);
