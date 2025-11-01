@@ -1,7 +1,7 @@
 [![Testing dir2cast](https://github.com/ben-xo/dir2cast/actions/workflows/testing.yml/badge.svg)](https://github.com/ben-xo/dir2cast/actions/workflows/testing.yml)
 
 
-dir2cast by Ben XO v1.38 (2023-01-05)
+dir2cast by Ben XO v1.39 (2023-10-24)
 ================================================================================
 
 https://github.com/ben-xo/dir2cast/
@@ -41,8 +41,8 @@ Features:
 * iTunes 'image' supported: just drop a file called itunes_image.jpg in the same
   folder as your media files.
 
-* RSS Description, iTunes Subtitle and iTunes Summary can be set by dropping
-  files named description.txt, itunes_subtitle.txt and itunes_summary.txt 
+* RSS Title, Description, iTunes Subtitle and iTunes Summary can be set by dropping
+  files named title.txt, description.txt, itunes_subtitle.txt and itunes_summary.txt 
   in the same folder as dir2cast.php - but they are not required. (You can
   also set these in the config).
 
@@ -218,7 +218,7 @@ To run the unit tests:
 COPYRIGHT & LICENSE
 ================================================================================
 
-Copyright (c) 2008-2021, Ben XO (me@ben-xo.com).
+Copyright (c) 2008-2023, Ben XO (me@ben-xo.com).
 
 The software is released under the BSD License.
 

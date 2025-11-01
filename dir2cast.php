@@ -1,7 +1,7 @@
 <?php
 
 /******************************************************************************
- * Copyright (c) 2008-2022, Ben XO (me@ben-xo.com).
+ * Copyright (c) 2008-2023, Ben XO (me@ben-xo.com).
  *
  * All rights reserved.
  * 
@@ -56,7 +56,7 @@
 /* DEFAULTS *********************************************/
 
 // error handler needs these, so let's set them now.
-define('VERSION', '1.38');
+define('VERSION', '1.39');
 define('DIR2CAST_HOMEPAGE', 'https://github.com/ben-xo/dir2cast/');
 define('GENERATOR', 'dir2cast ' . VERSION . ' by Ben XO (' . DIR2CAST_HOMEPAGE . ')');
 
@@ -1891,7 +1891,9 @@ class SettingsHandler
 
         if(!defined('TITLE'))
         {
-            if(basename(MP3_DIR()))
+            if(file_exists(MP3_DIR() . 'title.txt'))
+                define('TITLE', file_get_contents(MP3_DIR() . 'title.txt'));
+            elseif(basename(MP3_DIR()))
                 define('TITLE', basename(MP3_DIR()));
             else
                 define('TITLE', 'My First dir2cast Podcast');
@@ -2128,6 +2130,7 @@ class Dispatcher
         // Ensure that the cache is invalidated if we have updated any of non-episode files used for feed metadata
         $metadata_files = array(
             'description.txt',
+            'title.txt',
             'itunes_summary.txt',
             'itunes_subtitle.txt',
             'image.jpg',

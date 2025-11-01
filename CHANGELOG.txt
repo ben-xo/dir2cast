@@ -1,6 +1,9 @@
 Changelog
 =========
 
+1.39 2023-10-24 * Add ability to override title by adding title.txt to the folder
+                  (similar to description.txt). Thanks to @MichielvanBeers (#73)
+
 1.38 2023-01-05 * Add <itunes:type> defaulting to "episodic". The ITUNES_TYPE
                   option in dir2cast.ini will let you set the  feed to
                   <itunes:type>serial<itunes:type> set, and then,
