@@ -33,7 +33,7 @@
 ; The full filesystem path to the MP3 folder
 ; Set this if you *do not* want the folder to be passed in the URL.
 ; (This defaults to the same folder as the script)
-; MP3_DIR = "/var/www/html/episodes"
+MP3_DIR = "/var/www/html/episodes"
 
 ; The base to look for folders if they are specified in the URL
 ; Set this if you *do* want the folder passed in the URL, but the passed
@@ -50,7 +50,7 @@
 ;MP3_URL = "http://www.example.foo/my_mp3_folder/"
 
 ; Uncomment this if you want to check in every sub-folder for new files as well.
-; RECURSIVE_DIRECTORY_ITERATOR = true
+RECURSIVE_DIRECTORY_ITERATOR = true
 
 
 
@@ -105,15 +105,7 @@
 ;
 ; If you don't set this, it will not appear in the feed at all, and Apple
 ; Podcasts may reject your feed!
-; ITUNES_EXPLICIT = "false"
-
-; Whether or not to include the podcast in the iTunes podcast directory.
-; See https://github.com/simplepie/simplepie-ng/wiki/Spec:-iTunes-Podcast-RSS
-; Valid values are "Yes" or "yes". Any other value will be ignored.
-;
-; Only set this if you want the feed to be private and completely excluded from 
-; any podcast directory scanning.
-;ITUNES_BLOCK = "no"
+ITUNES_EXPLICIT = "false"
 
 
 ; *** INFORMATION ABOUT YOUR PODCAST - the following can be set using text files ***
@@ -196,7 +188,7 @@
 ; the RSS standard. Apple Podcasts only supports values from the ISO 639 list
 ; (two-letter language codes, with some possible modifiers, such as "en-us").
 ; See https://www.loc.gov/standards/iso639-2/php/code_list.php
-; LANGUAGE = "en-us"
+LANGUAGE = "en-us"
 
 ; Where to cache RSS feeds (this must be writable by the web server)
 ; This defaults to a folder called 'temp' alongside the script
@@ -204,7 +196,7 @@
 
 ; Number of items to show in the feed
 ; This defaults to 10
-; ITEM_COUNT = 10000
+ITEM_COUNT = 10000
 
 ; Format of the <title> tag for each item. If this is set to 'false',
 ; then <title> will be set to the 'title' field in your ID3 tag.
@@ -216,7 +208,7 @@
 ; can become the episode image. This will never overwrite a file that
 ; you uploaded manually, but if dir2cast doesn't have write permissions
 ; in your podcast folder then it will fail. So, then perhaps turn it off.
-; AUTO_SAVE_COVER_ART = true
+AUTO_SAVE_COVER_ART = true
 
 
 ; *** THESE SHOULD BE LEFT AS THEY ARE - unless you have a good reason. ***
@@ -225,7 +217,7 @@
 ; younger than this it might indicate that they are still being uploaded.
 ; 
 ; Defaults to 30 seconds
-; MIN_FILE_AGE = 30
+MIN_FILE_AGE = 30
 
 ; Number of seconds for which the cache files are guaranteed valid; that is
 ; to say, if you generate a new feed, and then hit refresh a lot, it will
@@ -235,12 +227,12 @@
 ; dir2cast.php.
 ;
 ; Defaults to 5 seconds
-; MIN_CACHE_TIME = 5
+MIN_CACHE_TIME = 5
 
 ; Time-to-live (Expiry time) of the feed. This appears in the <ttl> tag, and
 ; is used by Podcast clients to determine if it is worth refetching the feed.
 ; Defaults to 1 hour (60 minutes)
-; TTL = 60
+TTL = 60
 
 ; The password to use on the 'force=<password>' part of the URL in order to 
 ; force the RSS feed to be regenerated (bypassing and replacing the cached 
