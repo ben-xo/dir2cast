@@ -56,7 +56,7 @@
 /* DEFAULTS *********************************************/
 
 // error handler needs these, so let's set them now.
-define('VERSION', '1.38');
+define('VERSION', '1.39');
 define('DIR2CAST_HOMEPAGE', 'https://github.com/ben-xo/dir2cast/');
 define('GENERATOR', 'dir2cast ' . VERSION . ' by Ben XO (' . DIR2CAST_HOMEPAGE . ')');
 
@@ -234,7 +234,7 @@ class Caching_getID3_Podcast_Helper implements Podcast_Helper {
     }
 
     public function addNamespaceTo(DOMElement $d, DOMDocument $doc) {
-        return $this->wrapped_helper->appendToChannel($d, $doc);
+        return $this->wrapped_helper->addNamespaceTo($d, $doc);
     }
 
     public function appendToItem(DOMElement $d, DOMDocument $doc, RSS_Item $item)
@@ -390,7 +390,9 @@ class iTunes_Podcast_Helper extends GetterSetter implements Podcast_Helper {
                 ->appendChild( new DOMText( $this->explicit ) );
         }
         
-        if(!empty($this->block))
+        // Per Apple's spec, <itunes:block> is only meaningful when set to "Yes"/"yes";
+        // any other value must be ignored, so omit the tag entirely.
+        if(!empty($this->block) && strtolower($this->block) === 'yes')
         {
             $channel->appendChild( $doc->createElement('itunes:block') )
                 ->appendChild( new DOMText( $this->block ) );
@@ -1072,11 +1074,32 @@ abstract class Podcast extends GetterSetter
     
     public function http_headers($content_length)
     {
-        // The correct content type is application/rss+xml; however, the de-facto standard is now text/xml. 
+        // The correct content type is application/rss+xml; however, the de-facto standard is now text/xml.
         // See https://stackoverflow.com/questions/595616/what-is-the-correct-mime-type-to-use-for-an-rss-feed
         header('Content-type: text/xml; charset=UTF-8');
         header('Content-length: ' . $content_length);
-        header('Last-modified: ' . $this->getLastBuildDate());
+        $http_last_modified = $this->httpLastModified();
+        if($http_last_modified !== null) {
+            header('Last-modified: ' . $http_last_modified);
+        }
+    }
+
+    /**
+     * Returns the last-modified timestamp formatted as an HTTP-date (IMF-fixdate, RFC 7231)
+     * suitable for the HTTP `Last-Modified` header. The channel's <lastBuildDate> uses
+     * RFC 2822 format (date('r')) which is correct for RSS but not for HTTP headers.
+     */
+    public function httpLastModified()
+    {
+        $lbd = $this->getLastBuildDate();
+        if(!$lbd) {
+            return null;
+        }
+        $ts = strtotime((string)$lbd);
+        if($ts === false) {
+            return null;
+        }
+        return gmdate('D, d M Y H:i:s', $ts) . ' GMT';
     }
     
     /**
@@ -1526,6 +1549,12 @@ class Cached_Dir_Podcast extends Dir_Podcast
             {
                 $this->setLastBuildDate($matches[1]);
             }
+            else
+            {
+                // Fall back to the cache file's mtime so HTTP Last-Modified is still
+                // populated (e.g. if the cached XML predates this format or is corrupt).
+                $this->setLastBuildDate(date('r', filemtime($this->temp_file)));
+            }
         }
         else
         {
@@ -1864,11 +1893,16 @@ class SettingsHandler
     public static function defaults(array $SERVER)
     {
         // if an MP3_DIR specific config file exists, load it now, as long as it's not the same file as the global one!
-        if( 
-            file_exists( MP3_DIR() . 'dir2cast.ini' ) and    
-            realpath(DIR2CAST_BASE() . 'dir2cast.ini') != realpath( MP3_DIR() . 'dir2cast.ini' ) 
+        if(
+            file_exists( MP3_DIR() . 'dir2cast.ini' ) and
+            realpath(DIR2CAST_BASE() . 'dir2cast.ini') != realpath( MP3_DIR() . 'dir2cast.ini' )
         ) {
-            self::load_from_ini( MP3_DIR() . 'dir2cast.ini' );
+            $local_ini = MP3_DIR() . 'dir2cast.ini';
+            self::load_from_ini( $local_ini );
+            // Track this so the dispatcher can use its mtime for cache invalidation;
+            // INI_FILE alone only covers the install-wide ini.
+            if(!defined('LOCAL_INI_FILE'))
+                define('LOCAL_INI_FILE', $local_ini);
         }
         
         self::finalize();
@@ -2100,8 +2134,15 @@ class Dispatcher
 
     public function uncache_if_forced($force_password, $get)
     {
-        if( strlen($force_password) && isset($get['force']) && $force_password == $get['force'] )
-        {
+        // Cast both sides to string and use hash_equals to avoid two issues:
+        // (1) PHP's `==` does numeric coercion of numeric-looking strings (so e.g.
+        //     "01" loosely equals "1"); (2) `==`/`===` are not constant-time, so
+        //     they leak password length / prefix via timing.
+        if(
+            strlen((string)$force_password) &&
+            isset($get['force']) &&
+            hash_equals((string)$force_password, (string)$get['force'])
+        ) {
             $this->podcast->uncache();
         }
     }
@@ -2121,6 +2162,8 @@ class Dispatcher
         $this->podcast->updateMaxMtime(filemtime(__FILE__), __FILE__);
         if(defined('INI_FILE'))
             $this->podcast->updateMaxMtime(filemtime(INI_FILE), INI_FILE);
+        if(defined('LOCAL_INI_FILE'))
+            $this->podcast->updateMaxMtime(filemtime(LOCAL_INI_FILE), LOCAL_INI_FILE);
     }
 
     public function update_mtime_if_metadata_files_modified()

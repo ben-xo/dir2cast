@@ -29,6 +29,25 @@ class RSS_Item_Caching_getID3_Podcast_HelperTest extends RSS_Item_getID3_Podcast
         return $m;
     }
 
+    public function test_addNamespaceTo_delegates_to_wrapped_helper_addNamespaceTo()
+    {
+        // Caching_getID3_Podcast_Helper wraps another Podcast_Helper.
+        // Each Podcast_Helper interface method on the wrapper should delegate to the
+        // SAME method on the wrapped helper - not to a different one.
+        $mock = $this->getMockBuilder(getID3_Podcast_Helper::class)
+                     ->setMethods(['addNamespaceTo', 'appendToChannel'])
+                     ->getMock();
+        $mock->expects($this->once())->method('addNamespaceTo');
+        $mock->expects($this->never())->method('appendToChannel');
+
+        $helper = new Caching_getID3_Podcast_Helper('temp', $mock);
+
+        $doc = new DOMDocument();
+        $rss = $doc->createElement('rss');
+        $doc->appendChild($rss);
+        $helper->addNamespaceTo($rss, $doc);
+    }
+
     public function test_changed_file_is_rescanned()
     {
         $mp = new MyPodcast();

@@ -1,6 +1,29 @@
 Changelog
 =========
 
+1.39 2026-04-28 * Fix: ITUNES_BLOCK now only emits <itunes:block> for the
+                  documented values "yes"/"Yes". Previously any non-empty
+                  value (including the example "no" from dir2cast.ini)
+                  would emit the tag, contradicting the docs and the spec.
+                * Fix: the per-MP3-dir dir2cast.ini's mtime now invalidates
+                  the cache. Editing a per-podcast ini file no longer
+                  silently serves stale cached output.
+                * Fix: HTTP Last-Modified header now uses RFC 7231 IMF-fixdate
+                  ("... GMT") instead of RFC 2822 ("... +0000"). The channel's
+                  <lastBuildDate> still uses RFC 2822 as required by RSS.
+                * Fix: HTTP Last-Modified falls back to the cache file's
+                  mtime when the cached feed has no extractable
+                  <lastBuildDate> (avoids emitting an empty header).
+                * Fix: Caching_getID3_Podcast_Helper::addNamespaceTo now
+                  delegates to the wrapped helper's addNamespaceTo (was
+                  incorrectly calling appendToChannel).
+                * Security: ?force=... password compare now uses
+                  hash_equals() with explicit string casts, avoiding
+                  PHP's numeric-string coercion in == and timing leaks.
+                * Tests now run on PHP 8.4 and 8.5 (E_STRICT removal,
+                  getopt() argv-injection change). CI matrix expanded
+                  to cover 8.3, 8.4 and 8.5.
+
 1.38 2023-01-05 * Add <itunes:type> defaulting to "episodic". The ITUNES_TYPE
                   option in dir2cast.ini will let you set the  feed to
                   <itunes:type>serial<itunes:type> set, and then,
