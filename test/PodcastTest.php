@@ -38,9 +38,26 @@ class PodcastTest extends TestCase
         $mp = $this->newPodcast();
         $content = $mp->generate();
         $data = simplexml_load_string($content);
-        
+
         $this->assertGreaterThan(time() - 100, strtotime((string)$data->channel->lastBuildDate));
         $this->assertLessThan(time() + 100, strtotime((string)$data->channel->lastBuildDate));
+    }
+
+    public function test_http_last_modified_is_in_imf_fixdate_format()
+    {
+        // RFC 7231 / RFC 9110: HTTP-date "Last-Modified" headers must use IMF-fixdate
+        // (e.g. "Sun, 06 Nov 1994 08:49:37 GMT"), NOT the RFC 2822 form that ends in
+        // a numeric offset like "+0000". Some intermediaries reject non-conforming
+        // values. We expose this via httpLastModified() and assert the format.
+        $mp = $this->newPodcast();
+        $mp->generate();
+
+        $http_last_modified = $mp->httpLastModified();
+        $this->assertNotNull($http_last_modified);
+        $this->assertMatchesRegularExpression(
+            '/^[A-Z][a-z]{2}, \d{2} [A-Z][a-z]{2} \d{4} \d{2}:\d{2}:\d{2} GMT$/',
+            $http_last_modified
+        );
     }
 
     public function test_basic_feed_properties()

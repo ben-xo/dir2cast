@@ -154,6 +154,55 @@ final class iTunes_Podcast_HelperTest extends TestCase
         $this->assertChannelHasElement('block', 'yes', $data->channel);
     }
 
+    public function test_adds_capitalized_block_to_podcast()
+    {
+        $mp = new MyPodcast();
+        $itunes = $mp->addHelper(new iTunes_Podcast_Helper());
+        $itunes->setBlock('Yes');
+        $content = $mp->generate();
+
+        $data = simplexml_load_string($content, 'SimpleXMLElement');
+        $this->assertChannelHasElement('block', 'Yes', $data->channel);
+    }
+
+    public function test_block_no_does_not_appear_in_podcast()
+    {
+        // Per Apple's spec and the dir2cast.ini docs: only "yes"/"Yes" is meaningful;
+        // any other value (including "no") must be ignored and the tag omitted.
+        $mp = new MyPodcast();
+        $itunes = $mp->addHelper(new iTunes_Podcast_Helper());
+        $itunes->setBlock('no');
+        $content = $mp->generate();
+
+        $data = simplexml_load_string($content, 'SimpleXMLElement');
+        $itunes_children = $data->channel->children('http://www.itunes.com/dtds/podcast-1.0.dtd');
+        $this->assertFalse(isset($itunes_children->block));
+    }
+
+    public function test_block_arbitrary_value_does_not_appear_in_podcast()
+    {
+        $mp = new MyPodcast();
+        $itunes = $mp->addHelper(new iTunes_Podcast_Helper());
+        $itunes->setBlock('maybe');
+        $content = $mp->generate();
+
+        $data = simplexml_load_string($content, 'SimpleXMLElement');
+        $itunes_children = $data->channel->children('http://www.itunes.com/dtds/podcast-1.0.dtd');
+        $this->assertFalse(isset($itunes_children->block));
+    }
+
+    public function test_empty_block_does_not_appear_in_podcast()
+    {
+        $mp = new MyPodcast();
+        $itunes = $mp->addHelper(new iTunes_Podcast_Helper());
+        $itunes->setBlock('');
+        $content = $mp->generate();
+
+        $data = simplexml_load_string($content, 'SimpleXMLElement');
+        $itunes_children = $data->channel->children('http://www.itunes.com/dtds/podcast-1.0.dtd');
+        $this->assertFalse(isset($itunes_children->block));
+    }
+
     public function test_adds_image_to_podcast()
     {
         $mp = new MyPodcast();

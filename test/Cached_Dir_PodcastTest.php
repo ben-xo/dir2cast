@@ -168,6 +168,43 @@ class Cached_Dir_PodcastTest extends Dir_PodcastTest
         $this->assertEquals($lastBuildDate, $mp3->getLastBuildDate());
     }
 
+    public function test_lastBuildDate_falls_back_to_cache_filemtime_when_unparseable()
+    {
+        // If the cached XML doesn't contain an extractable <lastBuildDate> (corrupted,
+        // truncated, manually edited, or written by an older version that didn't
+        // emit one), the served HTTP `Last-Modified` header would be empty. In that
+        // case we should fall back to the cache file's mtime so the header is still sane.
+        $this->createTestItems();
+        age_dir_by('.', 3600);
+
+        $mp = $this->newPodcast();
+        $mp->generate();
+        unset($mp);
+
+        // Corrupt the cached file so the regex can't extract lastBuildDate.
+        $cache_files = glob(temp_xml_glob());
+        $this->assertNotEmpty($cache_files);
+        $cache_file = $cache_files[0];
+        $corrupted = preg_replace(
+            '#<lastBuildDate>.*?</lastBuildDate>#',
+            '',
+            file_get_contents($cache_file)
+        );
+        file_put_contents($cache_file, $corrupted);
+        $expected_ts = filemtime($cache_file);
+
+        $mp2 = $this->newPodcast(3600);
+        $this->assertTrue($mp2->isCached());
+        $mp2->generate();
+
+        $http_last_modified = $mp2->httpLastModified();
+        $this->assertNotNull($http_last_modified);
+        $this->assertEquals(
+            gmdate('D, d M Y H:i:s', $expected_ts) . ' GMT',
+            $http_last_modified
+        );
+    }
+
     public function tearDown(): void
     {
         file_exists('extra.mp3') && unlink('extra.mp3');

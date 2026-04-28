@@ -24,7 +24,9 @@
  *  THE SOFTWARE.
  */
 
-error_reporting(E_ALL | E_STRICT);
+// E_STRICT was deprecated in PHP 8.4 and removed in 8.5. Use constant() so 8.5 doesn't
+// emit a parse-time deprecation about referencing the symbol directly.
+error_reporting(E_ALL | (defined('E_STRICT') ? @constant('E_STRICT') : 0));
 
 function rmrf($dir) {
     // modified from https://www.php.net/manual/en/function.rmdir.php
@@ -94,19 +96,21 @@ function escape_single_quoted_string($string)
 
 function fake_getopt_command($argv_in, $short_options, $long_options)
 {
-    $argv_string = "'" . implode("', '", array_map('escape_single_quoted_string', $argv_in) ). "'";
-    $argv_count = count($argv_in);
+    // Pass the user's argv as REAL CLI args after `--`. PHP 8.4+ no longer reads
+    // $GLOBALS['argv'] for getopt(), so injection-based mocking doesn't work.
     $short_options_string = escape_single_quoted_string($short_options);
     $long_options_string = "'" . implode("', '", array_map('escape_single_quoted_string', $long_options) ). "'";
 
+    $script_argv = array_slice($argv_in, 1); // drop the fake script name at index 0
+    $escaped_user_args = array_map('escapeshellarg', $script_argv);
+
     $command_parts = array(
-        'php', '-d', 'register_argc_argv=false', '-r', escapeshellarg(<<<EOSCRIPT
-            \$GLOBALS["argv"]=array($argv_string);
-            \$GLOBALS["argc"]=$argv_count;
+        'php', '-r', escapeshellarg(<<<EOSCRIPT
             print(serialize(getopt('$short_options_string', array($long_options_string))));
-        EOSCRIPT)
+        EOSCRIPT),
+        '--'
     );
-    return implode(" ", $command_parts);
+    return implode(" ", array_merge($command_parts, $escaped_user_args));
 }
 
 /**
