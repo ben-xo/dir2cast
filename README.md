@@ -41,8 +41,8 @@ Features:
 * iTunes 'image' supported: just drop a file called itunes_image.jpg in the same
   folder as your media files.
 
-* RSS Description, iTunes Subtitle and iTunes Summary can be set by dropping
-  files named description.txt, itunes_subtitle.txt and itunes_summary.txt 
+* RSS Title, Description, iTunes Subtitle and iTunes Summary can be set by dropping
+  files named title.txt, description.txt, itunes_subtitle.txt and itunes_summary.txt 
   in the same folder as dir2cast.php - but they are not required. (You can
   also set these in the config).
 
