@@ -177,7 +177,21 @@ class getID3_Podcast_Helper implements Podcast_Helper {
             if(!empty($info['comments']))
             {
                 if(!empty($info['comments']['title'][0]))
-                    $item->setID3Title( $info['comments']['title'][0] );
+                {
+                    // Chaptered m4b carries one ©nam per chapter, so title[0] is a chapter
+                    // name. Album isn't chapterised; the work's own ©nam sorts last. See #81.
+                    if(count($info['comments']['title']) > 1 && isset($info['tags']['quicktime']))
+                    {
+                        if(!empty($info['comments']['album'][0]))
+                            $item->setID3Title( $info['comments']['album'][0] );
+                        else
+                            $item->setID3Title( end($info['comments']['title']) );
+                    }
+                    else
+                    {
+                        $item->setID3Title( $info['comments']['title'][0] );
+                    }
+                }
                 if(!empty($info['comments']['artist'][0]))
                     $item->setID3Artist( $info['comments']['artist'][0] );
                 if(!empty($info['comments']['album'][0]))
