@@ -265,8 +265,46 @@ class RSS_Item_getID3_Podcast_HelperTest extends TestCase
         $this->assertFalse(file_exists('tagged_with_cover.jpg'));
     }
 
+    public function test_mp4_chaptered_titles_uses_album_not_chapter_name()
+    {
+        $mp = new MyPodcast();
+        $helper = $this->newHelper();
+        $mp->addHelper($helper);
+
+        copy('../fixtures/chaptered_titles.m4b', './chaptered_titles.m4b');
+        $item = new Media_RSS_Item('chaptered_titles.m4b');
+
+        $mp->addRssItem($item);
+
+        $content = $mp->generate();
+
+        // title[0] is a chapter name, so the album is used instead.
+        $this->assertEquals('ALBUMCHAP', $item->getID3Title());
+        $this->assertEquals('ALBUMCHAP', $item->getID3Album());
+    }
+
+    public function test_mp4_chaptered_titles_without_album_uses_last_title()
+    {
+        $mp = new MyPodcast();
+        $helper = $this->newHelper();
+        $mp->addHelper($helper);
+
+        copy('../fixtures/chaptered_titles_no_album.m4b', './chaptered_titles_no_album.m4b');
+        $item = new Media_RSS_Item('chaptered_titles_no_album.m4b');
+
+        $mp->addRssItem($item);
+
+        $content = $mp->generate();
+
+        // No album, so the last entry is used: it is the work's own ©nam.
+        $this->assertEquals('THE REAL BOOK TITLE', $item->getID3Title());
+        $this->assertEquals('', $item->getID3Album());
+    }
+
     public function tearDown(): void
     {
+        file_exists('chaptered_titles_no_album.m4b') && unlink('chaptered_titles_no_album.m4b');
+        file_exists('chaptered_titles.m4b') && unlink('chaptered_titles.m4b');
         file_exists('empty.mp4') && unlink('empty.mp4');
         file_exists('tagged.mp4') && unlink('tagged.mp4');
         file_exists('tagged_with_cover.mp4') && unlink('tagged_with_cover.mp4');
