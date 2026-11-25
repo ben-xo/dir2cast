@@ -596,8 +596,16 @@ class RSS_Item extends GetterSetter {
         }
 
         // Look to see if there is an item specific image and include it.
+        //
+        // Plain RSS 2.0 has no <image> element inside <item>; it only exists at
+        // channel level. Emitting it here makes the whole feed fail the W3C
+        // validator ("Undefined item element: image"). The iTunes helper already
+        // emits the same image as <itunes:image>, so suppress the duplicate
+        // invalid element whenever that helper is attached (which is the normal
+        // dir2cast setup). Bare RSS_Item users without the helper keep the old
+        // behaviour.
         $item_image = $this->getImage();
-        if(!empty($item_image))
+        if(!empty($item_image) && !isset($this->helpers['iTunes_Podcast_Helper']))
         {
             $item_element->appendChild( $doc->createElement('image') )
                 ->appendChild(new DOMText($item_image));

@@ -67,8 +67,11 @@ final class MixedMediaExampleWithExtraFilesTest extends MixedMediaExampleTest
     {
         $data = simplexml_load_string(file_get_contents(self::$file));
 
-        $this->assertEquals('https://www.example.com/podcast/4.png', $data->channel->item[2]->image);
-        $this->assertEquals('https://www.example.com/podcast/3.jpg', $data->channel->item[3]->image);
+        // <image> is not a valid RSS 2.0 <item> element, so dir2cast no longer
+        // emits it when the iTunes helper (which publishes <itunes:image>)
+        // is attached. The image values are asserted via that namespace below.
+        $this->assertFalse(isset($data->channel->item[2]->image));
+        $this->assertFalse(isset($data->channel->item[3]->image));
 
         $itdtd = "http://www.itunes.com/dtds/podcast-1.0.dtd";
 
