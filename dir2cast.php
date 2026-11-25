@@ -1673,7 +1673,14 @@ class ErrorHandler
         {
             if(!defined('CLI_ONLY'))
             {
-                if(!http_response_code())
+                // http_response_code() reports the status PHP will send, which
+                // defaults to 200 on a web request (not 0/false), so the old
+                // `if(!http_response_code())` never fired and errors went out
+                // with HTTP 200. Treat the default 200 as "not set" and raise
+                // it to 500, while preserving a status chosen earlier (such as
+                // the 404 from display404()).
+                $status = http_response_code();
+                if($status === false || $status === 200)
                 {
                     http_response_code(500);
                 }
@@ -1738,10 +1745,14 @@ class ErrorHandler
 
     public static function display404($message)
     {
-        if(defined('CLI_ONLY'))
+        // This must send the 404 on a web request, not on the CLI. The condition
+        // used to be inverted (`if(defined('CLI_ONLY'))`), so a bad ?dir= produced
+        // HTTP 200 with a "Not Found" body and search engines / podcast clients
+        // treated it as a valid response.
+        if(!defined('CLI_ONLY'))
         {
             http_response_code(404);
-            header("Content-type: text/plain");
+            header('Content-Type: text/plain; charset=UTF-8');
         }
         throw new ExitException("Not Found: $message", -2);
     }
