@@ -38,6 +38,11 @@ Features:
 
 * Comprehensive support for iTunes podcast tags.
 
+* Optional stable episode identifiers (`<guid>`, via GUID_SOURCE): either the
+  enclosure URL, or a date-based value for archives that reuse filenames every
+  week (so a new week is a new episode for Apple Podcasts / Spotify) while the
+  filename stays the same.
+
 * iTunes 'image' supported: just drop a file called itunes_image.jpg in the same
   folder as your media files.
 
