@@ -99,4 +99,26 @@ class RSS_ItemTest extends TestCase
 
         $this->assertEquals('visuals.jpg', $data->channel->item[0]->image);
     }
+
+    public function test_item_image_is_not_emitted_as_invalid_rss_image_with_itunes_helper()
+    {
+        $mp = new MyPodcast();
+        $mp->addHelper(new iTunes_Podcast_Helper());
+
+        $item = $this->newRSSItem();
+        $item->setImage('visuals.jpg');
+        $mp->addRssItem($item);
+
+        $content = $mp->generate();
+        $data = simplexml_load_string($content, 'SimpleXMLElement', LIBXML_NOCDATA);
+        $item_data = $data->channel->item[0];
+
+        // <image> is not part of the RSS 2.0 <item> grammar; emitting it made
+        // the W3C validator reject the whole feed.
+        $this->assertFalse(isset($item_data->image));
+
+        // The image is still published, via the iTunes namespace.
+        $itunes = $item_data->children('http://www.itunes.com/dtds/podcast-1.0.dtd');
+        $this->assertEquals('visuals.jpg', (string) $itunes->image->attributes()->href);
+    }
 }
