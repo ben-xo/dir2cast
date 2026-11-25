@@ -581,6 +581,18 @@ class RSS_Item extends GetterSetter {
             $item_element->appendChild( new DOMElement($name) )
                 ->appendChild(new DOMText($val));
         }
+
+        // Optional <guid>. The GUID is the stable episode identity that podcast
+        // directories and clients use to recognise an episode even if its
+        // enclosure URL or title changes. RSS says isPermaLink is a hint only;
+        // a GUID is a permalink when it is the item's URL.
+        $guid = (string)$this->getGuid();
+        if($guid !== '')
+        {
+            $guid_element = $item_element->appendChild( new DOMElement('guid') );
+            $guid_element->setAttribute('isPermaLink', $this->getGuidIsPermaLink() ? 'true' : 'false');
+            $guid_element->appendChild( new DOMText($guid) );
+        }
         
         foreach($cdata_item_elements as $name => $val)
         {
@@ -620,6 +632,14 @@ class RSS_File_Item extends RSS_Item {
     
     static $FILES_URL = '';
     static $FILES_DIR = '';
+
+    /**
+     * Source of the optional <guid>: 'none', 'url' or 'date'.
+     * Set from GUID_SOURCE by SettingsHandler::defaults().
+     *
+     * @var string
+     */
+    static $GUID_SOURCE = 'none';
 
     public function __construct($filename)
     {
@@ -696,6 +716,57 @@ class RSS_File_Item extends RSS_Item {
         }
 
         return 'application/octet-stream';
+    }
+
+    /**
+     * Returns the stable <guid> value for this item, or '' for no GUID.
+     *
+     * 'url' uses the enclosure URL. 'date' uses the UTC date of the media file
+     * plus its filename without extension, e.g. "2026-11-25-wednesday_17-18".
+     * The directory is deliberately excluded: when a rolling archive moves an
+     * episode from the live folder into a 'previous' folder its mtime (and
+     * therefore its date) is preserved, so the GUID stays the same and podcast
+     * clients keep recognising the episode. Sidecar files (cover art, summary
+     * text) do not influence the date.
+     *
+     * @return string
+     */
+    public function getGuid()
+    {
+        $overridden_guid = parent::getGuid();
+        if($overridden_guid)
+        {
+            return $overridden_guid;
+        }
+
+        switch(self::$GUID_SOURCE)
+        {
+            case 'url':
+                return $this->getLink();
+
+            case 'date':
+                return date('Y-m-d', $this->getFileTimestamp()) . '-' . basename($this->getFilename(), '.' . $this->getExtension());
+        }
+
+        return '';
+    }
+
+    public function getGuidIsPermaLink()
+    {
+        $overridden_is_permalink = parent::getGuidIsPermaLink();
+        if($overridden_is_permalink !== null)
+        {
+            return (bool)$overridden_is_permalink;
+        }
+
+        // A manually supplied GUID is assumed to be opaque unless the caller
+        // explicitly marks it as a permalink.
+        if(parent::getGuid())
+        {
+            return false;
+        }
+
+        return self::$GUID_SOURCE === 'url';
     }
         
     /**
@@ -2058,6 +2129,9 @@ class SettingsHandler
         if(!defined('DESCRIPTION_SOURCE'))
             define('DESCRIPTION_SOURCE', 'comment');
 
+        if(!defined('GUID_SOURCE'))
+            define('GUID_SOURCE', 'none');
+
         if(!defined('RECURSIVE_DIRECTORY_ITERATOR'))
             define('RECURSIVE_DIRECTORY_ITERATOR', false);
 
@@ -2092,6 +2166,11 @@ class SettingsHandler
         RSS_File_Item::$FILES_DIR = MP3_DIR(); // TODO: rename this to MEDIA_DIR
         Media_RSS_Item::$LONG_TITLES = LONG_TITLES;
         Media_RSS_Item::$DESCRIPTION_SOURCE = DESCRIPTION_SOURCE;
+
+        $guid_source = strtolower((string)GUID_SOURCE);
+        if(!in_array($guid_source, array('none', 'url', 'date'), true))
+            $guid_source = 'none';
+        RSS_File_Item::$GUID_SOURCE = $guid_source;
     }
     
     public static function load_from_ini($file)
